@@ -39,7 +39,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthFunc(GLES20.GL_LEQUAL)
         mPhone2D = Phone2D()
-        val bitmapImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.test)
+        val bitmapImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.phone)
         mPhone2D.readyToDraw(bitmapImage)
     }
 
