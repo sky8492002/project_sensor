@@ -2,6 +2,7 @@ package com.choi.sensorproject.opngl
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.PixelFormat
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -14,8 +15,13 @@ class CustomGLSurfaceView @JvmOverloads constructor(
     private val renderer: CustomGLRenderer
 
     init {
+        // renderer 설정, 배경 투명하게 설정
         setEGLContextClientVersion(2)
         renderer = CustomGLRenderer(context)
+        setEGLConfigChooser( 8, 8, 8, 8, 16, 0)
+        holder.setFormat(PixelFormat.RGBA_8888)
+        holder.setFormat(PixelFormat.TRANSLUCENT)
+        setZOrderOnTop(true)
         setRenderer(renderer)
     }
 
@@ -37,6 +43,11 @@ class CustomGLSurfaceView @JvmOverloads constructor(
         mPreviousX = x
         mPreviousY = y
         return true
+    }
+
+    fun changeAngle(dx: Float, dy: Float, dz: Float){
+        renderer.resetAngle()
+        renderer.rotate(dx, dy, dz)
     }
 
 }

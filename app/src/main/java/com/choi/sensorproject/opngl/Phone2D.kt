@@ -1,39 +1,28 @@
 package com.choi.sensorproject.opngl
 
-import android.content.ContentValues.TAG
 import android.graphics.Bitmap
 import android.opengl.GLES20
-import android.opengl.GLES20.GL_UNSIGNED_INT
 import android.opengl.GLUtils
-import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import javax.microedition.khronos.opengles.GL10.GL_TRIANGLES
 
-class Square {
-    private val COORDS_PER_VERTEX = 3;
-    private val VERTEX_STRIDE: Int = COORDS_PER_VERTEX * 4
-
-//    private var triangleCoords: FloatArray = arrayOf(
-//        -0.5f,  0.5f, //0번 정점
-//        -0.5f, -0.5f, //1번 정점
-//        0.5f, -0.5f,  //2번 정점
-//        0.5f,  0.5f  //3번 정점
-//    ).toFloatArray()
+class Phone2D {
+    private val COORDS = 3;
+    private val STRIDE: Int = COORDS * 4
 
     private var vertices = floatArrayOf(
-        -0.5f, -0.8f, 0.0f,
-        0.5f, -0.8f, 0.0f,
-        -0.5f, 0.8f, 0.0f,
-        0.5f, 0.8f, 0.0f
+        -0.4f, -0.7f, 0.0f,
+        0.4f, -0.7f, 0.0f,
+        -0.4f, 0.7f, 0.0f,
+        0.4f, 0.7f, 0.0f
     )
 
     private var texCoords = floatArrayOf(
-        0f,1f, 0.0f,
-        1f,1f, 0.0f,
-        0f,0f, 0.0f,
-        1f,0f, 0.0f,
+        0.0f,1.0f, 0.0f,
+        1.0f,1.0f, 0.0f,
+        0.0f,0.0f, 0.0f,
+        1.0f,0.0f, 0.0f,
     )
 
     val order = arrayOf(0,1,2,0,2,3).toIntArray() //삼각형 그리는 순서 (012),(023)
@@ -143,13 +132,13 @@ class Square {
         texCoordHandle = GLES20.glGetAttribLocation(mProgram, "aTexCoord")
         textureHandle = GLES20.glGetUniformLocation(mProgram, "sTexture")
 
-//        GLES20.glEnable(GLES20.GL_BLEND)
-//        GLES20.glEnable(GLES20.GL_TEXTURE_2D)
-//        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-//
-//        GLES20.glGenTextures(textureUnit.size, textureUnit, 0)
-//        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureUnit[0])
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glEnable(GLES20.GL_TEXTURE_2D)
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+
+        GLES20.glGenTextures(textureUnit.size, textureUnit, 0)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureUnit[0])
 
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
@@ -172,8 +161,8 @@ class Square {
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
         //GLES20.glUniform4fv(colorHandle, 1, color, 0)
 
-        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, VERTEX_STRIDE, vertexBuffer)
-        GLES20.glVertexAttribPointer(texCoordHandle, 3, GLES20.GL_FLOAT, false, VERTEX_STRIDE, texCoordBuffer)
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, STRIDE, vertexBuffer)
+        GLES20.glVertexAttribPointer(texCoordHandle, 3, GLES20.GL_FLOAT, false, STRIDE, texCoordBuffer)
 
         GLES20.glEnableVertexAttribArray(positionHandle)
         GLES20.glEnableVertexAttribArray(texCoordHandle)

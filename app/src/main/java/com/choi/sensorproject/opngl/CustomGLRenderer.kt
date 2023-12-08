@@ -9,6 +9,7 @@ import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import com.example.sensorproject.R
 import java.io.FileInputStream
+import java.lang.reflect.Array
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -16,7 +17,7 @@ import javax.microedition.khronos.opengles.GL10
 class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
 
     private lateinit var mTriangle : Triangle
-    private lateinit var mSquare: Square
+    private lateinit var mPhone2D: Phone2D
     private lateinit var mCube: Cube
     private lateinit var mPhone: Phone
 
@@ -34,27 +35,18 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
 
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-        GLES20.glClearDepthf(1.0f);
+        GLES20.glClearDepthf(1.0f)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthFunc(GLES20.GL_LEQUAL)
-        mSquare = Square()
-        //mCube = Cube()
-        mPhone = Phone()
-
-        //val bitmapImage = getDrawable(context, R.drawable.medal)!!.toBitmap()
+        mPhone2D = Phone2D()
         val bitmapImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.test)
-        //val bitmapImage = BitmapFactory.decodeStream(context.assets.open("test.png"))
-        mSquare.readyToDraw(bitmapImage)
+        mPhone2D.readyToDraw(bitmapImage)
     }
 
     override fun onDrawFrame(unused: GL10) {
-        // Redraw background color
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT) // 없으면 움직일 때마다 잔상 남음
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
-        mSquare.draw(vPMatrix)
-        //mCube.draw(vPMatrix)
-        //mPhone.draw(vPMatrix)
+        mPhone2D.draw(vPMatrix)
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
@@ -63,19 +55,29 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         // 보는 시점 설정
         aspectRatio = width.toFloat() / height // 가로 세로 비율을 구함
 
-        Matrix.perspectiveM(projectionMatrix, 0, 60f, aspectRatio, 1f, 7f)
-        Matrix.setLookAtM(
-            viewMatrix, 0,
-            0.0f, 0.0f, -2.0f,
-            0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f
-        )
-        // mvp = p * v * m (곱하는 순서 중요함)
-        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+        resetAngle()
     }
 
     fun rotate(dx:Float, dy:Float){
         Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 0f, 1f, 0f)
         Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 1f, 0f, 0f)
+    }
+    fun rotate(dx:Float, dy:Float, dz: Float){
+        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 0f, 1f, 0f)
+        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(vPMatrix, 0, dz * aspectRatio, 0f, 0f, 1f)
+    }
+
+    fun resetAngle(){
+
+        Matrix.perspectiveM(projectionMatrix, 0, 60f, aspectRatio, 1f, 7f)
+        Matrix.setLookAtM(
+            viewMatrix, 0,
+            0.0f, 0.0f, 2.5f,
+            0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f
+        )
+        // mvp = p * v * m (곱하는 순서 중요함)
+        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
     }
 }
