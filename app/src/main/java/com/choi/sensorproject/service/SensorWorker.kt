@@ -4,6 +4,9 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.util.Log
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -18,6 +21,13 @@ class SensorWorker(context: Context, params: WorkerParameters) : CoroutineWorker
 
     var curXAngle : Float = 0f
     var curYAngle: Float = 0f
+
+    init {
+        val sensorManager = getSystemService(context, SensorManager:: class.java) as SensorManager
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
+            SensorManager.SENSOR_DELAY_FASTEST)
+    }
+
     override suspend fun doWork(): Result = coroutineScope {
         withContext(Dispatchers.IO){
             for (i in 1..900){
