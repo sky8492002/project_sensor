@@ -8,7 +8,7 @@ class InsertSensorRecordUseCase @Inject constructor(
     private val repository: SensorRecordRepository
 ){
 
-    operator fun invoke(xAngle: Float, yAngle: Float, recordTime: String, runningAppName: String){
+    suspend operator fun invoke(xAngle: Float, yAngle: Float, recordTime: String, runningAppName: String){
         val sensorRecordModel = SensorRecordModel(xAngle, yAngle, recordTime, runningAppName)
         repository.insertSensorRecord(sensorRecordModel)
     }

@@ -4,11 +4,11 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.choi.sensorproject.room.dao.SensorRecordDao
-import com.choi.sensorproject.room.entity.SensorAngle
+import com.choi.sensorproject.room.entity.SensorRecordEntity
 
 @Database(
     entities = [
-        SensorAngle:: class,
+        SensorRecordEntity:: class,
     ],
     version = 1
 )

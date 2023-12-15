@@ -10,8 +10,8 @@ import javax.inject.Inject
 class SensorRecordRepositoryImpl @Inject constructor(
     private val dataSource: SensorRecordDataSource
 ): SensorRecordRepository {
-    override fun insertSensorRecord(sensorRecordModel: SensorRecordModel) {
-        Log.d("sensorRecordModel", sensorRecordModel.toString())
+    override suspend fun insertSensorRecord(sensorRecordModel: SensorRecordModel) {
+        dataSource.insertSensorRecord(sensorRecordModel)
     }
 
     override fun getSensorRecords(): Flow<SensorRecordModel> {
