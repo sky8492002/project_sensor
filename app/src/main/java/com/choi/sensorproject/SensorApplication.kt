@@ -9,8 +9,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.choi.sensorproject.service.SensorWorker
+import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 
+@HiltAndroidApp
 class SensorApplication: Application() {
     override fun onCreate() {
         super.onCreate()

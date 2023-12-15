@@ -10,14 +10,19 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.choi.sensorproject.domain.usecase.InsertSensorRecordUseCase
 import com.choi.sensorproject.room.RoomManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 import kotlin.math.pow
 
-class SensorWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params), SensorEventListener {
+class SensorWorker @Inject constructor(
+    private val insertSensorRecordUseCase: InsertSensorRecordUseCase,
+    context: Context, params: WorkerParameters
+)  : CoroutineWorker(context, params), SensorEventListener {
 
     var curXAngle : Float = 0f
     var curYAngle: Float = 0f
@@ -31,7 +36,7 @@ class SensorWorker(context: Context, params: WorkerParameters) : CoroutineWorker
     override suspend fun doWork(): Result = coroutineScope {
         withContext(Dispatchers.IO){
             for (i in 1..900){
-                RoomManager.recordAngles(curXAngle, curYAngle)
+                insertSensorRecordUseCase(curXAngle, curYAngle)
                 delay(1000)
             }
         }
@@ -50,5 +55,6 @@ class SensorWorker(context: Context, params: WorkerParameters) : CoroutineWorker
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
     }
 }

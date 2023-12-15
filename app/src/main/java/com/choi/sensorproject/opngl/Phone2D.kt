@@ -83,7 +83,7 @@ class Phone2D {
 
         // 디바이스 하드웨어의 native byte 순서로 바꿈.
         byteBuffer.order(ByteOrder.nativeOrder())
-        textCoordByteBuffer.order(ByteOrder.nativeOrder()) // 이 줄이 없으면 텍스펴 표시 안됨
+        textCoordByteBuffer.order(ByteOrder.nativeOrder()) // 이 줄이 없으면 텍스쳐 표시 안됨
 
         // 생성한 바이트 버퍼를 float버퍼로 치환하여, vertexBuffer 멤버변수에 floatBuffer을 할당함.
         vertexBuffer = byteBuffer.asFloatBuffer();
