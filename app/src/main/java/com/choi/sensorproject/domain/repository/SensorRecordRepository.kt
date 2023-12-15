@@ -5,6 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface SensorRecordRepository {
 
-    fun insertSensorRecord()
+    fun insertSensorRecord(sensorRecordModel: SensorRecordModel)
     fun getSensorRecords() : Flow<SensorRecordModel>
 }
