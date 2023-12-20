@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface SensorRecordRepository {
 
     suspend fun insertSensorRecord(sensorRecordModel: SensorRecordModel)
-    fun getSensorRecords() : Flow<SensorRecordModel>
+    suspend fun getSensorRecords(pageDate: String) : Flow<List<SensorRecordModel>>
 }

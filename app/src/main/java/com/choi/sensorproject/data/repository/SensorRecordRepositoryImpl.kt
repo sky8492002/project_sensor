@@ -14,7 +14,7 @@ class SensorRecordRepositoryImpl @Inject constructor(
         dataSource.insertSensorRecord(sensorRecordModel)
     }
 
-    override fun getSensorRecords(): Flow<SensorRecordModel> {
-        TODO("Not yet implemented")
+    override suspend fun getSensorRecords(pageDate: String): Flow<List<SensorRecordModel>> {
+        return dataSource.getSensorRecords(pageDate)
     }
 }

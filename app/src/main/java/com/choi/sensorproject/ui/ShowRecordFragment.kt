@@ -1,18 +1,19 @@
 package com.choi.sensorproject.ui
 
-import android.graphics.PixelFormat
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.sensorproject.R
+import androidx.recyclerview.widget.PagerSnapHelper
+import com.choi.sensorproject.ui.recyclerview.CurvedLayoutManager
+import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
 import com.example.sensorproject.databinding.FragmentSensorTestBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SensorTestFragment: Fragment() {
+class ShowRecordFragment: Fragment() {
     private var _binding: FragmentSensorTestBinding? = null
 
     private val binding
@@ -29,6 +30,11 @@ class SensorTestFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val recordsForHourAdapter = RecordsForHourAdapter()
+
+        binding.timeRecyclerView.adapter = recordsForHourAdapter
+        binding.timeRecyclerView.layoutManager = CurvedLayoutManager(requireActivity().baseContext, 0, 100f, 90f)
     }
 
     override fun onResume() {

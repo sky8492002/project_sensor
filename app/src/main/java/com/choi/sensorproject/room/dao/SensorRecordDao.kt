@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.choi.sensorproject.room.entity.SensorRecordEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SensorRecordDao {
@@ -13,6 +14,6 @@ interface SensorRecordDao {
         sensorRecordEntity: SensorRecordEntity
     )
 
-    @Query("SELECT * FROM sensor_record")
-    fun getAllSensorRecords() : List<SensorRecordEntity>
+    @Query("SELECT * FROM sensor_record WHERE record_time LIKE :pageDate")
+    fun getSensorRecords(pageDate: String) : Flow<List<SensorRecordEntity>>
 }
