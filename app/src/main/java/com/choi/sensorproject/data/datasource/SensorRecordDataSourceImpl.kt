@@ -29,16 +29,6 @@ class SensorRecordDataSourceImpl @Inject constructor(
 
         return sensorRecordModelList
 
-        // 타입 변경한 flow를 return
-//        return flow {
-//            appDatabase.sensorRecordDao().getSensorRecords(pageDate).collect{ list ->
-//                val sensorRecordModelList : MutableList<SensorRecordModel> = mutableListOf()
-//                for(entity in list){
-//                    sensorRecordModelList.add(entity.toModel())
-//                }
-//                emit(sensorRecordModelList)
-//            }
-//        }
     }
 
 }

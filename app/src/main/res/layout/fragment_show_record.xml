@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="각도: "
-            android:textSize="40sp"
+            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf= "parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

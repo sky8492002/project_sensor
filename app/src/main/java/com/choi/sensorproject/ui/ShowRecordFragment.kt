@@ -9,10 +9,15 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.choi.sensorproject.ui.recyclerview.FocusedLayoutManager
 import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
 import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -46,7 +51,6 @@ class ShowRecordFragment: Fragment() {
         focusedLayoutManager.orientation = LinearLayoutManager.HORIZONTAL
 
         binding.timeRecyclerView.adapter = recordsForHourAdapter
-        //binding.timeRecyclerView.layoutManager = CurvedLayoutManager(requireActivity().baseContext, 0, 90f, 100f)
         binding.timeRecyclerView.layoutManager = focusedLayoutManager
         binding.showRecordViewModel = showRecordViewModel
 
@@ -57,6 +61,38 @@ class ShowRecordFragment: Fragment() {
                 }
             }
         }
+
+        var lastJob: Job? = null
+        // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
+        binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                recyclerView.layoutManager?.let{ layoutManager ->
+                    val centerView = snapHelper.findSnapView(layoutManager)!!
+                    val position = layoutManager.getPosition(centerView)
+                    val centerModel = recordsForHourAdapter.getRecordsForHourModel(position)
+
+                    // 이전 coroutine job cancel 필수
+                    lastJob?.let{ job ->
+                        if(job.isActive) {
+                            job.cancel()
+                            binding.surfaceView.changeAngle(50f, 0f, 0f)
+                        }
+                    }
+
+                    // 새로운 coroutine job launch
+                    lastJob = viewLifecycleOwner.lifecycleScope.launch {
+                        for(record in centerModel.records){
+                            // 실제 각도와 화면이 일치하게 조정
+                            binding.surfaceView.changeAngle(50f, record.yAngle, record.xAngle * 2)
+                            binding.angleTextView.text = record.recordTime
+                            delay(100)
+                        }
+                    }
+                }
+            }
+        })
     }
 
     override fun onResume() {

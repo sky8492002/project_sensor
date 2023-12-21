@@ -28,6 +28,10 @@ class RecordsForHourAdapter(): PagingDataAdapter<RecordsForHourModel, RecordsFor
         }
     }
 
+    fun getRecordsForHourModel(position: Int): RecordsForHourModel{
+        return getItem(position) as RecordsForHourModel
+    }
+
     class RecordsForHourViewHolder(
         val binding: ItemRecordsForHourBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
