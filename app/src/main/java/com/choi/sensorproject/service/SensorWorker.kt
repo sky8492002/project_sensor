@@ -35,7 +35,7 @@ class SensorWorker @AssistedInject constructor(
     var curYAngle: Float = 0f
 
     @SuppressLint("SimpleDateFormat")
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     init {
         val sensorManager = getSystemService(context, SensorManager:: class.java) as SensorManager
@@ -47,7 +47,7 @@ class SensorWorker @AssistedInject constructor(
         withContext(Dispatchers.IO){
             for (i in 1..900){
                 val currentTime : Long = System.currentTimeMillis()
-                insertSensorRecordUseCase(curXAngle, curYAngle, dateFormat.format(currentTime), "")
+                insertSensorRecordUseCase(curXAngle, curYAngle, timeFormat.format(currentTime), "")
                 delay(1000)
             }
         }

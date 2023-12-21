@@ -14,6 +14,6 @@ interface SensorRecordDao {
         sensorRecordEntity: SensorRecordEntity
     )
 
-    @Query("SELECT * FROM sensor_record WHERE record_time LIKE :pageDate")
-    fun getSensorRecords(pageDate: String) : Flow<List<SensorRecordEntity>>
+    @Query("SELECT * FROM sensor_record WHERE record_time LIKE:pageDateQuery")
+    fun getSensorRecords(pageDateQuery: String) : List<SensorRecordEntity>
 }

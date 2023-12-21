@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetSensorRecordsUseCase @Inject constructor(
     private val repository: SensorRecordRepository
 ) {
-    suspend operator fun invoke(pageDate: String): Flow<List<SensorRecordModel>> {
+    suspend operator fun invoke(pageDate: String): List<SensorRecordModel> {
         return repository.getSensorRecords(pageDate)
     }
 }

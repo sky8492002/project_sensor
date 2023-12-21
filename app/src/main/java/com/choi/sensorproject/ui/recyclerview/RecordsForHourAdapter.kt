@@ -42,7 +42,7 @@ class RecordsForHourAdapter(): PagingDataAdapter<RecordsForHourModel, RecordsFor
                 oldItem: RecordsForHourModel,
                 newItem: RecordsForHourModel
             ): Boolean {
-                return oldItem.date == newItem.date
+                return oldItem.records == newItem.records
             }
 
             override fun areContentsTheSame(

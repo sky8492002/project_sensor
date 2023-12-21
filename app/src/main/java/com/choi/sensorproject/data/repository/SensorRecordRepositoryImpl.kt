@@ -14,7 +14,7 @@ class SensorRecordRepositoryImpl @Inject constructor(
         dataSource.insertSensorRecord(sensorRecordModel)
     }
 
-    override suspend fun getSensorRecords(pageDate: String): Flow<List<SensorRecordModel>> {
+    override suspend fun getSensorRecords(pageDate: String): List<SensorRecordModel> {
         return dataSource.getSensorRecords(pageDate)
     }
 }

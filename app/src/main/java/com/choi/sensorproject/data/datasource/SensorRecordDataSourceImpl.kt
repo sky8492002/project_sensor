@@ -16,17 +16,29 @@ class SensorRecordDataSourceImpl @Inject constructor(
         appDatabase.sensorRecordDao().insertSensorAngle(sensorRecordModel.toEntity())
     }
 
-    override suspend fun getSensorRecords(pageDate: String): Flow<List<SensorRecordModel>> {
-        // 타입 변경한 flow를 return
-        return flow {
-            appDatabase.sensorRecordDao().getSensorRecords(pageDate).collect{ list ->
-                val sensorRecordModelList : MutableList<SensorRecordModel> = mutableListOf()
-                for(entity in list){
-                    sensorRecordModelList.add(entity.toModel())
-                }
-                emit(sensorRecordModelList)
-            }
+    override suspend fun getSensorRecords(pageDate: String): List<SensorRecordModel> {
+
+        val pageDateQuery = "%$pageDate%"
+
+        val sensorRecordModelList : MutableList<SensorRecordModel> = mutableListOf()
+        val sensorRecordEntityList = appDatabase.sensorRecordDao().getSensorRecords(pageDateQuery)
+
+        for(entity in sensorRecordEntityList){
+            sensorRecordModelList.add(entity.toModel())
         }
+
+        return sensorRecordModelList
+
+        // 타입 변경한 flow를 return
+//        return flow {
+//            appDatabase.sensorRecordDao().getSensorRecords(pageDate).collect{ list ->
+//                val sensorRecordModelList : MutableList<SensorRecordModel> = mutableListOf()
+//                for(entity in list){
+//                    sensorRecordModelList.add(entity.toModel())
+//                }
+//                emit(sensorRecordModelList)
+//            }
+//        }
     }
 
 }

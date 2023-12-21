@@ -5,25 +5,33 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.choi.sensorproject.ui.recyclerview.CurvedLayoutManager
 import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
-import com.example.sensorproject.databinding.FragmentSensorTestBinding
+import com.example.sensorproject.databinding.FragmentShowRecordBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class ShowRecordFragment: Fragment() {
-    private var _binding: FragmentSensorTestBinding? = null
+    private var _binding: FragmentShowRecordBinding? = null
 
     private val binding
         get() = checkNotNull(_binding) { "binding was accessed outside of view lifecycle" }
+
+    private val showRecordViewModel: ShowRecordViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentSensorTestBinding.inflate(inflater, container, false)
+        _binding = FragmentShowRecordBinding.inflate(inflater, container, false)
 
         return binding.root
     }
@@ -34,58 +42,67 @@ class ShowRecordFragment: Fragment() {
         val recordsForHourAdapter = RecordsForHourAdapter()
 
         binding.timeRecyclerView.adapter = recordsForHourAdapter
-        binding.timeRecyclerView.layoutManager = CurvedLayoutManager(requireActivity().baseContext, 0, 100f, 90f)
+        //binding.timeRecyclerView.layoutManager = CurvedLayoutManager(requireActivity().baseContext, 0, 100f, 90f)
+        binding.showRecordViewModel = showRecordViewModel
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            showRecordViewModel.uiState.collect(){ uiState ->
+                if (uiState is ShowRecordUIState.Success) {
+                    recordsForHourAdapter.submitData(uiState.records)
+                }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
 
-        val testAngleQueue: ArrayDeque<Triple<Float, Float, Float>> = ArrayDeque()
-
-        testAngleQueue.addLast(Triple(50f, 0f, 0f))
-        testAngleQueue.addLast(Triple(50f, 10f, 0f))
-        testAngleQueue.addLast(Triple(50f, 20f, 0f))
-        testAngleQueue.addLast(Triple(50f, 30f, 0f))
-        testAngleQueue.addLast(Triple(50f, 40f, 0f))
-        testAngleQueue.addLast(Triple(50f, 50f, 0f))
-
-        testAngleQueue.addLast(Triple(50f, 50f, -20f))
-        testAngleQueue.addLast(Triple(50f, 50f, -40f))
-        testAngleQueue.addLast(Triple(50f, 50f, -60f))
-        testAngleQueue.addLast(Triple(50f, 50f, -80f))
-        testAngleQueue.addLast(Triple(50f, 50f, -100f))
-        testAngleQueue.addLast(Triple(50f, 50f, -120f))
-        testAngleQueue.addLast(Triple(50f, 50f, -140f))
-        testAngleQueue.addLast(Triple(50f, 50f, -160f))
-        testAngleQueue.addLast(Triple(50f, 50f, -180f))
-        testAngleQueue.addLast(Triple(50f, 50f, -200f))
-
-        testAngleQueue.addLast(Triple(50f, -30f, -20f))
-        testAngleQueue.addLast(Triple(50f, -30f, -40f))
-        testAngleQueue.addLast(Triple(50f, -30f, -60f))
-        testAngleQueue.addLast(Triple(50f, -30f, -80f))
-        testAngleQueue.addLast(Triple(50f, -30f, -100f))
-        testAngleQueue.addLast(Triple(50f, -30f, -120f))
-        testAngleQueue.addLast(Triple(50f, -30f, -140f))
-        testAngleQueue.addLast(Triple(50f, -30f, -160f))
-        testAngleQueue.addLast(Triple(50f, -30f, -180f))
-        testAngleQueue.addLast(Triple(50f, -30f, -200f))
-
-
-        val scope = GlobalScope // 비동기 함수 진행
-        scope.launch {
-            while (true) {
-                delay(500)
-                val cur = testAngleQueue.first()
-                testAngleQueue.removeFirst()
-                testAngleQueue.addLast(cur)
-                val dx = cur.first
-                val dy = cur.second
-                val dz = cur.third
-                binding.surfaceView.changeAngle(dx, dy, dz)
-                binding.angleTextView.text = "각도: " + dx.toString() + ", " + dy.toString() + ", " + dz.toString()
-            }
-        }
+//        val testAngleQueue: ArrayDeque<Triple<Float, Float, Float>> = ArrayDeque()
+//
+//        testAngleQueue.addLast(Triple(50f, 0f, 0f))
+//        testAngleQueue.addLast(Triple(50f, 10f, 0f))
+//        testAngleQueue.addLast(Triple(50f, 20f, 0f))
+//        testAngleQueue.addLast(Triple(50f, 30f, 0f))
+//        testAngleQueue.addLast(Triple(50f, 40f, 0f))
+//        testAngleQueue.addLast(Triple(50f, 50f, 0f))
+//
+//        testAngleQueue.addLast(Triple(50f, 50f, -20f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -40f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -60f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -80f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -100f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -120f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -140f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -160f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -180f))
+//        testAngleQueue.addLast(Triple(50f, 50f, -200f))
+//
+//        testAngleQueue.addLast(Triple(50f, -30f, -20f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -40f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -60f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -80f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -100f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -120f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -140f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -160f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -180f))
+//        testAngleQueue.addLast(Triple(50f, -30f, -200f))
+//
+//
+//        val scope = GlobalScope // 비동기 함수 진행
+//        scope.launch {
+//            while (true) {
+//                delay(500)
+//                val cur = testAngleQueue.first()
+//                testAngleQueue.removeFirst()
+//                testAngleQueue.addLast(cur)
+//                val dx = cur.first
+//                val dy = cur.second
+//                val dz = cur.third
+//                binding.surfaceView.changeAngle(dx, dy, dz)
+//                binding.angleTextView.text = "각도: " + dx.toString() + ", " + dy.toString() + ", " + dz.toString()
+//            }
+//        }
 
     }
 

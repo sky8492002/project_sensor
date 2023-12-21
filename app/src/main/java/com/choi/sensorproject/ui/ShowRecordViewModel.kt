@@ -9,6 +9,7 @@ import com.choi.sensorproject.domain.paging.CustomPagingSource
 import com.choi.sensorproject.domain.usecase.GetSensorRecordsUseCase
 import com.choi.sensorproject.ui.model.RecordsForHourModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,31 +24,31 @@ class ShowRecordViewModel  @Inject constructor(
 ): ViewModel(){
 
     private val _uiState =
-        MutableStateFlow<UIState>(UIState.Success(PagingData.empty()))
-    val uiState: StateFlow<UIState> = _uiState
+        MutableStateFlow<ShowRecordUIState>(ShowRecordUIState.Success(PagingData.empty()))
+    val uiState: StateFlow<ShowRecordUIState> = _uiState
 
     fun getRecords() : Flow<PagingData<RecordsForHourModel>> {
-        return Pager(config = PagingConfig(pageSize = 20, enablePlaceholders = false, initialLoadSize = 20, ), pagingSourceFactory = {
+        return Pager(config = PagingConfig(pageSize = 24, enablePlaceholders = false, initialLoadSize = 24 ), pagingSourceFactory = {
             customPagingSource
         }).flow
     }
 
     init{
-        viewModelScope.launch() {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                getRecords().collect {
-                    _uiState.value = UIState.Success(it)
+                getRecords().collectLatest {
+                    _uiState.value = ShowRecordUIState.Success(it)
                 }
             }
             catch (e: Exception){
-                _uiState.value = UIState.Fail(e)
+                _uiState.value = ShowRecordUIState.Fail(e)
             }
         }
     }
 }
 
-sealed class UIState {
-    data class Success(val records: PagingData<RecordsForHourModel>) : UIState()
+sealed class ShowRecordUIState {
+    data class Success(val records: PagingData<RecordsForHourModel>) : ShowRecordUIState()
 
-    data class Fail(val error: Exception) : UIState()
+    data class Fail(val error: Exception) : ShowRecordUIState()
 }
