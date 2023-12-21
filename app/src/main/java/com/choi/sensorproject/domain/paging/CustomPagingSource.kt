@@ -55,7 +55,7 @@ class CustomPagingSource @Inject constructor(
                 val recordsForHourModelList: MutableList<RecordsForHourModel> = mutableListOf()
                 for (hour in 0 until 24) {
                     val emptyRecords: MutableList<SensorRecordModel> = mutableListOf()
-                    recordsForHourModelList.add(RecordsForHourModel(pageDate, hour, emptyRecords))
+                    recordsForHourModelList.add(RecordsForHourModel(pageDate, hour.toString(), emptyRecords))
                 }
 
                 for (sensorRecordModel in sensorRecordModelList) {

@@ -21,12 +21,51 @@
             app:cardBackgroundColor="#000000"
             app:cardCornerRadius="20dp">
 
-            <ImageView
-                android:id="@+id/day_night_imageView"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/daynight_day"/>
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent">
+
+                <ImageView
+                    android:id="@+id/day_night_imageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/daynight_day"/>
+
+
+                <TextView
+                    android:id="@+id/date_textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:gravity="center_horizontal"
+                    app:layout_constraintTop_toTopOf="@id/day_night_imageView"
+                    android:textSize="10sp"
+                    android:text="@{recordsForHourModel.date}"/>
+
+                <TextView
+                    android:id="@+id/record_textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:gravity="center_horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/date_textView"
+                    android:textSize="10sp"
+                    android:text="@{recordsForHourModel.records.toString()}"/>
+
+                <TextView
+                    android:id="@+id/hour_textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:gravity="center_horizontal"
+                    app:layout_constraintBottom_toBottomOf="@id/day_night_imageView"
+                    android:textSize="10sp"
+                    android:text="@{recordsForHourModel.hour}"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.cardview.widget.CardView>
 
