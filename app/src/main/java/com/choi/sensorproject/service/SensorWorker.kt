@@ -32,7 +32,7 @@ class SensorWorker @AssistedInject constructor(
 )  : CoroutineWorker(context, params), SensorEventListener {
 
     var curXAngle : Float = 0f
-    var curYAngle: Float = 0f
+    var curZAngle : Float = 0f
 
     @SuppressLint("SimpleDateFormat")
     val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -47,7 +47,7 @@ class SensorWorker @AssistedInject constructor(
         withContext(Dispatchers.IO){
             for (i in 1..900){
                 val currentTime : Long = System.currentTimeMillis()
-                insertSensorRecordUseCase(curXAngle, curYAngle, timeFormat.format(currentTime), "")
+                insertSensorRecordUseCase(curXAngle, curZAngle, timeFormat.format(currentTime), "")
                 delay(1000)
             }
         }
@@ -61,7 +61,7 @@ class SensorWorker @AssistedInject constructor(
             val z = event.values[2].toDouble()
             val r = Math.sqrt(x.pow(2) + y.pow(2) + z.pow(2))
             curXAngle = (90 - Math.acos(x / r) * 180 / Math.PI).toFloat()
-            curYAngle = (90 - Math.acos(y / r) * 180 / Math.PI).toFloat()
+            curZAngle = (90 - Math.acos(z / r) * 180 / Math.PI).toFloat()
         }
     }
 

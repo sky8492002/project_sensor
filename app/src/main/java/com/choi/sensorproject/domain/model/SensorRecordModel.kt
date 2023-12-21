@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class SensorRecordModel(
     val xAngle: Float,
-    val yAngle: Float,
+    val zAngle: Float,
     val recordTime: String,
     val runningAppName: String
 )

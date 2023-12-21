@@ -13,7 +13,7 @@ data class SensorRecordEntity (
     @ColumnInfo(name = "x_angle")
     val xAngle: Float,
     @ColumnInfo(name = "y_angle")
-    val yAngle: Float,
+    val zAngle: Float,
     @ColumnInfo(name = "record_time")
     val recordTime: String,
     @ColumnInfo(name = "running_app_name")
