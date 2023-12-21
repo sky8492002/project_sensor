@@ -29,6 +29,7 @@ class CurvedLayoutManager(
         state: RecyclerView.State?
     ): Int {
         horizontalOffset += dx
+        fill(recycler, state)
         return dx
     }
 

@@ -8,7 +8,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.PagerSnapHelper
 import com.choi.sensorproject.ui.recyclerview.CurvedLayoutManager
+import com.choi.sensorproject.ui.recyclerview.FocusedLayoutManager
 import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
 import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,10 +42,18 @@ class ShowRecordFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // recyclerview 스크롤 시 하나의 아이템이 반드시 중앙에 오도록 하는 PagerSnapHelper
+        val snapHelper = PagerSnapHelper()
+        snapHelper.attachToRecyclerView(binding.timeRecyclerView)
+
         val recordsForHourAdapter = RecordsForHourAdapter()
 
+        val focusedLayoutManager = FocusedLayoutManager(requireActivity().baseContext, snapHelper, -200f)
+        focusedLayoutManager.orientation = LinearLayoutManager.HORIZONTAL
+
         binding.timeRecyclerView.adapter = recordsForHourAdapter
-        //binding.timeRecyclerView.layoutManager = CurvedLayoutManager(requireActivity().baseContext, 0, 100f, 90f)
+        //binding.timeRecyclerView.layoutManager = CurvedLayoutManager(requireActivity().baseContext, 0, 90f, 100f)
+        binding.timeRecyclerView.layoutManager = focusedLayoutManager
         binding.showRecordViewModel = showRecordViewModel
 
         viewLifecycleOwner.lifecycleScope.launch {

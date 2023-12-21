@@ -10,7 +10,8 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="90dp"
-        android:layout_height="100dp">
+        android:layout_height="100dp"
+        android:padding="5dp">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/record_for_hour_cardView"

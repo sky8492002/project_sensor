@@ -28,7 +28,8 @@ class ShowRecordViewModel  @Inject constructor(
     val uiState: StateFlow<ShowRecordUIState> = _uiState
 
     fun getRecords() : Flow<PagingData<RecordsForHourModel>> {
-        return Pager(config = PagingConfig(pageSize = 24, enablePlaceholders = false, initialLoadSize = 24 ), pagingSourceFactory = {
+        // pageSize와 initialLoadSize는 CustomPagingSource에서 사용되지 않음 (개수 기준이 아닌 날짜 기준으로 요청하기 때문)
+        return Pager(config = PagingConfig(pageSize = 1, enablePlaceholders = false, initialLoadSize = 1 ), pagingSourceFactory = {
             customPagingSource
         }).flow
     }
