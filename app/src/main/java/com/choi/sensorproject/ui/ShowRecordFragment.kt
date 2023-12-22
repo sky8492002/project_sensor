@@ -85,7 +85,7 @@ class ShowRecordFragment: Fragment() {
                     lastJob = viewLifecycleOwner.lifecycleScope.launch {
                         for(record in centerModel.records){
                             // 실제 각도와 화면이 일치하게 조정
-                            binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle * 2)
+                            binding.surfaceView.changeAngle(50f, record.xrAngle, record.zrAngle * 1.8f)
                             binding.angleTextView.text = record.recordTime
                             delay(100)
                         }
