@@ -5,8 +5,8 @@ import com.choi.sensorproject.room.entity.SensorRecordEntity
 
 fun SensorRecordEntity.toModel(): SensorRecordModel {
     return SensorRecordModel(
-        xAngle = xAngle,
-        zAngle = zAngle,
+        xrAngle = xrAngle,
+        zrAngle = zrAngle,
         recordTime = recordTime,
         runningAppName = runningAppName
     )

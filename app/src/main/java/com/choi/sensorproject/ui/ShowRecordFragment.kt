@@ -85,7 +85,7 @@ class ShowRecordFragment: Fragment() {
                     lastJob = viewLifecycleOwner.lifecycleScope.launch {
                         for(record in centerModel.records){
                             // 실제 각도와 화면이 일치하게 조정
-                            binding.surfaceView.changeAngle(50f, -record.zAngle, record.xAngle * 2)
+                            binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle * 2)
                             binding.angleTextView.text = record.recordTime
                             delay(100)
                         }
@@ -112,11 +112,11 @@ class ShowRecordFragment: Fragment() {
 //        testAngleQueue.addLast(Triple(50f, 50f, -60f))
 //        testAngleQueue.addLast(Triple(50f, 50f, -80f))
 //        testAngleQueue.addLast(Triple(50f, 50f, -100f))
-//        testAngleQueue.addLast(Triple(50f, 50f, -120f))
-//        testAngleQueue.addLast(Triple(50f, 50f, -140f))
-//        testAngleQueue.addLast(Triple(50f, 50f, -160f))
-//        testAngleQueue.addLast(Triple(50f, 50f, -180f))
-//        testAngleQueue.addLast(Triple(50f, 50f, -200f))
+//        testAngleQueue.addLast(Triple(50f, 50f,  20f))
+//        testAngleQueue.addLast(Triple(50f, 50f,  40f))
+//        testAngleQueue.addLast(Triple(50f, 50f,  60f))
+//        testAngleQueue.addLast(Triple(50f, 50f,  80f))
+//        testAngleQueue.addLast(Triple(50f, 50f,  100f))
 //
 //        testAngleQueue.addLast(Triple(50f, -30f, -20f))
 //        testAngleQueue.addLast(Triple(50f, -30f, -40f))

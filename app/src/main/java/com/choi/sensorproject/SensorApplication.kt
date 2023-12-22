@@ -18,6 +18,7 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class SensorApplication: Application(), Configuration.Provider {
+
     override fun onCreate() {
         super.onCreate()
 
