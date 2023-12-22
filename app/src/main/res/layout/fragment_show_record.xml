@@ -31,6 +31,14 @@
             app:show_record_ui_state="@{showRecordViewModel.uiState}"/>
 
         <TextView
+            android:id="@+id/time_textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="20sp"
+            app:layout_constraintBottom_toTopOf= "@+id/angle_textView"/>
+
+        <TextView
             android:id="@+id/angle_textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
