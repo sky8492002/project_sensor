@@ -77,7 +77,6 @@ class ShowRecordFragment: Fragment() {
                     lastJob?.let{ job ->
                         if(job.isActive) {
                             job.cancel()
-                            binding.surfaceView.changeAngle(50f, 0f, 0f)
                         }
                     }
 

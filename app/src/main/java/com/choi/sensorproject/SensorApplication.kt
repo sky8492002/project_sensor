@@ -34,7 +34,7 @@ class SensorApplication: Application(), Configuration.Provider {
 
     // 앱 실행 시 WorkManager 시작
     private fun initWorkManager() {
-        val workRequest = PeriodicWorkRequestBuilder<SensorWorker>(15, TimeUnit.MINUTES).build()
+        val workRequest = PeriodicWorkRequestBuilder<SensorWorker>(1, TimeUnit.HOURS).build()
         val workManager = WorkManager.getInstance(applicationContext)
         workManager.enqueueUniquePeriodicWork(
             "SensorWorker",

@@ -2,9 +2,13 @@ package com.choi.sensorproject.service
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.ActivityManager
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.Sensor
@@ -12,6 +16,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
@@ -30,6 +35,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import kotlin.math.pow
 
 
@@ -39,23 +45,33 @@ import kotlin.math.pow
 
 @HiltWorker
 class SensorWorker @AssistedInject constructor(
-    @Assisted context: Context,
+    @Assisted private val context: Context,
     @Assisted params: WorkerParameters,
     private var insertSensorRecordUseCase: InsertSensorRecordUseCase
 )  : CoroutineWorker(context, params), SensorEventListener {
 
     private val NOTIFICATION_ID = 1
 
+    var sensorManager: SensorManager
+    var usageStatsManager: UsageStatsManager
+
     var curXrAngle : Float = 0f
     var curZrAngle : Float = 0f
+    var curAppPackageName: String = "none"
 
     @SuppressLint("SimpleDateFormat")
     val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     init {
-        val sensorManager = ContextCompat.getSystemService(context, SensorManager:: class.java) as SensorManager
+        // 중력 정보를 불러오기 위해 필요
+        sensorManager = ContextCompat.getSystemService(context, SensorManager:: class.java) as SensorManager
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
             SensorManager.SENSOR_DELAY_FASTEST)
+
+        // 실행중인 앱 정보를 불러오기 위해 필요
+        usageStatsManager =
+            context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -63,12 +79,14 @@ class SensorWorker @AssistedInject constructor(
         return try {
             coroutineScope {
                 withContext(Dispatchers.IO){
-                    for (i in 1..900){
+                    updateCurAppPackageName()
+                    for (i in 1..3600){
                         // 포그라운드 서비스에서 작업을 실행
                         // 프로세스를 활성 상태로 유지해야 한다는 신호를 OS에 제공하여 작업이 OS에 의해 중단되는 것을 방지
+                        val currentTimeMillis : Long = System.currentTimeMillis()
+                        updateCurAppPackageName()
+                        insertSensorRecordUseCase(curXrAngle, curZrAngle, timeFormat.format(currentTimeMillis), curAppPackageName)
                         setForeground(getForegroundInfo())
-                        val currentTime : Long = System.currentTimeMillis()
-                        insertSensorRecordUseCase(curXrAngle, curZrAngle, timeFormat.format(currentTime), "")
                         delay(1000)
                     }
                 }
@@ -83,12 +101,12 @@ class SensorWorker @AssistedInject constructor(
     override suspend fun getForegroundInfo(): ForegroundInfo {
 
         val notification = NotificationCompat.Builder(applicationContext, "channel_id")
-            .setContentTitle("title")
-            .setTicker("title")
-            .setContentText("$curXrAngle $curZrAngle")
+            .setContentTitle("sensor_project")
+            .setTicker("sensor_project")
+            .setContentText("$curXrAngle $curZrAngle $curAppPackageName")
             .setSmallIcon(R.drawable.phone)
             .setOngoing(true)
-            .setChannelId(createNotificationChannel("channel_id", "title").id)
+            .setChannelId(createNotificationChannel("channel_id", "sensor_project").id)
             .build()
 
         // 안드로이드 13 이상은 알림 권한 부여 필요
@@ -101,6 +119,7 @@ class SensorWorker @AssistedInject constructor(
             NOTIFICATION_ID, notification
         )
     }
+
     private fun createNotificationChannel(
         channelId: String,
         name: String
@@ -148,6 +167,34 @@ class SensorWorker @AssistedInject constructor(
 //                }
 //            }
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun updateCurAppPackageName(){
+        // 문제점: queryEvents(start, end) 일 때 end-start 시간 후 사용 중인 앱이 바뀌지 없으면 usageEvents가 event를 갖지 않게 됨
+        // 현재로선 예상되는 앱 최대 연속 사용시간 보다 길게 잡아야 함 (1일)
+        val calendar = Calendar.getInstance()
+        val endTime = calendar.timeInMillis
+        calendar.add(Calendar.DATE, -1)
+        val startTime = calendar.timeInMillis
+
+        var cacheAppPackageName = "none"
+
+        val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
+        val curEvent = UsageEvents.Event()
+        var eventCount = 0
+        while (usageEvents.hasNextEvent()) {
+            usageEvents.getNextEvent(curEvent)
+            eventCount +=1
+
+            if(curEvent.getEventType() == UsageEvents.Event.ACTIVITY_RESUMED){
+                cacheAppPackageName = curEvent.packageName
+            }
+        }
+        Log.d("시간 event 체크", timeFormat.format(startTime) + " " + timeFormat.format(endTime) + " " + eventCount)
+        curAppPackageName = cacheAppPackageName
+
+
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
