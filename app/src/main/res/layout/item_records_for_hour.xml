@@ -5,7 +5,7 @@
     <data>
         <variable
             name="recordsForHourModel"
-            type="com.choi.sensorproject.ui.model.RecordsForHourModel" />
+            type="com.choi.sensorproject.ui.model.RecordsForHourUIModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

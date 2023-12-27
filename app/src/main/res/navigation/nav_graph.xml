@@ -6,6 +6,6 @@
 
     <fragment
         android:id="@+id/sensorTestFragment"
-        android:name="com.choi.sensorproject.ui.ShowRecordFragment"
+        android:name="com.choi.sensorproject.ui.showrecord.ShowRecordFragment"
         android:label="SensorTestFragment" />
 </navigation>

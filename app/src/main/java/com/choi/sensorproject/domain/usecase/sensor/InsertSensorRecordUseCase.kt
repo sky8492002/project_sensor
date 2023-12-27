@@ -1,4 +1,4 @@
-package com.choi.sensorproject.domain.usecase
+package com.choi.sensorproject.domain.usecase.sensor
 
 import com.choi.sensorproject.domain.model.SensorRecordModel
 import com.choi.sensorproject.domain.repository.SensorRecordRepository

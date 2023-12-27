@@ -7,7 +7,7 @@
 
         <variable
             name="showRecordViewModel"
-            type="com.choi.sensorproject.ui.ShowRecordViewModel" />
+            type="com.choi.sensorproject.ui.showrecord.ShowRecordViewModel" />
 
     </data>
 

@@ -1,7 +1,7 @@
 package com.choi.sensorproject.di
 
 import com.choi.sensorproject.domain.paging.CustomPagingSource
-import com.choi.sensorproject.domain.usecase.GetSensorRecordsUseCase
+import com.choi.sensorproject.domain.usecase.sensor.GetSensorRecordsUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

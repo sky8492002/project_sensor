@@ -1,14 +1,8 @@
 package com.choi.sensorproject.ui.databinding
 
 import androidx.databinding.BindingAdapter
-import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.paging.PagingData
 import androidx.recyclerview.widget.RecyclerView
-import com.choi.sensorproject.ui.ShowRecordUIState
-import com.choi.sensorproject.ui.model.RecordsForHourModel
-import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
-import kotlinx.coroutines.launch
+import com.choi.sensorproject.ui.showrecord.ShowRecordUIState
 
 @BindingAdapter("show_record_ui_state")
 fun RecyclerView.setShowRecordUIState(uiState: ShowRecordUIState) {

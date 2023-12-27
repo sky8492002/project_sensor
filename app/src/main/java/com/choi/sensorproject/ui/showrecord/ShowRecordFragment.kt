@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui
+package com.choi.sensorproject.ui.showrecord
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,9 +14,7 @@ import com.choi.sensorproject.ui.recyclerview.FocusedLayoutManager
 import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
 import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

@@ -1,16 +1,12 @@
 package com.choi.sensorproject.service
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.ActivityManager
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -18,15 +14,13 @@ import android.hardware.SensorManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import com.choi.sensorproject.domain.usecase.InsertSensorRecordUseCase
+import com.choi.sensorproject.domain.usecase.sensor.InsertSensorRecordUseCase
 import com.example.sensorproject.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
