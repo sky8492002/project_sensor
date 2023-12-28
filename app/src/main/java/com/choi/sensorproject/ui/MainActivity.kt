@@ -33,9 +33,14 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
             checkNotificationPermission()
         }
-        else{
-            checkUsageStatsPermission()
-        }
+
+        // 갤러리 접근 권한 체크 필요
+        checkGalleryPermission()
+
+        // 사용정보 접근 권한 체크 필요
+        checkUsageStatsPermission()
+
+
 
         setContentView(R.layout.activity_main)
     }
@@ -45,9 +50,22 @@ class MainActivity : AppCompatActivity() {
         val notificationPermission = Manifest.permission.POST_NOTIFICATIONS
 
         val moveToSettingIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(
-            Uri.parse("package: $packageName"))
+            Uri.parse("package:$packageName"))
 
         checkPermission(notificationPermission,"알림", moveToSettingIntent)
+    }
+
+    private fun checkGalleryPermission(){
+        val galleryPermission = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else{
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        val moveToSettingIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(
+            Uri.parse("package:$packageName"))
+
+        checkPermission(galleryPermission, "갤러리 접근", moveToSettingIntent)
     }
 
     private fun checkUsageStatsPermission(){
@@ -65,9 +83,6 @@ class MainActivity : AppCompatActivity() {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted->
                 if (isGranted){
                     Toast.makeText(this, "$permissionName 권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
-
-                    // 사용정보 접근 권한 체크 필요
-                    checkUsageStatsPermission()
                 }
                 else{
                     Toast.makeText(this, "$permissionName 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
@@ -80,9 +95,6 @@ class MainActivity : AppCompatActivity() {
             // 권한을 이미 허용한 경우
             ContextCompat.checkSelfPermission(applicationContext, permission) == PackageManager.PERMISSION_GRANTED -> {
                 Toast.makeText(this, "$permissionName 권한이 이미 허용되었습니다.", Toast.LENGTH_SHORT).show()
-
-                // 사용정보 접근 권한 체크 필요
-                checkUsageStatsPermission()
             }
             // 사용자가 Dialog로 띄워진 권한 요청을 명시적으로 거부한 적이 있을 경우
             ActivityCompat.shouldShowRequestPermissionRationale(this, permission) -> {

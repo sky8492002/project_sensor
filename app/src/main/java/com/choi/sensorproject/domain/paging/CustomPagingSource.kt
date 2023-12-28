@@ -41,6 +41,8 @@ class CustomPagingSource @Inject constructor(
                 // 해당 날짜에 기록된 데이터를 가져옴 (UseCase에 요청)
                 // LoadResult을 바로 return해야 하기 때문에 flow collect 사용하기 어려움
                 val sensorRecordModelList = getSensorRecordsUseCase(pageDate)
+
+                // 시간 별로 통합하여 분류
                 val recordsForHourUIModelList = sensorRecordModelList.toRecordsForHourUIModels(pageDate)
 
                 // 어제, 내일 날짜 구하기

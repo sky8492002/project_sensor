@@ -5,7 +5,7 @@ import com.choi.sensorproject.domain.model.SensorRecordModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import java.text.SimpleDateFormat
 
-
+// 시간 별로 통합하여 분류
 fun List<SensorRecordModel>.toRecordsForHourUIModels(pageDate: String): List<RecordsForHourUIModel> {
     @SuppressLint("SimpleDateFormat")
     val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")

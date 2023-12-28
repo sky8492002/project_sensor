@@ -18,6 +18,7 @@
         android:padding="20dp">
 
         <Button
+            android:id="@+id/image_test_buton"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             app:layout_constraintBottom_toBottomOf="parent"
