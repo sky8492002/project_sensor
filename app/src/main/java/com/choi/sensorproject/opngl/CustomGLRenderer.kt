@@ -51,10 +51,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height) // 뷰포트를 전체화면으로 맞춤
-
-        // 보는 시점 설정
         aspectRatio = width.toFloat() / height // 가로 세로 비율을 구함
-
         resetAngle()
     }
 
@@ -79,5 +76,9 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         )
         // mvp = p * v * m (곱하는 순서 중요함)
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+    }
+
+    fun changeImage(bitmapImage: Bitmap){
+        mPhone2D.readyToDraw(bitmapImage)
     }
 }

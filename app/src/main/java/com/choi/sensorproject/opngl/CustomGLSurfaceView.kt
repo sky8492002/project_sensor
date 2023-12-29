@@ -2,6 +2,7 @@ package com.choi.sensorproject.opngl
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
@@ -48,6 +49,11 @@ class CustomGLSurfaceView @JvmOverloads constructor(
     fun changeAngle(dx: Float, dy: Float, dz: Float){
         renderer.resetAngle()
         renderer.rotate(dx, dy, dz)
+    }
+
+    // 출력되는 이미지 변경을 위해 사용
+    fun changeImage(bitmapImage: Bitmap){
+        renderer.changeImage(bitmapImage)
     }
 
 }
