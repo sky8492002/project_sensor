@@ -14,6 +14,13 @@
         android:padding="20dp">
 
         <Button
+            android:id="@+id/navigate_button"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            app:layout_constraintBottom_toTopOf="@+id/image_test_buton"
+            android:text="화면 이동"/>
+
+        <Button
             android:id="@+id/image_test_buton"
             android:layout_width="match_parent"
             android:layout_height="50dp"

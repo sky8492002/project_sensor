@@ -109,8 +109,10 @@ class ShowRecordFragment: Fragment() {
                             // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
                             binding.surfaceView.changeImage(getPlayingImage(record.runningAppName))
                             binding.timeTextView.text = record.recordTime
+//                            binding.angleTextView.text =
+//                                "각도: " + 50f.toString() + ", " + record.zrAngle.toString() + ", " + (record.xrAngle * 2).toString()
                             binding.angleTextView.text =
-                                "각도: " + 50f.toString() + ", " + record.zrAngle.toString() + ", " + (record.xrAngle * 2).toString()
+                                record.runningAppName
                             delay(100)
                         }
                     }
