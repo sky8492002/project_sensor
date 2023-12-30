@@ -1,7 +1,9 @@
 package com.choi.sensorproject.domain.mapper
 
 import android.annotation.SuppressLint
+import com.choi.sensorproject.domain.model.AppInfoModel
 import com.choi.sensorproject.domain.model.SensorRecordModel
+import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import java.text.SimpleDateFormat
 
@@ -27,4 +29,11 @@ fun List<SensorRecordModel>.toRecordsForHourUIModels(pageDate: String): List<Rec
     }
 
     return recordsForHourUIModelList.toList()
+}
+
+fun AppInfoModel.toUiModel(): AppInfoUIModel{
+    return AppInfoUIModel(
+        appName = appName,
+        appPlayingImage = appPlayingImage
+    )
 }

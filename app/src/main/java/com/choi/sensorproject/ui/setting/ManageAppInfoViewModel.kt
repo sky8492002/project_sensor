@@ -9,12 +9,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ManageAppInfoViewModel @Inject constructor(
-    insertAppInfoUseCase: InsertAppInfoUseCase,
-    getAppInfoUseCase: GetAppInfoUseCase
+    private val insertAppInfoUseCase: InsertAppInfoUseCase,
+    private val getAppInfoUseCase: GetAppInfoUseCase
 ) : ViewModel(){
 
-    fun insertAppInfo(appInfo: AppInfoUIModel){
-
+    suspend fun insertAppInfo(appInfoUiModel: AppInfoUIModel){
+        insertAppInfoUseCase.invoke(appInfoUiModel)
     }
 
 }

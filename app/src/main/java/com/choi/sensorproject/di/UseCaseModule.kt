@@ -1,5 +1,6 @@
 package com.choi.sensorproject.di
 
+import com.choi.sensorproject.domain.repository.AppInfoRepository
 import com.choi.sensorproject.domain.repository.SensorRecordRepository
 import com.choi.sensorproject.domain.usecase.appinfo.GetAppInfoUseCase
 import com.choi.sensorproject.domain.usecase.sensor.GetSensorRecordsUseCase
@@ -31,16 +32,16 @@ class UseCaseModule {
     @Provides
     @Singleton
     fun provideInsertAppInfoUseCase(
-
+        appInfoRepository: AppInfoRepository
     ): InsertAppInfoUseCase {
-        return InsertAppInfoUseCase()
+        return InsertAppInfoUseCase(appInfoRepository)
     }
     @Provides
     @Singleton
     fun provideGetAppInfoInfoUseCase(
-
+        appInfoRepository: AppInfoRepository
     ): GetAppInfoUseCase {
-        return GetAppInfoUseCase()
+        return GetAppInfoUseCase(appInfoRepository)
     }
 
 }

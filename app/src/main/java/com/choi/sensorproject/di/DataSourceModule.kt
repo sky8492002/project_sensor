@@ -1,5 +1,7 @@
 package com.choi.sensorproject.di
 
+import com.choi.sensorproject.data.datasource.AppInfoDataSource
+import com.choi.sensorproject.data.datasource.AppInfoDataSourceImpl
 import com.choi.sensorproject.data.datasource.SensorRecordDataSource
 import com.choi.sensorproject.data.datasource.SensorRecordDataSourceImpl
 import com.choi.sensorproject.room.AppDatabase
@@ -18,5 +20,13 @@ class DataSourceModule{
         appDatabase: AppDatabase
     ): SensorRecordDataSource{
         return SensorRecordDataSourceImpl(appDatabase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppInfoDataSource(
+        appDatabase: AppDatabase
+    ): AppInfoDataSource{
+        return AppInfoDataSourceImpl(appDatabase)
     }
 }

@@ -13,9 +13,11 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.example.sensorproject.databinding.FragmentSettingBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SettingFragment: Fragment() {
@@ -43,7 +45,9 @@ class SettingFragment: Fragment() {
         binding.imageTestButon.setOnClickListener(){
             getImageFromGallery()?.let{ imageBitmap ->
                 val sampleAppInfo = AppInfoUIModel("appName", imageBitmap)
-                manageAppInfoViewModel.insertAppInfo(sampleAppInfo)
+                viewLifecycleOwner.lifecycleScope.launch{
+                    manageAppInfoViewModel.insertAppInfo(sampleAppInfo)
+                }
             }
 
         }
