@@ -14,7 +14,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.choi.sensorproject.ui.model.AppInfoUIModel
+import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
+import com.example.sensorproject.R
 import com.example.sensorproject.databinding.FragmentSettingBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -72,12 +75,13 @@ class SettingFragment: Fragment() {
         binding.imageTestButon.setOnClickListener(){
             getImageFromGallery()
             curBitmap?.let{
-                val sampleAppInfo = AppInfoUIModel("appName", it)
+                val sampleAppInfo = AppInfoUIModel("com.sec.android.app.launcher", it)
                 viewLifecycleOwner.lifecycleScope.launch{
                     manageAppInfoViewModel.insertAppInfo(sampleAppInfo)
                 }
             }
             curBitmap = null
+            findNavController().navigate(R.id.action_settingFragment_to_sensorRecordFragment)
         }
     }
 

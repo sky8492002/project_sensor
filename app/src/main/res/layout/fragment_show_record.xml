@@ -6,8 +6,8 @@
     <data>
 
         <variable
-            name="showRecordViewModel"
-            type="com.choi.sensorproject.ui.showrecord.ShowRecordViewModel" />
+            name="manageSensorRecordViewModel"
+            type="com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel" />
 
     </data>
 
@@ -27,8 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             app:layout_constraintTop_toBottomOf="@+id/surfaceView"
-            android:orientation="horizontal"
-            app:show_record_ui_state="@{showRecordViewModel.uiState}"/>
+            android:orientation="horizontal"/>
 
         <TextView
             android:id="@+id/time_textView"

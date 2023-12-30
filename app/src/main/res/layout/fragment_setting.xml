@@ -5,10 +5,6 @@
 
     <data>
 
-        <variable
-            name="showRecordViewModel"
-            type="com.choi.sensorproject.ui.showrecord.ShowRecordViewModel" />
-
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -27,6 +27,8 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
 
     private var aspectRatio: Float = 0f
 
+    private var appPlayingImage: Bitmap? = null
+
     init{
         Matrix.setIdentityM(projectionMatrix, 0)
         Matrix.setIdentityM(viewMatrix, 0)
@@ -39,13 +41,20 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthFunc(GLES20.GL_LEQUAL)
         mPhone2D = Phone2D()
-        val bitmapImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.phone)
-        mPhone2D.readyToDraw(bitmapImage)
+        val basePhoneImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.phone)
+        mPhone2D.readyToDraw(basePhoneImage)
     }
 
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT) // 없으면 움직일 때마다 잔상 남음
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
+        if(appPlayingImage != null){
+            mPhone2D.changeImage(appPlayingImage!!)
+        }
+        else{
+            val basePhoneImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.phone)
+            mPhone2D.changeImage(basePhoneImage)
+        }
         mPhone2D.draw(vPMatrix)
     }
 
@@ -78,7 +87,8 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
     }
 
-    fun changeImage(bitmapImage: Bitmap){
-        mPhone2D.readyToDraw(bitmapImage)
+    // 이 함수로 appPlayingImage를 변경해 두면 실시간으로 작동하는 onDrawFrame에서 적용할 수 있음
+    fun changeImage(bitmapImage: Bitmap?){
+       appPlayingImage = bitmapImage
     }
 }

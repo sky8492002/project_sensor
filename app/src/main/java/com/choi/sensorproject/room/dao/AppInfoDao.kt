@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.choi.sensorproject.room.entity.AppInfoEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AppInfoDao {
@@ -15,4 +16,7 @@ interface AppInfoDao {
 
     @Query("SELECT * FROM app_info WHERE app_name =:appName")
     fun getAppInfo(appName: String) : AppInfoEntity
+
+    @Query("SELECT * FROM app_info")
+    fun getAllAppInfos() : Flow<List<AppInfoEntity>>
 }

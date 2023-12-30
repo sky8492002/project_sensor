@@ -1,10 +1,14 @@
 package com.choi.sensorproject.domain.mapper
 
 import android.annotation.SuppressLint
+import com.choi.sensorproject.data.mapper.toModel
+import com.choi.sensorproject.data.mapper.toModelsFlow
 import com.choi.sensorproject.domain.model.AppInfoModel
 import com.choi.sensorproject.domain.model.SensorRecordModel
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 
 // 시간 별로 통합하여 분류
@@ -36,4 +40,14 @@ fun AppInfoModel.toUiModel(): AppInfoUIModel{
         appName = appName,
         appPlayingImage = appPlayingImage
     )
+}
+
+fun Flow<List<AppInfoModel>>.toUiModelsFlow(): Flow<List<AppInfoUIModel>> {
+    return this.map{
+        val appInfoUIModels: MutableList<AppInfoUIModel> = mutableListOf()
+        for(model in it){
+            appInfoUIModels.add(model.toUiModel())
+        }
+        appInfoUIModels.toList()
+    }
 }

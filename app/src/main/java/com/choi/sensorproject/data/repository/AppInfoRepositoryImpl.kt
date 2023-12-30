@@ -3,6 +3,7 @@ package com.choi.sensorproject.data.repository
 import com.choi.sensorproject.data.datasource.AppInfoDataSource
 import com.choi.sensorproject.domain.model.AppInfoModel
 import com.choi.sensorproject.domain.repository.AppInfoRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class AppInfoRepositoryImpl @Inject constructor(
@@ -14,5 +15,9 @@ class AppInfoRepositoryImpl @Inject constructor(
 
     override suspend fun getAppInfo(appName: String): AppInfoModel {
         return appInfoDataSource.getAppInfo(appName)
+    }
+
+    override suspend fun getAllAppInfos(): Flow<List<AppInfoModel>> {
+        return appInfoDataSource.getAllAppInfos()
     }
 }

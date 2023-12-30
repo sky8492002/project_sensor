@@ -52,7 +52,7 @@ class CustomGLSurfaceView @JvmOverloads constructor(
     }
 
     // 출력되는 이미지 변경을 위해 사용
-    fun changeImage(bitmapImage: Bitmap){
+    fun changeImage(bitmapImage: Bitmap?){
         renderer.changeImage(bitmapImage)
     }
 

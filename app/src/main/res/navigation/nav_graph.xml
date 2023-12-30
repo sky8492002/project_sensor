@@ -11,5 +11,9 @@
     <fragment
         android:id="@+id/settingFragment"
         android:name="com.choi.sensorproject.ui.setting.SettingFragment"
-        android:label="SettingFragment" />
+        android:label="SettingFragment" >
+        <action
+            android:id="@+id/action_settingFragment_to_sensorRecordFragment"
+            app:destination="@id/sensorRecordFragment" />
+    </fragment>
 </navigation>
