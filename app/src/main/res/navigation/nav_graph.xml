@@ -2,10 +2,10 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/sensorTestFragment">
+    app:startDestination="@id/settingFragment">
 
     <fragment
-        android:id="@+id/sensorTestFragment"
+        android:id="@+id/sensorRecordFragment"
         android:name="com.choi.sensorproject.ui.showrecord.ShowRecordFragment"
         android:label="SensorTestFragment" />
     <fragment

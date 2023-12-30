@@ -12,7 +12,7 @@ import com.choi.sensorproject.room.entity.SensorRecordEntity
 @Database(
     entities = [
         SensorRecordEntity:: class,
-        AppInfoDao:: class
+        AppInfoEntity:: class
     ],
     version = 1
 )
