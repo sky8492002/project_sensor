@@ -4,21 +4,19 @@ import android.annotation.SuppressLint
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.choi.sensorproject.domain.mapper.toRecordsForHourUIModels
-import com.choi.sensorproject.domain.model.SensorRecordModel
-import com.choi.sensorproject.domain.usecase.sensor.GetSensorRecordsUseCase
+import com.choi.sensorproject.domain.repository.SensorRecordRepository
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import javax.inject.Inject
 
 // 페이지의 끝에 도달할 때 다음 날짜의 데이터를 room에서 가져오도록 하는 커스텀 PagingSource
-class CustomPagingSource @Inject constructor(
-    private val getSensorRecordsUseCase: GetSensorRecordsUseCase
+class SensorRecordPagingSource (
+    private val sensorRecordRepository: SensorRecordRepository
 ) : PagingSource<String, RecordsForHourUIModel>() {
 
-    lateinit var INIT_PAGE_DATE: String
+    var INIT_PAGE_DATE: String
     @SuppressLint("SimpleDateFormat")
     val dayFormat = SimpleDateFormat("yyyy-MM-dd")
     private val initTime : Long = System.currentTimeMillis()
@@ -27,8 +25,10 @@ class CustomPagingSource @Inject constructor(
     init{
         INIT_PAGE_DATE = dayFormat.format(initTime)
     }
-    override fun getRefreshKey(state: PagingState<String, RecordsForHourUIModel>): String? {
-        return null
+
+    // 연결된 PagingAdapter가 refresh 함수 호출 시 실행됨
+    override fun getRefreshKey(state: PagingState<String, RecordsForHourUIModel>): String {
+        return INIT_PAGE_DATE
     }
 
     //  recyclerview를 왼쪽으로 이동하면 하루 전 날짜의 데이터를, 오른쪽으로 이동하면 하루 뒤 날짜의 데이터를 가져오도록 설정
@@ -40,7 +40,7 @@ class CustomPagingSource @Inject constructor(
 
                 // 해당 날짜에 기록된 데이터를 가져옴 (UseCase에 요청)
                 // LoadResult을 바로 return해야 하기 때문에 flow collect 사용하기 어려움
-                val sensorRecordModelList = getSensorRecordsUseCase(pageDate)
+                val sensorRecordModelList = sensorRecordRepository.getSensorRecords(pageDate)
 
                 // 시간 별로 통합하여 분류
                 val recordsForHourUIModelList = sensorRecordModelList.toRecordsForHourUIModels(pageDate)

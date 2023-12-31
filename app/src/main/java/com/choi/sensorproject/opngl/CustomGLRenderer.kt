@@ -1,6 +1,5 @@
 package com.choi.sensorproject.opngl
 
-import android.R.attr.bitmap
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -88,7 +87,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     // 이 함수로 appPlayingImage를 변경해 두면 실시간으로 작동하는 onDrawFrame에서 적용할 수 있음
-    fun changeImage(bitmapImage: Bitmap?){
-       appPlayingImage = bitmapImage
+    fun changeAppPlayingImage(appPlayingImage: Bitmap?){
+       this.appPlayingImage = appPlayingImage
     }
 }

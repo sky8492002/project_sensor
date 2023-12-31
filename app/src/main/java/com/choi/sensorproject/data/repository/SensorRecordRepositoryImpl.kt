@@ -1,10 +1,9 @@
 package com.choi.sensorproject.data.repository
 
-import android.util.Log
 import com.choi.sensorproject.data.datasource.SensorRecordDataSource
 import com.choi.sensorproject.domain.model.SensorRecordModel
+import com.choi.sensorproject.domain.paging.SensorRecordPagingSource
 import com.choi.sensorproject.domain.repository.SensorRecordRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class SensorRecordRepositoryImpl @Inject constructor(
@@ -16,5 +15,9 @@ class SensorRecordRepositoryImpl @Inject constructor(
 
     override suspend fun getSensorRecords(pageDate: String): List<SensorRecordModel> {
         return dataSource.getSensorRecords(pageDate)
+    }
+
+    override fun getSensorRecordPagingSource(): SensorRecordPagingSource {
+        return SensorRecordPagingSource(this)
     }
 }

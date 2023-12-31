@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -83,6 +84,10 @@ class ShowRecordFragment: Fragment() {
             }
         }
 
+        binding.refreshButton.setOnClickListener(){
+            recordsForHourAdapter.refresh()
+        }
+
         var lastJob: Job? = null
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
@@ -107,12 +112,11 @@ class ShowRecordFragment: Fragment() {
                             // 실제 각도와 화면이 일치하게 조정
                             binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle*2)
                             // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
-                            binding.surfaceView.changeImage(getPlayingImage(record.runningAppName))
+                            binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
                             binding.timeTextView.text = record.recordTime
 //                            binding.angleTextView.text =
 //                                "각도: " + 50f.toString() + ", " + record.zrAngle.toString() + ", " + (record.xrAngle * 2).toString()
-                            binding.angleTextView.text =
-                                record.runningAppName
+                            binding.angleTextView.text = record.runningAppName
                             delay(100)
                         }
                     }
