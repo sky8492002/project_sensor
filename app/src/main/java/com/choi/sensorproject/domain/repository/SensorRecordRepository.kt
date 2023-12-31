@@ -1,7 +1,7 @@
 package com.choi.sensorproject.domain.repository
 
 import com.choi.sensorproject.domain.model.SensorRecordModel
-import com.choi.sensorproject.domain.paging.SensorRecordPagingSource
+import com.choi.sensorproject.data.paging.SensorRecordPagingSource
 
 interface SensorRecordRepository {
 

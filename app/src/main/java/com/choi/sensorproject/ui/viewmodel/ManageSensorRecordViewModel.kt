@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.choi.sensorproject.domain.paging.SensorRecordPagingSource
+import com.choi.sensorproject.data.paging.SensorRecordPagingSource
 import com.choi.sensorproject.domain.usecase.sensor.GetSensorRecordsUseCase
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel

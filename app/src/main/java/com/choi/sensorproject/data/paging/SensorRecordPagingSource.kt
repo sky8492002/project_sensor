@@ -1,4 +1,4 @@
-package com.choi.sensorproject.domain.paging
+package com.choi.sensorproject.data.paging
 
 import android.annotation.SuppressLint
 import androidx.paging.PagingSource
@@ -27,8 +27,26 @@ class SensorRecordPagingSource (
     }
 
     // 연결된 PagingAdapter가 refresh 함수 호출 시 실행됨
-    override fun getRefreshKey(state: PagingState<String, RecordsForHourUIModel>): String {
-        return INIT_PAGE_DATE
+    override fun getRefreshKey(state: PagingState<String, RecordsForHourUIModel>): String? {
+        // refresh 하기 직전에 보던 날짜로 위치 잡음
+        state.anchorPosition?.let { anchorPosition ->
+            val calendar = Calendar.getInstance()
+            state.closestPageToPosition(anchorPosition)?.nextKey?.let{ key ->
+                dayFormat.parse(key)?.let{ date ->
+                    calendar.time = date
+                    calendar.add(Calendar.DATE, -1)
+                    return dayFormat.format(calendar.time)
+                }
+            }
+            state.closestPageToPosition(anchorPosition)?.prevKey?.let{ key ->
+                dayFormat.parse(key)?.let{ date ->
+                    calendar.time = date
+                    calendar.add(Calendar.DATE, 1)
+                    return dayFormat.format(calendar.time)
+                }
+            }
+        }
+        return null
     }
 
     //  recyclerview를 왼쪽으로 이동하면 하루 전 날짜의 데이터를, 오른쪽으로 이동하면 하루 뒤 날짜의 데이터를 가져오도록 설정

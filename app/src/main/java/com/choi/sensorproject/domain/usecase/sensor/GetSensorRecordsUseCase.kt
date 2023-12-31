@@ -1,7 +1,7 @@
 package com.choi.sensorproject.domain.usecase.sensor
 
 import com.choi.sensorproject.domain.model.SensorRecordModel
-import com.choi.sensorproject.domain.paging.SensorRecordPagingSource
+import com.choi.sensorproject.data.paging.SensorRecordPagingSource
 import com.choi.sensorproject.domain.repository.SensorRecordRepository
 import javax.inject.Inject
 
