@@ -13,7 +13,7 @@ class AppInfoRepositoryImpl @Inject constructor(
         appInfoDataSource.insertAppInfo(appInfoModel)
     }
 
-    override suspend fun getAppInfo(appName: String): AppInfoModel {
+    override suspend fun getAppInfo(appName: String): List<AppInfoModel> {
         return appInfoDataSource.getAppInfo(appName)
     }
 

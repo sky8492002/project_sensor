@@ -7,7 +7,7 @@ interface AppInfoRepository {
 
     suspend fun insertAppInfo(appInfoModel: AppInfoModel)
 
-    suspend fun getAppInfo(appName: String): AppInfoModel
+    suspend fun getAppInfo(appName: String): List<AppInfoModel>
 
     suspend fun getAllAppInfos(): Flow<List<AppInfoModel>>
 }

@@ -10,6 +10,8 @@ data class AppInfoEntity (
     @PrimaryKey
     @ColumnInfo(name = "app_name")
     val appName: String,
+    @ColumnInfo(name = "app_icon")
+    val appIcon: Bitmap?,
     @ColumnInfo(name = "app_playing_image")
-    val appPlayingImage: Bitmap
+    val appPlayingImage: Bitmap?
 )

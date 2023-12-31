@@ -6,6 +6,7 @@ import com.choi.sensorproject.ui.model.AppInfoUIModel
 fun AppInfoUIModel.toModel():AppInfoModel{
     return AppInfoModel(
         appName = appName,
+        appIcon = appIcon,
         appPlayingImage = appPlayingImage
     )
 }

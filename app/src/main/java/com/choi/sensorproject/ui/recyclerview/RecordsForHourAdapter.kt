@@ -36,7 +36,7 @@ class RecordsForHourAdapter(): PagingDataAdapter<RecordsForHourUIModel, RecordsF
         val binding: ItemRecordsForHourBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun setItem(item: RecordsForHourUIModel?) {
-            binding.recordsForHourModel = item
+            binding.recordsForHourUIModel = item
         }
     }
 

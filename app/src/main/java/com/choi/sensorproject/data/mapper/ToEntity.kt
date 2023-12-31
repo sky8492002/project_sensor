@@ -17,6 +17,7 @@ fun SensorRecordModel.toEntity(): SensorRecordEntity{
 fun AppInfoModel.toEntity(): AppInfoEntity{
     return AppInfoEntity(
         appName = appName,
+        appIcon = appIcon,
         appPlayingImage = appPlayingImage
     )
 }

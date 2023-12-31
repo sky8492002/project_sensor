@@ -1,9 +1,13 @@
 package com.choi.sensorproject.ui.setting
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -11,11 +15,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.choi.sensorproject.ui.model.AppInfoUIModel
+import com.choi.sensorproject.ui.recyclerview.AppInfoAdapter
+import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.example.sensorproject.R
 import com.example.sensorproject.databinding.FragmentSettingBinding
@@ -24,7 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class SettingFragment: Fragment() {
+class SettingFragment: Fragment(), SettingClickHandler {
 
     private var _binding: FragmentSettingBinding? = null
 
@@ -32,6 +40,8 @@ class SettingFragment: Fragment() {
         get() = checkNotNull(_binding) { "binding was accessed outside of view lifecycle" }
 
     private val manageAppInfoViewModel: ManageAppInfoViewModel by viewModels()
+
+    private var curAppInfoUIModel: AppInfoUIModel? = null
 
     // registerForActivityResult는 Fragment의 전역 부분에 선언되어야 한다. (Activity가 Create 될 때 Callback이 정해져야 하기 때문)
 
@@ -55,9 +65,12 @@ class SettingFragment: Fragment() {
                     )
                 }
 
-                val sampleAppInfo = AppInfoUIModel("com.sec.android.app.launcher", bitmapImage)
-                viewLifecycleOwner.lifecycleScope.launch(){
-                    manageAppInfoViewModel.insertAppInfo(sampleAppInfo)
+                curAppInfoUIModel?.let{
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO){
+                        val updatedAppInfoUIModel = AppInfoUIModel(it.appName, it.appIcon, bitmapImage)
+                        manageAppInfoViewModel.insertAppInfo(updatedAppInfoUIModel)
+                        curAppInfoUIModel = updatedAppInfoUIModel
+                    }
                 }
             }
         }
@@ -75,6 +88,29 @@ class SettingFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val installedAppInfos = getInstalledApps(requireContext())
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            for (appInfo in installedAppInfos) {
+                val packageName = appInfo.packageName
+                val icon = appInfo.loadIcon(requireContext().packageManager).toBitmap()
+                val appInfoUIModel = AppInfoUIModel(packageName, icon, null)
+                manageAppInfoViewModel.insertAppInfo(appInfoUIModel)
+            }
+        }
+
+        val appInfoAdapter = AppInfoAdapter(this)
+        binding.appInfoRecyclerView.adapter = appInfoAdapter
+        binding.appInfoRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.manageAppInfoViewModel = manageAppInfoViewModel
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            manageAppInfoViewModel.uiState.collect() {
+                if(it is AppInfoUIState.Success){
+                    appInfoAdapter.submitList(it.appInfos)
+                }
+            }
+        }
+
 
         binding.imageTestButon.setOnClickListener(){
             getImageFromGallery()
@@ -89,5 +125,36 @@ class SettingFragment: Fragment() {
         intent.type = "image/*"
         intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NO_HISTORY
         galleryResultLauncher.launch(intent)
+    }
+
+    // 설치된 앱 불러오기
+    @SuppressLint("QueryPermissionsNeeded")
+    private fun getInstalledApps(context: Context): List<ApplicationInfo>{
+        val packageManager = context.packageManager
+        val applications: List<ApplicationInfo> = packageManager.getInstalledApplications(0)
+
+        val notSystemApps = mutableListOf<ApplicationInfo>()
+
+        for (app in applications){
+            if((app.flags and ApplicationInfo.FLAG_SYSTEM) == 0){
+                notSystemApps.add(app)
+            }
+            else if((app.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0){
+                notSystemApps.add(app)
+            }
+            else if(app.packageName == "com.google.android.youtube"){
+                notSystemApps.add(app)
+            }
+            else if(app.packageName == "com.android.chrome"){
+                notSystemApps.add(app)
+            }
+        }
+
+        return notSystemApps
+    }
+
+    override fun setPlayingImageFromGalley(appInfoUIModel: AppInfoUIModel) {
+        curAppInfoUIModel = appInfoUIModel
+        getImageFromGallery()
     }
 }

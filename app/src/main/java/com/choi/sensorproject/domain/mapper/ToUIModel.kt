@@ -27,8 +27,19 @@ fun RecordsForHourModel.toUIModel(): RecordsForHourUIModel{
 fun AppInfoModel.toUIModel(): AppInfoUIModel{
     return AppInfoUIModel(
         appName = appName,
+        appIcon = appIcon,
         appPlayingImage = appPlayingImage
     )
+}
+
+fun List<AppInfoModel>.toUIModels(): List<AppInfoUIModel> {
+    return this.map{
+        AppInfoUIModel(
+            appName = it.appName,
+            appIcon = it.appIcon,
+            appPlayingImage = it.appPlayingImage
+        )
+    }
 }
 
 fun Flow<List<AppInfoModel>>.toUIModelsFlow(): Flow<List<AppInfoUIModel>> {

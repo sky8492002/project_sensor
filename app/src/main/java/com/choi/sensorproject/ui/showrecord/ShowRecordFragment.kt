@@ -21,6 +21,7 @@ import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
 import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -67,7 +68,7 @@ class ShowRecordFragment: Fragment() {
         binding.timeRecyclerView.layoutManager = focusedLayoutManager
         binding.manageSensorRecordViewModel = manageSensorRecordViewModel
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             manageSensorRecordViewModel.uiState.collect(){ uiState ->
                 if (uiState is SensorRecordUIState.Success) {
                     recordsForHourAdapter.submitData(uiState.records)
@@ -78,10 +79,10 @@ class ShowRecordFragment: Fragment() {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             manageAppInfoViewModel.uiState.collect(){ uiState ->
                 if (uiState is AppInfoUIState.Success) {
-                    allAppInfos = uiState.appInfoList
+                    allAppInfos = uiState.appInfos
                 }
                 else{
                     requireActivity().finish()
@@ -121,6 +122,7 @@ class ShowRecordFragment: Fragment() {
                     }
 
                     // 새로운 coroutine job launch
+                    // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
                     curJob = viewLifecycleOwner.lifecycleScope.launch {
                         for(record in centerModel.records){
                             // 실제 각도와 화면이 일치하게 조정

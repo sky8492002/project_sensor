@@ -46,8 +46,19 @@ fun List<SensorRecordModel>.toRecordsForHourModels(pageDate: String): List<Recor
 fun AppInfoEntity.toModel(): AppInfoModel{
     return AppInfoModel(
         appName = appName,
+        appIcon = appIcon,
         appPlayingImage = appPlayingImage
     )
+}
+
+fun List<AppInfoEntity>.toModels(): List<AppInfoModel>{
+    return this.map{
+        AppInfoModel(
+            appName = it.appName,
+            appIcon = it.appIcon,
+            appPlayingImage = it.appPlayingImage
+        )
+    }
 }
 
 fun Flow<List<AppInfoEntity>>.toModelsFlow(): Flow<List<AppInfoModel>>{

@@ -15,7 +15,7 @@ interface AppInfoDao {
     )
 
     @Query("SELECT * FROM app_info WHERE app_name =:appName")
-    fun getAppInfo(appName: String) : AppInfoEntity
+    fun getAppInfo(appName: String) : List<AppInfoEntity>
 
     @Query("SELECT * FROM app_info")
     fun getAllAppInfos() : Flow<List<AppInfoEntity>>

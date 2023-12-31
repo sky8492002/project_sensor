@@ -27,17 +27,21 @@ class ManageAppInfoViewModel @Inject constructor(
 
 
     suspend fun insertAppInfo(appInfoUiModel: AppInfoUIModel){
-        insertAppInfoUseCase(appInfoUiModel)
+        val appInfos = getAppInfoUseCase.getAppInfo(appInfoUiModel.appName)
+        if(appInfos.size == 1){
+            // 데이터가 이미 있는 앱은 기본값으로 업데이트 하지 않음
+            if(appInfoUiModel.appPlayingImage != null){
+                insertAppInfoUseCase(appInfoUiModel)
+            }
+        }
+        else{
+            insertAppInfoUseCase(appInfoUiModel)
+        }
     }
-
-    private suspend fun getAllAppInfos(): Flow<List<AppInfoUIModel>> {
-        return getAppInfoUseCase.getAllAppInfos()
-    }
-
     init{
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                getAllAppInfos().collectLatest {
+                getAppInfoUseCase.getAllAppInfos().collectLatest {
                     _uiState.value = AppInfoUIState.Success(it)
                 }
             }
@@ -50,7 +54,8 @@ class ManageAppInfoViewModel @Inject constructor(
 }
 
 sealed class AppInfoUIState {
-    data class Success(val appInfoList: List<AppInfoUIModel>): AppInfoUIState()
+
+    data class Success(val appInfos: List<AppInfoUIModel>): AppInfoUIState()
 
     data class Fail(val error: Exception) : AppInfoUIState()
 }
