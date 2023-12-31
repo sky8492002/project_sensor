@@ -88,6 +88,16 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
 
     // 이 함수로 appPlayingImage를 변경해 두면 실시간으로 작동하는 onDrawFrame에서 적용할 수 있음
     fun changeAppPlayingImage(appPlayingImage: Bitmap?){
+        appPlayingImage?.let{
+            // 가로가 세로보다 길 경우 90도 회전하여 출력
+            if(it.width > it.height){
+                val matrix = android.graphics.Matrix()
+                matrix.setRotate(90f)
+                val rotatedAppPlayingImage = Bitmap.createBitmap(it, 0, 0, it.width, it.height, matrix, true)
+                this.appPlayingImage = rotatedAppPlayingImage
+                return
+            }
+        }
        this.appPlayingImage = appPlayingImage
     }
 }
