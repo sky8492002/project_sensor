@@ -1,11 +1,14 @@
 package com.choi.sensorproject.data.mapper
 
+import android.annotation.SuppressLint
 import com.choi.sensorproject.domain.model.AppInfoModel
+import com.choi.sensorproject.domain.model.RecordsForHourModel
 import com.choi.sensorproject.domain.model.SensorRecordModel
 import com.choi.sensorproject.room.entity.AppInfoEntity
 import com.choi.sensorproject.room.entity.SensorRecordEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
 
 fun SensorRecordEntity.toModel(): SensorRecordModel {
     return SensorRecordModel(
@@ -14,6 +17,30 @@ fun SensorRecordEntity.toModel(): SensorRecordModel {
         recordTime = recordTime,
         runningAppName = runningAppName
     )
+}
+
+// 시간 별로 통합하여 분류
+fun List<SensorRecordModel>.toRecordsForHourModels(pageDate: String): List<RecordsForHourModel> {
+    @SuppressLint("SimpleDateFormat")
+    val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    @SuppressLint("SimpleDateFormat")
+    val hourFormat = SimpleDateFormat("HH")
+
+    val recordsForHourModels: MutableList<RecordsForHourModel> = mutableListOf()
+    for (hour in 0 until 24) {
+        val emptyRecords: MutableList<SensorRecordModel> = mutableListOf()
+        recordsForHourModels.add(RecordsForHourModel(pageDate, hour.toString().padStart(2, '0'), emptyRecords))
+    }
+
+    // SensorRecordModel list의 요소를 시간 별로 통합하여 RecordsForHourModel list로 변환
+    for (sensorRecordModel in this) {
+        timeFormat.parse(sensorRecordModel.recordTime)?.let {
+            val hour = hourFormat.format(it).toInt()
+            recordsForHourModels[hour].records.add(sensorRecordModel)
+        }
+    }
+
+    return recordsForHourModels.toList()
 }
 
 fun AppInfoEntity.toModel(): AppInfoModel{

@@ -3,9 +3,9 @@ package com.choi.sensorproject.data.paging
 import android.annotation.SuppressLint
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.choi.sensorproject.domain.mapper.toRecordsForHourUIModels
+import com.choi.sensorproject.data.mapper.toRecordsForHourModels
+import com.choi.sensorproject.domain.model.RecordsForHourModel
 import com.choi.sensorproject.domain.repository.SensorRecordRepository
-import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -14,7 +14,7 @@ import java.util.Calendar
 // 페이지의 끝에 도달할 때 다음 날짜의 데이터를 room에서 가져오도록 하는 커스텀 PagingSource
 class SensorRecordPagingSource (
     private val sensorRecordRepository: SensorRecordRepository
-) : PagingSource<String, RecordsForHourUIModel>() {
+) : PagingSource<String, RecordsForHourModel>() {
 
     var INIT_PAGE_DATE: String
     @SuppressLint("SimpleDateFormat")
@@ -27,7 +27,7 @@ class SensorRecordPagingSource (
     }
 
     // 연결된 PagingAdapter가 refresh 함수 호출 시 실행됨
-    override fun getRefreshKey(state: PagingState<String, RecordsForHourUIModel>): String? {
+    override fun getRefreshKey(state: PagingState<String, RecordsForHourModel>): String? {
         // refresh 하기 직전에 보던 날짜로 위치 잡음
         state.anchorPosition?.let { anchorPosition ->
             val calendar = Calendar.getInstance()
@@ -50,7 +50,7 @@ class SensorRecordPagingSource (
     }
 
     //  recyclerview를 왼쪽으로 이동하면 하루 전 날짜의 데이터를, 오른쪽으로 이동하면 하루 뒤 날짜의 데이터를 가져오도록 설정
-    override suspend fun load(params: LoadParams<String>): LoadResult<String, RecordsForHourUIModel> {
+    override suspend fun load(params: LoadParams<String>): LoadResult<String, RecordsForHourModel> {
         return try {
             withContext(Dispatchers.IO) {
                 val pageDate = (params.key ?: INIT_PAGE_DATE) as String
@@ -61,18 +61,17 @@ class SensorRecordPagingSource (
                 val sensorRecordModelList = sensorRecordRepository.getSensorRecords(pageDate)
 
                 // 시간 별로 통합하여 분류
-                val recordsForHourUIModelList = sensorRecordModelList.toRecordsForHourUIModels(pageDate)
+                val recordsForHourUIModelList = sensorRecordModelList.toRecordsForHourModels(pageDate)
 
                 // 어제, 내일 날짜 구하기
                 val calendar = Calendar.getInstance()
                 if (pageDateTime != null) {
                     calendar.time = pageDateTime
                 }
-
                 calendar.add(Calendar.DATE, -1)
                 val prevKey = dayFormat.format(calendar.time)
                 calendar.add(Calendar.DATE, 2)
-                val nextKey = if(dayFormat.format(System.currentTimeMillis()) == pageDate) null else dayFormat.format(calendar.time)
+                val nextKey = dayFormat.format(calendar.time)
 
                 // 갱신된 LoadResult를 return
                 LoadResult.Page(

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.choi.sensorproject.data.paging.SensorRecordPagingSource
+import com.choi.sensorproject.domain.mapper.toUIModelsPagingData
 import com.choi.sensorproject.domain.usecase.sensor.GetSensorRecordsUseCase
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +35,7 @@ class ManageSensorRecordViewModel  @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 sensorRecordPager.collect {
-                    _uiState.value = SensorRecordUIState.Success(it)
+                    _uiState.value = SensorRecordUIState.Success(it.toUIModelsPagingData())
                 }
             }
             catch (e: Exception){

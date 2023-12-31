@@ -30,6 +30,16 @@ class FocusedLayoutManager(context: Context, private val snapHelper: SnapHelper,
         return super.scrollHorizontallyBy(dx, recycler, state)
     }
 
+    override fun onItemsAdded(recyclerView: RecyclerView, positionStart: Int, itemCount: Int) {
+        super.onItemsAdded(recyclerView, positionStart, itemCount)
+        focusCenterView()
+    }
+
+    override fun onItemsUpdated(recyclerView: RecyclerView, positionStart: Int, itemCount: Int) {
+        super.onItemsUpdated(recyclerView, positionStart, itemCount)
+        focusCenterView()
+    }
+
     private fun focusCenterView(){
         val centerPos = getCenterPosition() ?: return
         // 최소 화면에 보이는 만큼은 위치 조정해야 함

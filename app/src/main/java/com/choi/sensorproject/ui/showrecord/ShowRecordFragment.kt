@@ -1,5 +1,6 @@
 package com.choi.sensorproject.ui.showrecord
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,7 +9,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -24,7 +24,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
+@SuppressLint("SimpleDateFormat")
 @AndroidEntryPoint
 class ShowRecordFragment: Fragment() {
     private var _binding: FragmentShowRecordBinding? = null
@@ -36,6 +38,9 @@ class ShowRecordFragment: Fragment() {
     private val manageAppInfoViewModel: ManageAppInfoViewModel by viewModels()
 
     private var allAppInfos: List<AppInfoUIModel> = mutableListOf()
+
+    val dayFormat = SimpleDateFormat("yyyy-MM-dd")
+    val hourFormat = SimpleDateFormat("HH")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -88,7 +93,7 @@ class ShowRecordFragment: Fragment() {
             recordsForHourAdapter.refresh()
         }
 
-        var lastJob: Job? = null
+        var curJob: Job? = null
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -99,15 +104,24 @@ class ShowRecordFragment: Fragment() {
                     val position = layoutManager.getPosition(centerView)
                     val centerModel = recordsForHourAdapter.getRecordsForHourModel(position)
 
+                    // 현재 시간일 경우만 refresh 버튼 활성화
+                    val curTime = System.currentTimeMillis()
+                    if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
+                        binding.refreshButton.isEnabled = true
+                    }
+                    else{
+                        binding.refreshButton.isEnabled = false
+                    }
+
                     // 이전 coroutine job cancel 필수
-                    lastJob?.let{ job ->
+                    curJob?.let{ job ->
                         if(job.isActive) {
                             job.cancel()
                         }
                     }
 
                     // 새로운 coroutine job launch
-                    lastJob = viewLifecycleOwner.lifecycleScope.launch {
+                    curJob = viewLifecycleOwner.lifecycleScope.launch {
                         for(record in centerModel.records){
                             // 실제 각도와 화면이 일치하게 조정
                             binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle*2)
