@@ -4,23 +4,16 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.room.TypeConverter
 import java.io.ByteArrayOutputStream
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 // 특정 type을 room database에 저장하는 법을 알려주기 위해 필요
-class RoomTypeConverters {
+class ImageTypeConverters {
 
 
     // Bitmap을 저장 / 불러오기 위해 필요한 두가지 TypeConverter
     @TypeConverter
     fun toByteArray(bitmap: Bitmap?): ByteArray {
         val outputStream = ByteArrayOutputStream()
-        bitmap?.let{
-            // 1mb보다 큰 이미지를 저장할 때 앱이 crash 되기 때문에 크기를 1/4로, 품질을 30% 수준으로 압축하여 저장
-            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width / 2, bitmap.height / 2, true)
-            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 30, outputStream) // quality: 기존의 N%로 압축
-        }
+        bitmap?.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
         return outputStream.toByteArray()
     }
 

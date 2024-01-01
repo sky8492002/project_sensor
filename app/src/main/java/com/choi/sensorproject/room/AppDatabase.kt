@@ -16,7 +16,7 @@ import com.choi.sensorproject.room.entity.SensorRecordEntity
     ],
     version = 1
 )
-@TypeConverters(RoomTypeConverters::class)
+
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sensorRecordDao(): SensorRecordDao
     abstract fun appInfoDao(): AppInfoDao

@@ -141,7 +141,7 @@ class ShowRecordFragment: Fragment() {
                             if(lastXrAngle != null && lastZrAngle != null){
                                 val diffXrAngle = record.xrAngle - lastXrAngle!!
                                 val diffZrAngle = record.zrAngle - lastZrAngle!!
-                                for(n in 0 until 10){
+                                for(n in 1..10){
                                     val xrAngle = lastXrAngle!! + diffXrAngle / 10 * n
                                     val zrAngle = lastZrAngle!! + diffZrAngle / 10 * n
                                     binding.surfaceView.changeAngle(50f, -zrAngle, xrAngle*2)
