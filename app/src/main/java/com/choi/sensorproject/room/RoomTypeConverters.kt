@@ -16,7 +16,11 @@ class RoomTypeConverters {
     @TypeConverter
     fun toByteArray(bitmap: Bitmap?): ByteArray {
         val outputStream = ByteArrayOutputStream()
-        bitmap?.compress(Bitmap.CompressFormat.PNG, 100, outputStream) // quality: 기존의 N%로 압축
+        bitmap?.let{
+            // 1mb보다 큰 이미지를 저장할 때 앱이 crash 되기 때문에 크기를 1/4로, 품질을 30% 수준으로 압축하여 저장
+            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width / 2, bitmap.height / 2, true)
+            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 30, outputStream) // quality: 기존의 N%로 압축
+        }
         return outputStream.toByteArray()
     }
 

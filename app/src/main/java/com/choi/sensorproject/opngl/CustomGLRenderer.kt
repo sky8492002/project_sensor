@@ -47,6 +47,8 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     override fun onDrawFrame(unused: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT) // 없으면 움직일 때마다 잔상 남음
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
+
+        // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
         if(appPlayingImage != null){
             mPhone2D.changeImage(appPlayingImage!!)
         }
