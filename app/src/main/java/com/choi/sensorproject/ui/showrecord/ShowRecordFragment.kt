@@ -109,9 +109,11 @@ class ShowRecordFragment: Fragment() {
                     val curTime = System.currentTimeMillis()
                     if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
                         binding.refreshButton.isEnabled = true
+                        binding.refreshButton.setImageAlpha(0xFF)
                     }
                     else{
                         binding.refreshButton.isEnabled = false
+                        binding.refreshButton.setImageAlpha(0x3F)
                     }
 
                     // 이전 coroutine job cancel 필수
