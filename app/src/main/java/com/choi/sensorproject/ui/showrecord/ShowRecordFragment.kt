@@ -43,6 +43,10 @@ class ShowRecordFragment: Fragment() {
     val dayFormat = SimpleDateFormat("yyyy-MM-dd")
     val hourFormat = SimpleDateFormat("HH")
 
+    private var curUIJob: Job? = null
+    private var lastXrAngle: Float? = null
+    private var lastZrAngle: Float? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -94,7 +98,6 @@ class ShowRecordFragment: Fragment() {
             recordsForHourAdapter.refresh()
         }
 
-        var curJob: Job? = null
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -117,7 +120,7 @@ class ShowRecordFragment: Fragment() {
                     }
 
                     // 이전 coroutine job cancel 필수
-                    curJob?.let{ job ->
+                    curUIJob?.let{ job ->
                         if(job.isActive) {
                             job.cancel()
                         }
@@ -125,17 +128,33 @@ class ShowRecordFragment: Fragment() {
 
                     // 새로운 coroutine job launch
                     // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
-                    curJob = viewLifecycleOwner.lifecycleScope.launch {
+                    curUIJob = viewLifecycleOwner.lifecycleScope.launch {
                         for(record in centerModel.records){
-                            // 실제 각도와 화면이 일치하게 조정
-                            binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle*2)
                             // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
                             binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
                             binding.timeTextView.text = record.recordTime
 //                            binding.angleTextView.text =
 //                                "각도: " + 50f.toString() + ", " + record.zrAngle.toString() + ", " + (record.xrAngle * 2).toString()
                             binding.angleTextView.text = record.runningAppName
-                            delay(100)
+
+                            // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
+                            if(lastXrAngle != null && lastZrAngle != null){
+                                val diffXrAngle = record.xrAngle - lastXrAngle!!
+                                val diffZrAngle = record.zrAngle - lastZrAngle!!
+                                for(n in 0 until 10){
+                                    val xrAngle = lastXrAngle!! + diffXrAngle / 10 * n
+                                    val zrAngle = lastZrAngle!! + diffZrAngle / 10 * n
+                                    binding.surfaceView.changeAngle(50f, -zrAngle, xrAngle*2)
+                                    delay(10)
+                                }
+                            }
+                            else{
+                                binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle*2)
+                                delay(100)
+                            }
+
+                            lastXrAngle = record.xrAngle
+                            lastZrAngle = record.zrAngle
                         }
                     }
                 }
