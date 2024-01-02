@@ -66,12 +66,12 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     fun rotate(dx:Float, dy:Float){
-        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 0f, 1f, 0f)
-        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 0f, 1f, 0f)
     }
     fun rotate(dx:Float, dy:Float, dz: Float){
-        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 0f, 1f, 0f)
-        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 0f, 1f, 0f)
         Matrix.rotateM(vPMatrix, 0, dz * aspectRatio, 0f, 0f, 1f)
     }
 

@@ -12,8 +12,8 @@ import java.text.SimpleDateFormat
 
 fun SensorRecordEntity.toModel(): SensorRecordModel {
     return SensorRecordModel(
-        xrAngle = xrAngle,
-        zrAngle = zrAngle,
+        xAngle = xAngle,
+        zAngle = zAngle,
         recordTime = recordTime,
         runningAppName = runningAppName
     )

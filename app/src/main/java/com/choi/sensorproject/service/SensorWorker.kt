@@ -11,11 +11,15 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.util.Log
+import android.view.Display
+import android.view.Surface
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -28,6 +32,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.lang.Math.abs
+import java.lang.Math.pow
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import kotlin.math.pow
@@ -49,8 +55,8 @@ class SensorWorker @AssistedInject constructor(
     var sensorManager: SensorManager
     var usageStatsManager: UsageStatsManager
 
-    var curXrAngle : Float = 0f
-    var curZrAngle : Float = 0f
+    var curXAngle : Float = 0f
+    var curZAngle : Float = 0f
     var curAppPackageName: String = "none"
 
     @SuppressLint("SimpleDateFormat")
@@ -79,7 +85,7 @@ class SensorWorker @AssistedInject constructor(
                         // 프로세스를 활성 상태로 유지해야 한다는 신호를 OS에 제공하여 작업이 OS에 의해 중단되는 것을 방지
                         val currentTimeMillis : Long = System.currentTimeMillis()
                         updateCurAppPackageName()
-                        insertSensorRecordUseCase(curXrAngle, curZrAngle, timeFormat.format(currentTimeMillis), curAppPackageName)
+                        insertSensorRecordUseCase(curXAngle, curZAngle, timeFormat.format(currentTimeMillis), curAppPackageName)
                         setForeground(getForegroundInfo())
                         delay(1000)
                     }
@@ -97,7 +103,7 @@ class SensorWorker @AssistedInject constructor(
         val notification = NotificationCompat.Builder(applicationContext, "channel_id")
             .setContentTitle("sensor_project")
             .setTicker("sensor_project")
-            .setContentText("$curXrAngle $curZrAngle $curAppPackageName")
+            .setContentText("$curXAngle $curZAngle $curAppPackageName")
             .setSmallIcon(R.drawable.phone)
             .setOngoing(true)
             .setChannelId(createNotificationChannel("channel_id", "sensor_project").id)
@@ -129,37 +135,44 @@ class SensorWorker @AssistedInject constructor(
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
-            val x = event.values[0].toDouble()
-            val y = event.values[1].toDouble()
+            var x = event.values[0].toDouble()
+            var y = event.values[1].toDouble()
             val z = event.values[2].toDouble()
-            val r = Math.sqrt(x.pow(2) + y.pow(2) + z.pow(2))
-
-            // 화면 방향이 기본(충전포트가 아래)일 때의 xtAngle, zrAngle
-            val baseXrAngle = (90 - Math.acos(x / r) * 180 / Math.PI).toFloat()
-            val baseZrAngle = (90 - Math.acos(z / r) * 180 / Math.PI).toFloat()
-
-            curXrAngle = baseXrAngle
-            curZrAngle = baseZrAngle
 
             // 화면 방향이 상하좌우로 바뀔 때 중력좌표축이 달라지는 것을 고려 (세로모드 고정일 시 필요 x?)
 //            when(applicationContext.getSystemService<DisplayManager>()?.getDisplay(Display.DEFAULT_DISPLAY)?.rotation){
 //                Surface.ROTATION_0 ->{
-//                    curXrAngle = baseXrAngle
-//                    curZrAngle = baseZrAngle
 //                }
 //                Surface.ROTATION_90 ->{
-//                    curXrAngle = -baseZrAngle
-//                    curZrAngle = baseXrAngle
+//                    x = -y
+//                    y = x
 //                }
 //                Surface.ROTATION_180 ->{
-//                    curXrAngle = -baseXrAngle
-//                    curZrAngle = -baseZrAngle
+//                    x = -x
+//                    y = -y
 //                }
 //                Surface.ROTATION_270 ->{
-//                    curXrAngle = baseZrAngle
-//                    curZrAngle = -baseXrAngle
+//                    x = y
+//                    y = -x
 //                }
 //            }
+
+            val sqrtXY = Math.sqrt(x.pow(2) + y.pow(2) )
+            var baseXAngle = (90 - Math.acos(x / sqrtXY) * 180 / Math.PI).toFloat()
+            if(y < 0) baseXAngle = 180 - baseXAngle
+            else if(y > 0 && x < 0) baseXAngle = 360 + baseXAngle
+
+            val sqrtXYZ = Math.sqrt(x.pow(2) + y.pow(2) +  z.pow(2) )
+            var baseZAngle = (90 - Math.acos(z / sqrtXYZ) * 180 / Math.PI).toFloat()
+            if(y < 0) baseZAngle = 180 - baseZAngle
+            else if(y > 0 && z < 0) baseZAngle = 360 + baseZAngle
+
+            // baseXangle, baseZAngle: 0 ~ 360 , curXAngle, curZAngle: 0 ~ 180, -180 ~ 0 (가까운 쪽으로 회전하게 함)
+            curXAngle = if(baseXAngle <= 180 ) baseXAngle else baseXAngle - 360
+            curZAngle = if(baseZAngle <= 180 ) baseZAngle else baseZAngle - 360
+
+            Log.d("angle", curXAngle.toString() + " " + curZAngle.toString())
+
         }
     }
 

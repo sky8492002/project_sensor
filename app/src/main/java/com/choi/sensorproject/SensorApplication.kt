@@ -8,6 +8,8 @@ import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -34,12 +36,18 @@ class SensorApplication: Application(), Configuration.Provider {
 
     // 앱 실행 시 WorkManager 시작
     private fun initWorkManager() {
-        val workRequest = PeriodicWorkRequestBuilder<SensorWorker>(1, TimeUnit.HOURS).build()
+        val workRequest = OneTimeWorkRequestBuilder<SensorWorker>().build()
+        //val workRequest = PeriodicWorkRequestBuilder<SensorWorker>(1, TimeUnit.HOURS).build()
         val workManager = WorkManager.getInstance(applicationContext)
-        workManager.enqueueUniquePeriodicWork(
+        workManager.enqueueUniqueWork(
             "SensorWorker",
-            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            ExistingWorkPolicy.REPLACE,
             workRequest
         )
+//        workManager.enqueueUniquePeriodicWork(
+//            "SensorWorker",
+//            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+//            workRequest
+//        )
     }
 }

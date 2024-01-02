@@ -44,8 +44,8 @@ class ShowRecordFragment: Fragment() {
     val hourFormat = SimpleDateFormat("HH")
 
     private var curUIJob: Job? = null
-    private var lastXrAngle: Float? = null
-    private var lastZrAngle: Float? = null
+    private var lastxAngle: Float? = null
+    private var lastzAngle: Float? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -132,29 +132,27 @@ class ShowRecordFragment: Fragment() {
                         for(record in centerModel.records){
                             // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
                             binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
-                            binding.timeTextView.text = record.recordTime
-//                            binding.angleTextView.text =
-//                                "각도: " + 50f.toString() + ", " + record.zrAngle.toString() + ", " + (record.xrAngle * 2).toString()
+                            binding.timeTextView.text = record.xAngle.toString() + " " + record.zAngle.toString()
                             binding.angleTextView.text = record.runningAppName
 
                             // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
-                            if(lastXrAngle != null && lastZrAngle != null){
-                                val diffXrAngle = record.xrAngle - lastXrAngle!!
-                                val diffZrAngle = record.zrAngle - lastZrAngle!!
+                            if(lastxAngle != null && lastzAngle != null){
+                                val diffxAngle = record.xAngle - lastxAngle!!
+                                val diffzAngle = record.zAngle - lastzAngle!!
                                 for(n in 1..10){
-                                    val xrAngle = lastXrAngle!! + diffXrAngle / 10 * n
-                                    val zrAngle = lastZrAngle!! + diffZrAngle / 10 * n
-                                    binding.surfaceView.changeAngle(50f, -zrAngle, xrAngle*2)
+                                    val xAngle = lastxAngle!! + diffxAngle / 10 * n
+                                    val zAngle = lastzAngle!! + diffzAngle / 10 * n
+                                    binding.surfaceView.changeAngle(-zAngle / 360f * 500f, 0f, xAngle / 360f * 500f)
                                     delay(10)
                                 }
                             }
                             else{
-                                binding.surfaceView.changeAngle(50f, -record.zrAngle, record.xrAngle*2)
+                                binding.surfaceView.changeAngle(-record.zAngle / 360f * 500f, 0f, record.xAngle / 360f * 500f)
                                 delay(100)
                             }
 
-                            lastXrAngle = record.xrAngle
-                            lastZrAngle = record.zrAngle
+                            lastxAngle = record.xAngle
+                            lastzAngle = record.zAngle
                         }
                     }
                 }
