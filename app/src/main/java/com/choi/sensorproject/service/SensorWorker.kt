@@ -80,7 +80,8 @@ class SensorWorker @AssistedInject constructor(
             coroutineScope {
                 withContext(Dispatchers.IO){
                     updateCurAppPackageName()
-                    for (i in 1..3600){
+                    //for (i in 1..3600){
+                    while(true){
                         // 포그라운드 서비스에서 작업을 실행
                         // 프로세스를 활성 상태로 유지해야 한다는 신호를 OS에 제공하여 작업이 OS에 의해 중단되는 것을 방지
                         val currentTimeMillis : Long = System.currentTimeMillis()
@@ -162,16 +163,16 @@ class SensorWorker @AssistedInject constructor(
             if(y < 0) baseXAngle = 180 - baseXAngle
             else if(y > 0 && x < 0) baseXAngle = 360 + baseXAngle
 
-            val sqrtXYZ = Math.sqrt(x.pow(2) + y.pow(2) +  z.pow(2) )
+            val sqrtXYZ = Math.sqrt(x.pow(2) + z.pow(2) )
             var baseZAngle = (90 - Math.acos(z / sqrtXYZ) * 180 / Math.PI).toFloat()
-            if(y < 0) baseZAngle = 180 - baseZAngle
-            else if(y > 0 && z < 0) baseZAngle = 360 + baseZAngle
+            if(x < 0) baseZAngle = 180 - baseZAngle
+            if(x > 0 && z < 0) baseZAngle = 360 + baseZAngle
 
             // baseXangle, baseZAngle: 0 ~ 360 , curXAngle, curZAngle: 0 ~ 180, -180 ~ 0 (가까운 쪽으로 회전하게 함)
             curXAngle = if(baseXAngle <= 180 ) baseXAngle else baseXAngle - 360
             curZAngle = if(baseZAngle <= 180 ) baseZAngle else baseZAngle - 360
 
-            Log.d("angle", curXAngle.toString() + " " + curZAngle.toString())
+            Log.d("angle", curXAngle.toString() + " " + curZAngle.toString() + " "+ x.toString() + " " + y.toString() + " " + z.toString())
 
         }
     }

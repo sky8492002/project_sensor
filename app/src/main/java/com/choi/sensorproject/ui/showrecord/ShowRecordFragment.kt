@@ -132,7 +132,7 @@ class ShowRecordFragment: Fragment() {
                         for(record in centerModel.records){
                             // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
                             binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
-                            binding.timeTextView.text = record.xAngle.toString() + " " + record.zAngle.toString()
+                            binding.timeTextView.text = record.recordTime
                             binding.angleTextView.text = record.runningAppName
 
                             // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
@@ -142,12 +142,12 @@ class ShowRecordFragment: Fragment() {
                                 for(n in 1..10){
                                     val xAngle = lastxAngle!! + diffxAngle / 10 * n
                                     val zAngle = lastzAngle!! + diffzAngle / 10 * n
-                                    binding.surfaceView.changeAngle(-zAngle / 360f * 500f, 0f, xAngle / 360f * 500f)
+                                    binding.surfaceView.changeAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
                                     delay(10)
                                 }
                             }
                             else{
-                                binding.surfaceView.changeAngle(-record.zAngle / 360f * 500f, 0f, record.xAngle / 360f * 500f)
+                                binding.surfaceView.changeAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
                                 delay(100)
                             }
 
