@@ -108,6 +108,9 @@ class ShowRecordFragment: Fragment() {
                     val position = layoutManager.getPosition(centerView)
                     val centerModel = recordsForHourAdapter.getRecordsForHourModel(position)
 
+                    // 현재 model에 맞는 원형 custom view 설정
+                    binding.customClockView.setCurModel(centerModel)
+
                     // 현재 시간일 경우만 refresh 버튼 활성화
                     val curTime = System.currentTimeMillis()
                     if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){

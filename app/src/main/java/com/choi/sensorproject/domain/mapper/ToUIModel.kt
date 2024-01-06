@@ -4,10 +4,22 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import com.choi.sensorproject.domain.model.AppInfoModel
 import com.choi.sensorproject.domain.model.RecordsForHourModel
+import com.choi.sensorproject.domain.model.SensorRecordModel
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
+import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+
+fun SensorRecordModel.toUIModel(): SensorRecordUIModel {
+    return SensorRecordUIModel(
+        xAngle = xAngle,
+        zAngle = zAngle,
+        orientation = orientation,
+        recordTime = recordTime,
+        runningAppName = runningAppName
+    )
+}
 
 fun PagingData<RecordsForHourModel>.toUIModelsPagingData(): PagingData<RecordsForHourUIModel>{
     return this.map{
@@ -22,7 +34,6 @@ fun RecordsForHourModel.toUIModel(): RecordsForHourUIModel{
         records = records
     )
 }
-
 
 fun AppInfoModel.toUIModel(): AppInfoUIModel{
     return AppInfoUIModel(

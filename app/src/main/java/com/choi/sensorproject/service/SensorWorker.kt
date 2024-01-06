@@ -7,6 +7,9 @@ import android.app.NotificationManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.content.res.Configuration.ORIENTATION_PORTRAIT
+import android.content.res.Resources
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -25,6 +28,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.choi.sensorproject.domain.usecase.sensor.InsertSensorRecordUseCase
+import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import com.example.sensorproject.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -55,9 +59,10 @@ class SensorWorker @AssistedInject constructor(
     var sensorManager: SensorManager
     var usageStatsManager: UsageStatsManager
 
-    var curXAngle : Float = 0f
-    var curZAngle : Float = 0f
-    var curAppPackageName: String = "none"
+    private var curXAngle : Float = 0f
+    private var curZAngle : Float = 0f
+    private var curAppPackageName: String = "none"
+    private var curOrientation: Orientation = Orientation.Portrait
 
     @SuppressLint("SimpleDateFormat")
     val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -86,7 +91,9 @@ class SensorWorker @AssistedInject constructor(
                         // 프로세스를 활성 상태로 유지해야 한다는 신호를 OS에 제공하여 작업이 OS에 의해 중단되는 것을 방지
                         val currentTimeMillis : Long = System.currentTimeMillis()
                         updateCurAppPackageName()
-                        insertSensorRecordUseCase(curXAngle, curZAngle, timeFormat.format(currentTimeMillis), curAppPackageName)
+                        val curSensorRecordUIModel =
+                            SensorRecordUIModel(curXAngle, curZAngle, curOrientation, timeFormat.format(currentTimeMillis), curAppPackageName)
+                        insertSensorRecordUseCase(curSensorRecordUIModel)
                         setForeground(getForegroundInfo())
                         delay(1000)
                     }
@@ -140,24 +147,6 @@ class SensorWorker @AssistedInject constructor(
             var y = event.values[1].toDouble()
             val z = event.values[2].toDouble()
 
-            // 화면 방향이 상하좌우로 바뀔 때 중력좌표축이 달라지는 것을 고려 (세로모드 고정일 시 필요 x?)
-//            when(applicationContext.getSystemService<DisplayManager>()?.getDisplay(Display.DEFAULT_DISPLAY)?.rotation){
-//                Surface.ROTATION_0 ->{
-//                }
-//                Surface.ROTATION_90 ->{
-//                    x = -y
-//                    y = x
-//                }
-//                Surface.ROTATION_180 ->{
-//                    x = -x
-//                    y = -y
-//                }
-//                Surface.ROTATION_270 ->{
-//                    x = y
-//                    y = -x
-//                }
-//            }
-
             // curXAngle, curZAngle: 0 ~ 360 , curXAngle, curZAngle: 0 ~ 180, -180 ~ 0 (가까운 쪽으로 회전하게 함)
             val sqrtXY = Math.sqrt(x.pow(2) + y.pow(2) )
             var baseXAngle = (90 - Math.acos(x / sqrtXY) * 180 / Math.PI).toFloat()
@@ -174,6 +163,15 @@ class SensorWorker @AssistedInject constructor(
 
             Log.d("angle", curXAngle.toString() + " " + curZAngle.toString() + " "+ x.toString() + " " + y.toString() + " " + z.toString())
 
+            // 가로 모드인지 세로 모드인지 확인 후 기록
+            when(Resources.getSystem().configuration.orientation){
+                ORIENTATION_LANDSCAPE ->{
+                    curOrientation = Orientation.LandScape
+                }
+                ORIENTATION_PORTRAIT -> {
+                    curOrientation = Orientation.Portrait
+                }
+            }
         }
     }
 
@@ -208,4 +206,8 @@ class SensorWorker @AssistedInject constructor(
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
 
     }
+}
+
+enum class Orientation{
+    Portrait, LandScape
 }

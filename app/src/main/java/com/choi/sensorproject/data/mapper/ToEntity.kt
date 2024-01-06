@@ -10,6 +10,7 @@ fun SensorRecordModel.toEntity(): SensorRecordEntity{
         xAngle = xAngle,
         zAngle = zAngle,
         recordTime = recordTime,
+        orientation = orientation,
         runningAppName = runningAppName
     )
 }
