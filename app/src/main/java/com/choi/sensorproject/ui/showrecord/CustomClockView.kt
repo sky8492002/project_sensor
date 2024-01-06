@@ -5,27 +5,33 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Point
+import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.Region
+import android.text.method.Touch
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
-import android.view.OrientationEventListener
 import android.view.View
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import java.text.SimpleDateFormat
-import kotlin.math.abs
 
 @SuppressLint("SimpleDateFormat")
 class CustomClockView(context: Context, attrs: AttributeSet) : View(context, attrs) {
+    var touchListener: TouchListener? = null
 
-    private val rectF = RectF()
+    private val totalRecF = RectF()
+    private val centerRecF = RectF()
     private val paint = Paint()
     private var radius = 0
 
     private var curModel: RecordsForHourUIModel? = null
+
+    private var regions: MutableList<Region> = mutableListOf()
 
     @SuppressLint("SimpleDateFormat")
     private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -36,6 +42,7 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
 
     fun setCurModel(recordsForHourUIModel: RecordsForHourUIModel){
         curModel = recordsForHourUIModel
+        regions.clear()
         postInvalidate() // 화면을 갱신 (invalidate 앞에 post를 붙이면 ui thread가 아니더라도 ui thread에 요청할 수 있음)
     }
 
@@ -55,25 +62,32 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
         val centerX = (width.div(2)).toFloat()
         val centerY = (height.div(2)).toFloat()
 
-        // rectF: 도형을 그리는 최대 범위 설정
-        rectF.apply {
+        // totalRectF: 도형을 그리는 최대 범위 설정
+        totalRecF.apply {
             set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
+        }
+        centerRecF.apply {
+            set(centerX, centerY, centerX, centerY)
         }
 
         curModel?.let{ curModel ->
             var curIndex = 0
-            for (n in 0 until 3600) {
+            for (sec in 0 until 3600) {
+
+                val startAngle = -90f + 0.1f * sec
+                val sweepAngle = 0.1f
+
                 if(curIndex >= curModel.records.size){
                     break
                 }
                 val curRecord = curModel.records[curIndex]
                 val curDate = timeFormat.parse(curRecord.recordTime)
                 if(curDate != null){
-                    val minute = minuteFormat.format(curDate).toInt()
-                    val second = secondFormat.format(curDate).toInt()
-                    val totalSeconds = minute * 60 + second
+                    val curMinute = minuteFormat.format(curDate).toInt()
+                    val curSecond = secondFormat.format(curDate).toInt()
+                    val curTotalSeconds = curMinute * 60 + curSecond
 
-                    if(totalSeconds == n){
+                    if(curTotalSeconds == sec){
 
                         // 기기가 앞쪽으로 쏠림: 연한색, 뒤쪽: 진한색
                         // 기기가 왼쪽으로 쏠림: 주황색, 오른쪽: 보라색
@@ -105,37 +119,50 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
                         }
 
                         if (frontLeaning && leftLeaning) {
-                            canvas.drawArc(rectF, -90f + 0.1f * n, 0.1f, false, paint.apply {
+                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#FFECB3")
                                 strokeWidth = 100f
                                 style = Paint.Style.STROKE
                             })
                         }
                         else if(frontLeaning && leftLeaning.not()){
-                            canvas.drawArc(rectF, -90f + 0.1f * n, 0.1f, false, paint.apply {
+                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#E1BEE7")
                                 strokeWidth = 100f
                                 style = Paint.Style.STROKE
                             })
                         }
                         else if(frontLeaning.not() && leftLeaning) {
-                            canvas.drawArc(rectF, -90f + 0.1f * n, 0.1f, false, paint.apply {
+                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#FF8F00")
                                 strokeWidth = 100f
                                 style = Paint.Style.STROKE
                             })
                         }
                         else if(frontLeaning.not() && leftLeaning.not()){
-                            canvas.drawArc(rectF, -90f + 0.1f * n, 0.1f, false, paint.apply {
+                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#6A1B9A")
                                 strokeWidth = 100f
                                 style = Paint.Style.STROKE
                             })
                         }
+
+                        // 터치 범위 설정 (touchPath는 두 호를 잇는 경로를 설정함)
+                        val touchPath = Path()
+                        touchPath.arcTo(totalRecF, startAngle, sweepAngle)
+                        touchPath.arcTo(centerRecF, 0f, 0f)
+                        touchPath.close()
+                        touchPath.computeBounds(centerRecF, true)
+                        val curRegion = Region(Rect().apply {
+                            set(centerRecF.left.toInt(), centerRecF.top.toInt(),
+                                centerRecF.right.toInt(), centerRecF.bottom.toInt())})
+                        curRegion.setPath(touchPath, curRegion)
+                        regions.add(curRegion)
+
                         curIndex +=1
                     }
                     else{
-                        canvas.drawArc(rectF, -90f + 0.1f * n, 0.1f, false, paint.apply {
+                        canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                             color = Color.GRAY
                             strokeWidth = 100f
                             style = Paint.Style.STROKE
@@ -144,7 +171,7 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
 
                 }
                 else{
-                    canvas.drawArc(rectF, -90f + 0.1f * n, 0.1f, false, paint.apply {
+                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                         color = Color.GRAY
                         strokeWidth = 100f
                         style = Paint.Style.STROKE
@@ -152,17 +179,27 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
                 }
             }
         }
-
-//        canvas.drawArc(rectF, -90f, 6f, false, paint.apply {
-//            color = Color.parseColor("#95a5a6")
-//            strokeWidth = 100f
-//            style = Paint.Style.STROKE
-//        })
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
+        event?.let{
+            val point = Point()
+            point.x = it.x.toInt()
+            point.y = it.y.toInt()
+
+            Log.d("touched", point.x.toString() + " " + point.y.toString())
+
+            for (index in 0 until regions.size) {
+                if (regions[index].contains(point.x, point.y) && event.action == MotionEvent.ACTION_UP) {
+                    touchListener?.onSensorRecordTouchUP(curModel!!.records[index])
+                    Log.d("touched", curModel!!.records[index].recordTime)
+                    break
+                }
+            }
+
+        }
         return true
     }
 

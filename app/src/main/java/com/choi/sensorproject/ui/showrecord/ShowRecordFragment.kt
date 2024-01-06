@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.choi.sensorproject.ui.model.AppInfoUIModel
+import com.choi.sensorproject.ui.model.RecordsForHourUIModel
+import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import com.choi.sensorproject.ui.recyclerview.FocusedLayoutManager
 import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
 import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
@@ -23,9 +25,12 @@ import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Date
+
 
 @SuppressLint("SimpleDateFormat")
 @AndroidEntryPoint
@@ -40,12 +45,16 @@ class ShowRecordFragment: Fragment() {
 
     private var allAppInfos: List<AppInfoUIModel> = mutableListOf()
 
-    val dayFormat = SimpleDateFormat("yyyy-MM-dd")
-    val hourFormat = SimpleDateFormat("HH")
+    private val dayFormat = SimpleDateFormat("yyyy-MM-dd")
+    private val hourFormat = SimpleDateFormat("HH")
+    private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     private var curUIJob: Job? = null
+
     private var lastxAngle: Float? = null
     private var lastzAngle: Float? = null
+
+    private lateinit var centerModel: RecordsForHourUIModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,6 +80,23 @@ class ShowRecordFragment: Fragment() {
         binding.timeRecyclerView.adapter = recordsForHourAdapter
         binding.timeRecyclerView.layoutManager = focusedLayoutManager
         binding.manageSensorRecordViewModel = manageSensorRecordViewModel
+
+        // customClockView에서 시점을 터치하면 해당 시점의 데이터부터 보여줌
+        binding.customClockView.touchListener = object : TouchListener {
+            override fun onSensorRecordTouchUP(sensorRecordUIModel: SensorRecordUIModel) {
+                // 이전 coroutine job cancel 필수
+                curUIJob?.let{ job ->
+                    if(job.isActive) {
+                        job.cancel()
+                    }
+                }
+
+                // 새로운 coroutine job launch
+                curUIJob = timeFormat.parse(sensorRecordUIModel.recordTime)
+                    ?.let { runUIJobByRecordsForHour(centerModel, it) }
+
+            }
+        }
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             manageSensorRecordViewModel.uiState.collect(){ uiState ->
@@ -105,8 +131,8 @@ class ShowRecordFragment: Fragment() {
 
                 recyclerView.layoutManager?.let{ layoutManager ->
                     val centerView = snapHelper.findSnapView(layoutManager)!!
-                    val position = layoutManager.getPosition(centerView)
-                    val centerModel = recordsForHourAdapter.getRecordsForHourModel(position)
+                    val centerPosition = layoutManager.getPosition(centerView)
+                    centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
 
                     // 현재 model에 맞는 원형 custom view 설정
                     binding.customClockView.setCurModel(centerModel)
@@ -130,34 +156,7 @@ class ShowRecordFragment: Fragment() {
                     }
 
                     // 새로운 coroutine job launch
-                    // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
-                    curUIJob = viewLifecycleOwner.lifecycleScope.launch {
-                        for(record in centerModel.records){
-                            // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
-                            binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
-                            binding.timeTextView.text = record.recordTime
-                            binding.angleTextView.text = record.runningAppName
-
-                            // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
-                            if(lastxAngle != null && lastzAngle != null){
-                                val diffxAngle = record.xAngle - lastxAngle!!
-                                val diffzAngle = record.zAngle - lastzAngle!!
-                                for(n in 1..10){
-                                    val xAngle = lastxAngle!! + diffxAngle / 10 * n
-                                    val zAngle = lastzAngle!! + diffzAngle / 10 * n
-                                    binding.surfaceView.changeAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
-                                    delay(10)
-                                }
-                            }
-                            else{
-                                binding.surfaceView.changeAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
-                                delay(100)
-                            }
-
-                            lastxAngle = record.xAngle
-                            lastzAngle = record.zAngle
-                        }
-                    }
+                    curUIJob = runUIJobByRecordsForHour(centerModel, null)
                 }
             }
         })
@@ -170,6 +169,44 @@ class ShowRecordFragment: Fragment() {
             }
         }
         return null
+    }
+
+    // startTime 이후의 RecordsForHourUIModel 내부 기록을 보여줌
+    private fun runUIJobByRecordsForHour(recordsForHourUIModel: RecordsForHourUIModel, startTime: Date?): Job{
+        // 새로운 coroutine job launch
+        // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
+        return viewLifecycleOwner.lifecycleScope.launch {
+            for(record in recordsForHourUIModel.records){
+                // 시작 시간보다 이르면 화면에 표시하지 않고 넘어감
+                if((startTime != null) && (startTime > timeFormat.parse(record.recordTime))){
+                    continue
+                }
+
+                // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
+                binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
+                binding.timeTextView.text = record.recordTime
+                binding.angleTextView.text = record.runningAppName
+
+                // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
+                if(lastxAngle != null && lastzAngle != null){
+                    val diffxAngle = record.xAngle - lastxAngle!!
+                    val diffzAngle = record.zAngle - lastzAngle!!
+                    for(n in 1..10){
+                        val xAngle = lastxAngle!! + diffxAngle / 10 * n
+                        val zAngle = lastzAngle!! + diffzAngle / 10 * n
+                        binding.surfaceView.changeAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
+                        delay(10)
+                    }
+                }
+                else{
+                    binding.surfaceView.changeAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
+                    delay(100)
+                }
+
+                lastxAngle = record.xAngle
+                lastzAngle = record.zAngle
+            }
+        }
     }
 
 }

@@ -20,6 +20,18 @@ fun SensorRecordModel.toUIModel(): SensorRecordUIModel {
         runningAppName = runningAppName
     )
 }
+@JvmName("callFromSensorRecordModel")
+fun List<SensorRecordModel>.toUIModels(): List<SensorRecordUIModel> {
+    return this.map{
+        SensorRecordUIModel(
+            xAngle = it.xAngle,
+            zAngle = it.zAngle,
+            orientation = it.orientation,
+            recordTime = it.recordTime,
+            runningAppName = it.runningAppName
+        )
+    }
+}
 
 fun PagingData<RecordsForHourModel>.toUIModelsPagingData(): PagingData<RecordsForHourUIModel>{
     return this.map{
@@ -31,10 +43,9 @@ fun RecordsForHourModel.toUIModel(): RecordsForHourUIModel{
     return RecordsForHourUIModel(
         date = date,
         hour = hour,
-        records = records
+        records = records.toUIModels()
     )
 }
-
 fun AppInfoModel.toUIModel(): AppInfoUIModel{
     return AppInfoUIModel(
         appName = appName,
@@ -42,7 +53,7 @@ fun AppInfoModel.toUIModel(): AppInfoUIModel{
         appPlayingImage = appPlayingImage
     )
 }
-
+@JvmName("callFromAppInfoModel") // List형에 대하여 toUIModels가 중복이므로 고유한 이름을 지정해야 함
 fun List<AppInfoModel>.toUIModels(): List<AppInfoUIModel> {
     return this.map{
         AppInfoUIModel(
