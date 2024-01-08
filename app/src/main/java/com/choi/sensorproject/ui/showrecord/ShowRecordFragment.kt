@@ -2,6 +2,9 @@ package com.choi.sensorproject.ui.showrecord
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.Path
+import android.graphics.PathMeasure
+import android.graphics.RectF
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,7 +28,6 @@ import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -52,9 +54,6 @@ class ShowRecordFragment: Fragment() {
     private val secondFormat = SimpleDateFormat("ss")
 
     private var curUIJob: Job? = null
-
-    private var lastxAngle: Float? = null
-    private var lastzAngle: Float? = null
 
     private lateinit var centerModel: RecordsForHourUIModel
 
@@ -189,24 +188,30 @@ class ShowRecordFragment: Fragment() {
         // 새로운 coroutine job launch
         // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
         return viewLifecycleOwner.lifecycleScope.launch {
+            // job이 변경되면 관련된 변수도 초기화해야 하므로 지역 변수로 둠
+            var lastxAngle: Float? = null
+            var lastzAngle: Float? = null
             for(record in recordsForHourUIModel.records){
                 // 시작 시간보다 이르면 화면에 표시하지 않고 넘어감
                 if((startTime != null) && (startTime > timeFormat.parse(record.recordTime))){
                     continue
                 }
 
-                // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
-                binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
-                binding.timeTextView.text = record.recordTime
-                binding.angleTextView.text = record.runningAppName
-
                 val curDate = timeFormat.parse(record.recordTime)
                 val curMinute = minuteFormat.format(curDate).toInt()
                 val curSecond = secondFormat.format(curDate).toInt()
                 val curTotalSeconds = curMinute * 60 + curSecond
 
-                // 시간을 가리키는 앱 아이콘 표시 위치 업데이트
-                binding.customPinView.setPin(curTotalSeconds, getAppIcon(record.runningAppName))
+                // 시간을 가리키는 Pin 업데이트
+                //binding.customPinView.setPin(curTotalSeconds, getAppIcon(record.runningAppName))
+                val pinPoint = getPinPoint(curTotalSeconds)
+                binding.surfaceView.changePinLocation(pinPoint[0], pinPoint[1], 0f)
+                binding.surfaceView.changeAppIcon(getAppIcon(record.runningAppName))
+
+                // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
+                binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
+                binding.timeTextView.text = record.recordTime
+                binding.angleTextView.text = record.runningAppName
 
                 // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
                 if(lastxAngle != null && lastzAngle != null){
@@ -215,12 +220,12 @@ class ShowRecordFragment: Fragment() {
                     for(n in 1..10){
                         val xAngle = lastxAngle!! + diffxAngle / 10 * n
                         val zAngle = lastzAngle!! + diffzAngle / 10 * n
-                        binding.surfaceView.changeAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
+                        binding.surfaceView.changePhoneAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
                         delay(10)
                     }
                 }
                 else{
-                    binding.surfaceView.changeAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
+                    binding.surfaceView.changePhoneAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
                     delay(100)
                 }
 
@@ -228,6 +233,38 @@ class ShowRecordFragment: Fragment() {
                 lastzAngle = record.zAngle
             }
         }
+    }
+
+    private fun getPinPoint(sec: Int): FloatArray{
+        val innerRecF = RectF()
+        val min = Math.min(binding.surfaceView.width, binding.surfaceView.height)
+        val radius = (min - binding.surfaceView.paddingLeft - 90) / 2
+        val arcStrokeWidth = 100f
+        val innerRadius = radius - arcStrokeWidth.toInt() / 2
+
+        val centerX = (binding.surfaceView.width.div(2)).toFloat()
+        val centerY = (binding.surfaceView.height.div(2)).toFloat()
+
+        innerRecF.apply {
+            set(centerX - innerRadius, centerY - innerRadius, centerX + innerRadius, centerY + innerRadius)
+        }
+
+        val startAngle = -90f + 0.1f * sec
+        val sweepAngle = 0.1f
+
+        val arcPath = Path()
+        arcPath.arcTo(innerRecF, startAngle, sweepAngle)
+
+        // 호 경로의 절반에 있는 지점의 좌표를 찾음
+        val pm = PathMeasure(arcPath, false)
+        val point = FloatArray(2)
+        pm.getPosTan(pm.getLength() * 0.5f, point, null) // distance 만큼 시작 지점을 이동한 후의 위치를 point 변수에 담음
+
+        // opengl 내부 좌표에 맞게 변환
+        point[0] = (point[0] - centerX) / (binding.surfaceView.width / 2)
+        point[1] = -(point[1] - centerY) / (binding.surfaceView.height / 2)
+
+        return point
     }
 
 }

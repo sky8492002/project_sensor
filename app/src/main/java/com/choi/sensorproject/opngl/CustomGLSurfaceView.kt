@@ -1,12 +1,11 @@
 package com.choi.sensorproject.opngl
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
-import android.view.MotionEvent
+import android.util.Log
 
 class CustomGLSurfaceView @JvmOverloads constructor(
     context: Context,
@@ -46,14 +45,24 @@ class CustomGLSurfaceView @JvmOverloads constructor(
 //        return true
 //    }
 
-    fun changeAngle(dx: Float, dy: Float, dz: Float){
-        renderer.resetAngle()
-        renderer.rotate(dx, dy, dz)
+    fun changePhoneAngle(dx: Float, dy: Float, dz: Float){
+        renderer.resetPhoneAngle()
+        renderer.rotatePhone(dx, dy, dz)
+    }
+
+    fun changePinLocation(dx: Float, dy:Float, dz: Float){
+        renderer.resetPinLocation()
+        renderer.translatePin(dx, dy, dz)
+        Log.d("PinLocate", dx.toString() + " " + dy.toString())
     }
 
     // 출력되는 이미지 변경을 위해 사용
     fun changeAppPlayingImage(appPlayingImage: Bitmap?){
         renderer.changeAppPlayingImage(appPlayingImage)
+    }
+
+    fun changeAppIcon(appIcon: Bitmap?){
+        renderer.changeAppIcon(appIcon)
     }
 
 }
