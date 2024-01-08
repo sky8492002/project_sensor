@@ -26,8 +26,12 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
 
     private val totalRecF = RectF()
     private val centerRecF = RectF()
+    private val outsideRecF = RectF()
     private val paint = Paint()
     private var radius = 0
+    private var centerRadius = 0
+    private var outsideRadius = 0
+    private var arcStrokeWidth = 100f
 
     private var curModel: RecordsForHourUIModel? = null
 
@@ -52,6 +56,8 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
 
         val min = Math.min(width, height)
         radius = (min - paddingLeft - 90) / 2
+        centerRadius = radius - arcStrokeWidth.toInt() / 2
+        outsideRadius = radius + arcStrokeWidth.toInt() / 2
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
@@ -67,7 +73,10 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
             set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
         }
         centerRecF.apply {
-            set(centerX, centerY, centerX, centerY)
+            set(centerX - centerRadius, centerY - centerRadius, centerX + centerRadius, centerY + centerRadius)
+        }
+        outsideRecF.apply {
+            set(centerX - outsideRadius, centerY - outsideRadius, centerX + outsideRadius, centerY + outsideRadius)
         }
 
         curModel?.let{ curModel ->
@@ -121,43 +130,56 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
                         if (frontLeaning && leftLeaning) {
                             canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#FFECB3")
-                                strokeWidth = 100f
+                                strokeWidth = arcStrokeWidth
                                 style = Paint.Style.STROKE
                             })
                         }
                         else if(frontLeaning && leftLeaning.not()){
                             canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#E1BEE7")
-                                strokeWidth = 100f
+                                strokeWidth = arcStrokeWidth
                                 style = Paint.Style.STROKE
                             })
                         }
                         else if(frontLeaning.not() && leftLeaning) {
                             canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#FF8F00")
-                                strokeWidth = 100f
+                                strokeWidth = arcStrokeWidth
                                 style = Paint.Style.STROKE
                             })
                         }
                         else if(frontLeaning.not() && leftLeaning.not()){
                             canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                                 color = Color.parseColor("#6A1B9A")
-                                strokeWidth = 100f
+                                strokeWidth = arcStrokeWidth
                                 style = Paint.Style.STROKE
                             })
                         }
 
                         // 터치 범위 설정 (touchPath는 두 호를 잇는 경로를 설정함)
                         val touchPath = Path()
-                        touchPath.arcTo(totalRecF, startAngle, sweepAngle)
-                        touchPath.arcTo(centerRecF, 0f, 0f)
+                        touchPath.arcTo(centerRecF, startAngle, sweepAngle)
+                        touchPath.arcTo(outsideRecF, startAngle, sweepAngle)
                         touchPath.close()
-                        touchPath.computeBounds(centerRecF, true)
+                        //touchPath.computeBounds(centerRecF, true)
                         val curRegion = Region(Rect().apply {
-                            set(centerRecF.left.toInt(), centerRecF.top.toInt(),
-                                centerRecF.right.toInt(), centerRecF.bottom.toInt())})
+                            set(outsideRecF.left.toInt(), outsideRecF.top.toInt(),
+                                outsideRecF.right.toInt(), outsideRecF.bottom.toInt())})
                         curRegion.setPath(touchPath, curRegion)
                         regions.add(curRegion)
+
+//                        if(curTotalSeconds > 1800){
+//                            canvas.drawPath(touchPath,  paint.apply {
+//                                color = Color.parseColor("#FFFFFF")
+//                                style = Paint.Style.STROKE
+//                            })
+//                        }
+//                        else if(curTotalSeconds <= 1800){
+//                            canvas.drawPath(touchPath,  paint.apply {
+//                                color = Color.parseColor("#000000")
+//                                style = Paint.Style.STROKE
+//                            })
+//                        }
 
                         curIndex +=1
                     }
@@ -192,8 +214,8 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
             Log.d("touched", point.x.toString() + " " + point.y.toString())
 
             for (index in 0 until regions.size) {
-                if (regions[index].contains(point.x, point.y) && event.action == MotionEvent.ACTION_UP) {
-                    touchListener?.onSensorRecordTouchUP(curModel!!.records[index])
+                if (regions[index].contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
+                    touchListener?.onSensorRecordTouch(curModel!!.records[index])
                     Log.d("touched", curModel!!.records[index].recordTime)
                     break
                 }

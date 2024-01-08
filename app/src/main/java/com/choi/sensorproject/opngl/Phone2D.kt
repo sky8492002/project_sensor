@@ -19,31 +19,31 @@ class Phone2D {
     )
 
     private var texCoords = floatArrayOf(
-        0.0f,1.0f, 0.0f,
-        1.0f,1.0f, 0.0f,
-        0.0f,0.0f, 0.0f,
-        1.0f,0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
     )
 
-    val order = arrayOf(0,1,2,0,2,3).toIntArray() //삼각형 그리는 순서 (012),(023)
+//    val order = arrayOf(0,1,2,0,2,3).toIntArray() //삼각형 그리는 순서 (012),(023)
+//
+//    val orderBuffer = ByteBuffer.allocateDirect(order.size * 4).let { //
+//        it.order(ByteOrder.nativeOrder())
+//        it.asIntBuffer()
+//    }.apply {
+//        put(order)
+//        position(0)
+//    } //드로잉 순서 버퍼를 만듭니다.
 
-    val orderBuffer = ByteBuffer.allocateDirect(order.size * 4).let { //
-        it.order(ByteOrder.nativeOrder())
-        it.asIntBuffer()
-    }.apply {
-        put(order)
-        position(0)
-    } //드로잉 순서 버퍼를 만듭니다.
-
-    private val color : FloatArray = arrayOf(
-        0.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, 0.0f, 1.0f,
-        1.0f, 1.0f, 0.0f, 1.0f,
-        0.0f, 1.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 1.0f, 1.0f).toFloatArray()
+//    private val color : FloatArray = arrayOf(
+//        0.0f, 1.0f, 1.0f, 1.0f,
+//        1.0f, 0.0f, 0.0f, 1.0f,
+//        1.0f, 1.0f, 0.0f, 1.0f,
+//        0.0f, 1.0f, 0.0f, 1.0f,
+//        0.0f, 0.0f, 1.0f, 1.0f,
+//        1.0f, 0.0f, 1.0f, 1.0f,
+//        1.0f, 1.0f, 1.0f, 1.0f,
+//        0.0f, 1.0f, 1.0f, 1.0f).toFloatArray()
 
     private var vertexBuffer: FloatBuffer
     private var texCoordBuffer: FloatBuffer

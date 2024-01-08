@@ -83,7 +83,7 @@ class ShowRecordFragment: Fragment() {
 
         // customClockView에서 시점을 터치하면 해당 시점의 데이터부터 보여줌
         binding.customClockView.touchListener = object : TouchListener {
-            override fun onSensorRecordTouchUP(sensorRecordUIModel: SensorRecordUIModel) {
+            override fun onSensorRecordTouch(sensorRecordUIModel: SensorRecordUIModel) {
                 // 이전 coroutine job cancel 필수
                 curUIJob?.let{ job ->
                     if(job.isActive) {
