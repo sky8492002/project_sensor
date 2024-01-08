@@ -10,14 +10,12 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Region
-import android.text.method.Touch
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
-import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import java.text.SimpleDateFormat
 
 @SuppressLint("SimpleDateFormat")
@@ -25,11 +23,11 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
     var touchListener: TouchListener? = null
 
     private val totalRecF = RectF()
-    private val centerRecF = RectF()
+    private val innerRecF = RectF()
     private val outsideRecF = RectF()
     private val paint = Paint()
     private var radius = 0
-    private var centerRadius = 0
+    private var innerRadius = 0
     private var outsideRadius = 0
     private var arcStrokeWidth = 100f
 
@@ -56,7 +54,7 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
 
         val min = Math.min(width, height)
         radius = (min - paddingLeft - 90) / 2
-        centerRadius = radius - arcStrokeWidth.toInt() / 2
+        innerRadius = radius - arcStrokeWidth.toInt() / 2
         outsideRadius = radius + arcStrokeWidth.toInt() / 2
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -72,8 +70,8 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
         totalRecF.apply {
             set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
         }
-        centerRecF.apply {
-            set(centerX - centerRadius, centerY - centerRadius, centerX + centerRadius, centerY + centerRadius)
+        innerRecF.apply {
+            set(centerX - innerRadius, centerY - innerRadius, centerX + innerRadius, centerY + innerRadius)
         }
         outsideRecF.apply {
             set(centerX - outsideRadius, centerY - outsideRadius, centerX + outsideRadius, centerY + outsideRadius)
@@ -158,7 +156,7 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
 
                         // 터치 범위 설정 (touchPath는 두 호를 잇는 경로를 설정함)
                         val touchPath = Path()
-                        touchPath.arcTo(centerRecF, startAngle, sweepAngle)
+                        touchPath.arcTo(innerRecF, startAngle, sweepAngle)
                         touchPath.arcTo(outsideRecF, startAngle, sweepAngle)
                         touchPath.close()
                         //touchPath.computeBounds(centerRecF, true)
@@ -201,6 +199,8 @@ class CustomClockView(context: Context, attrs: AttributeSet) : View(context, att
                 }
             }
         }
+
+        super.onDraw(canvas)
     }
 
     @SuppressLint("ClickableViewAccessibility")

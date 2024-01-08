@@ -48,6 +48,8 @@ class ShowRecordFragment: Fragment() {
     private val dayFormat = SimpleDateFormat("yyyy-MM-dd")
     private val hourFormat = SimpleDateFormat("HH")
     private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    private val minuteFormat = SimpleDateFormat("mm")
+    private val secondFormat = SimpleDateFormat("ss")
 
     private var curUIJob: Job? = null
 
@@ -83,7 +85,9 @@ class ShowRecordFragment: Fragment() {
 
         // customClockView에서 시점을 터치하면 해당 시점의 데이터부터 보여줌
         binding.customClockView.touchListener = object : TouchListener {
-            override fun onSensorRecordTouch(sensorRecordUIModel: SensorRecordUIModel) {
+            override fun onSensorRecordTouch(
+                sensorRecordUIModel: SensorRecordUIModel,
+            ) {
                 // 이전 coroutine job cancel 필수
                 curUIJob?.let{ job ->
                     if(job.isActive) {
@@ -171,6 +175,15 @@ class ShowRecordFragment: Fragment() {
         return null
     }
 
+    private fun getAppIcon(appName: String): Bitmap? {
+        for(appInfo in allAppInfos){
+            if(appInfo.appName == appName){
+                return appInfo.appIcon
+            }
+        }
+        return null
+    }
+
     // startTime 이후의 RecordsForHourUIModel 내부 기록을 보여줌
     private fun runUIJobByRecordsForHour(recordsForHourUIModel: RecordsForHourUIModel, startTime: Date?): Job{
         // 새로운 coroutine job launch
@@ -186,6 +199,14 @@ class ShowRecordFragment: Fragment() {
                 binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
                 binding.timeTextView.text = record.recordTime
                 binding.angleTextView.text = record.runningAppName
+
+                val curDate = timeFormat.parse(record.recordTime)
+                val curMinute = minuteFormat.format(curDate).toInt()
+                val curSecond = secondFormat.format(curDate).toInt()
+                val curTotalSeconds = curMinute * 60 + curSecond
+
+                // 시간을 가리키는 앱 아이콘 표시 위치 업데이트
+                binding.customPinView.setPin(curTotalSeconds, getAppIcon(record.runningAppName))
 
                 // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
                 if(lastxAngle != null && lastzAngle != null){
