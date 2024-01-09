@@ -76,7 +76,6 @@ class CustomClockSurfaceView @JvmOverloads constructor(
 
     fun setCurModel(recordsForHourUIModel: RecordsForHourUIModel){
         curModel = recordsForHourUIModel
-        //regions.clear()
         // SurfaceView는 MainThread가 아닌 Thread를 활용하여 화면을 그릴 수 있음
         //DrawingThread().start()
 
@@ -114,9 +113,17 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     // Dispatchers.Main이 아닌 CorutineScope를 launch하면 빠른 속도로 화면에 그릴 수 있음
     fun runDrawingJob(): Job {
         return CoroutineScope(Dispatchers.Default).launch {
-            val canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
             regions.clear() // 데이터가 남아있을 수 있는 regions를 초기화
+
+            delay(100)
+
+            var canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
+            surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
+
+            delay(100) // 특이점: lockHardwareCanvas와 unlockCanvasAndPost 사이에 delay를 사용할 수 없음
+
+            canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
             drawCanvas(canvas)
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
         }
