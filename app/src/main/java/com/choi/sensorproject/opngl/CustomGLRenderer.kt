@@ -19,9 +19,9 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     private lateinit var mPhone: Phone
     private lateinit var mPin: Pin
 
-    private val vPMatrix = FloatArray(16)
-    private val projectionMatrix = FloatArray(16)
-    private val viewMatrix = FloatArray(16)
+    private val phoneVPMatrix = FloatArray(16)
+    private val phoneProjectionMatrix = FloatArray(16)
+    private val phoneViewMatrix = FloatArray(16)
 
     private val pinVPMatrix = FloatArray(16)
     private val pinProjectionMatrix = FloatArray(16)
@@ -33,9 +33,9 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     private var appIcon: Bitmap? = null
 
     init{
-        Matrix.setIdentityM(projectionMatrix, 0)
-        Matrix.setIdentityM(viewMatrix, 0)
-        Matrix.setIdentityM(vPMatrix, 0)
+        Matrix.setIdentityM(phoneProjectionMatrix, 0)
+        Matrix.setIdentityM(phoneViewMatrix, 0)
+        Matrix.setIdentityM(phoneVPMatrix, 0)
 
         Matrix.setIdentityM(pinProjectionMatrix, 0)
         Matrix.setIdentityM(pinViewMatrix, 0)
@@ -67,7 +67,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
             val basePhoneImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.phone)
             mPhone2D.changeImage(basePhoneImage)
         }
-        mPhone2D.draw(vPMatrix)
+        mPhone2D.draw(phoneVPMatrix)
 
         // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
         if(appIcon != null){
@@ -87,13 +87,13 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     fun rotatePhone(dx:Float, dy:Float){
-        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 1f, 0f, 0f)
-        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 0f, 1f, 0f)
+        Matrix.rotateM(phoneVPMatrix, 0, dx * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(phoneVPMatrix, 0, dy * aspectRatio, 0f, 1f, 0f)
     }
     fun rotatePhone(dx:Float, dy:Float, dz: Float){
-        Matrix.rotateM(vPMatrix, 0, dx * aspectRatio, 1f, 0f, 0f)
-        Matrix.rotateM(vPMatrix, 0, dy * aspectRatio, 0f, 1f, 0f)
-        Matrix.rotateM(vPMatrix, 0, dz * aspectRatio, 0f, 0f, 1f)
+        Matrix.rotateM(phoneVPMatrix, 0, dx * aspectRatio, 1f, 0f, 0f)
+        Matrix.rotateM(phoneVPMatrix, 0, dy * aspectRatio, 0f, 1f, 0f)
+        Matrix.rotateM(phoneVPMatrix, 0, dz * aspectRatio, 0f, 0f, 1f)
     }
 
     fun translatePin(dx:Float, dy:Float, dz: Float){
@@ -101,15 +101,15 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     }
 
     fun resetPhoneAngle(){
-        Matrix.perspectiveM(projectionMatrix, 0, 60f, aspectRatio, 1f, 7f)
+        Matrix.perspectiveM(phoneProjectionMatrix, 0, 60f, aspectRatio, 1f, 7f)
         Matrix.setLookAtM(
-            viewMatrix, 0,
+            phoneViewMatrix, 0,
             0.0f, 0.0f, 2.5f,
             0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f
         )
         // mvp = p * v * m (곱하는 순서 중요함)
-        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+        Matrix.multiplyMM(phoneVPMatrix, 0, phoneProjectionMatrix, 0, phoneViewMatrix, 0)
     }
 
     fun resetPinLocation(){

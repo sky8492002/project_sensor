@@ -30,7 +30,7 @@
             android:textSize="20sp"
             app:layout_constraintTop_toBottomOf= "@id/time_textView"/>
 
-        <com.choi.sensorproject.ui.showrecord.CustomClockView
+        <com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
             android:id="@+id/custom_clock_View"
             android:layout_width="match_parent"
             android:layout_height="500dp"

@@ -53,7 +53,6 @@ class CustomGLSurfaceView @JvmOverloads constructor(
     fun changePinLocation(dx: Float, dy:Float, dz: Float){
         renderer.resetPinLocation()
         renderer.translatePin(dx, dy, dz)
-        Log.d("PinLocate", dx.toString() + " " + dy.toString())
     }
 
     // 출력되는 이미지 변경을 위해 사용

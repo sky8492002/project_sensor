@@ -236,24 +236,24 @@ class ShowRecordFragment: Fragment() {
     }
 
     private fun getPinPoint(sec: Int): FloatArray{
-        val innerRecF = RectF()
+        val insideRecF = RectF()
         val min = Math.min(binding.surfaceView.width, binding.surfaceView.height)
         val radius = (min - binding.surfaceView.paddingLeft - 90) / 2
         val arcStrokeWidth = 100f
-        val innerRadius = radius - arcStrokeWidth.toInt() / 2
+        val insideRadius = radius - arcStrokeWidth.toInt() / 2
 
         val centerX = (binding.surfaceView.width.div(2)).toFloat()
         val centerY = (binding.surfaceView.height.div(2)).toFloat()
 
-        innerRecF.apply {
-            set(centerX - innerRadius, centerY - innerRadius, centerX + innerRadius, centerY + innerRadius)
+        insideRecF.apply {
+            set(centerX - insideRadius, centerY - insideRadius, centerX + insideRadius, centerY + insideRadius)
         }
 
         val startAngle = -90f + 0.1f * sec
         val sweepAngle = 0.1f
 
         val arcPath = Path()
-        arcPath.arcTo(innerRecF, startAngle, sweepAngle)
+        arcPath.arcTo(insideRecF, startAngle, sweepAngle)
 
         // 호 경로의 절반에 있는 지점의 좌표를 찾음
         val pm = PathMeasure(arcPath, false)
