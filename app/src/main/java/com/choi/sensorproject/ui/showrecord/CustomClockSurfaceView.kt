@@ -2,6 +2,7 @@ package com.choi.sensorproject.ui.showrecord
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -118,10 +119,13 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             delay(100)
 
             var canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
 
-            delay(100) // 특이점: lockHardwareCanvas와 unlockCanvasAndPost 사이에 delay를 사용할 수 없음
+            // 특이점: lockHardwareCanvas와 unlockCanvasAndPost 사이에 delay를 사용할 수 없음
+            // 지우는 과정과 그리는 과정 사이에 100밀리 이하의 delay가 있으면 잔상 생김
+            // 그 이상의 delay로 각각 Post 하여 화면이 지워진 후 다시 그려지도록 함 (한꺼번에 Post하면 지워지는 것이 보이지 않음)
+            delay(101)
 
             canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
             drawCanvas(canvas)
