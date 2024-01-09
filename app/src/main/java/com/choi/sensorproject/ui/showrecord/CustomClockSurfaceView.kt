@@ -105,6 +105,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     private inner class DrawingThread(): Thread() {
         override fun run() {
             val canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
             drawCanvas(canvas)
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
         }
@@ -112,7 +113,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
 
     // Dispatchers.Main이 아닌 CorutineScope를 launch하면 빠른 속도로 화면에 그릴 수 있음
     fun runDrawingJob(): Job {
-        return CoroutineScope(Dispatchers.IO).launch {
+        return CoroutineScope(Dispatchers.Default).launch {
             val canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
             drawCanvas(canvas)
