@@ -46,12 +46,12 @@ class CustomGLSurfaceView @JvmOverloads constructor(
 //    }
 
     fun changePhoneAngle(dx: Float, dy: Float, dz: Float){
-        renderer.resetPhoneAngle()
+        renderer.resetPhoneMatrix()
         renderer.rotatePhone(dx, dy, dz)
     }
 
     fun changePinLocation(dx: Float, dy:Float, dz: Float){
-        renderer.resetPinLocation()
+        renderer.resetPinMatrix()
         renderer.translatePin(dx, dy, dz)
     }
 

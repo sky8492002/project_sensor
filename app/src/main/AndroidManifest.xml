@@ -26,6 +26,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SensorProject"
+        android:hardwareAccelerated="true"
         tools:targetApi="31">
         <activity
             android:name="com.choi.sensorproject.ui.MainActivity"

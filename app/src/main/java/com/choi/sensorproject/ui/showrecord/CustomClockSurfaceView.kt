@@ -17,12 +17,12 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.view.View
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 
@@ -76,7 +76,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
 
     fun setCurModel(recordsForHourUIModel: RecordsForHourUIModel){
         curModel = recordsForHourUIModel
-        regions.clear()
+        //regions.clear()
         // SurfaceView는 MainThread가 아닌 Thread를 활용하여 화면을 그릴 수 있음
         //DrawingThread().start()
 
@@ -123,27 +123,30 @@ class CustomClockSurfaceView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        Log.d("regionSize", regions.size.toString() + " " + curModel!!.records.size.toString())
+        if(regions.size == curModel!!.records.size){ // regions가 채워지는 속도보다 터치가 빠름으로 인해 index가 어긋나는 경우 방지
+            event?.let{
+                val point = Point()
+                point.x = it.x.toInt()
+                point.y = it.y.toInt()
 
-        event?.let{
-            val point = Point()
-            point.x = it.x.toInt()
-            point.y = it.y.toInt()
+                Log.d("touched", point.x.toString() + " " + point.y.toString())
 
-            Log.d("touched", point.x.toString() + " " + point.y.toString())
-
-            for (index in 0 until regions.size) {
-                if (regions[index].contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
-                    touchListener?.onSensorRecordTouch(curModel!!.records[index])
-                    Log.d("touched", curModel!!.records[index].recordTime)
-                    break
+                for (index in 0 until regions.size) {
+                    if (regions[index].contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
+                        touchListener?.onSensorRecordTouch(curModel!!.records[index])
+                        Log.d("touched", curModel!!.records[index].recordTime)
+                        break
+                    }
                 }
-            }
 
+            }
         }
         return true
     }
 
     fun drawCanvas(canvas: Canvas) {
+        regions.clear() // 데이터가 남아있을 수 있는 regions를 초기화
 
         val centerX = (width.div(2)).toFloat()
         val centerY = (height.div(2)).toFloat()
@@ -287,7 +290,5 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 }
             }
         }
-
     }
-
 }

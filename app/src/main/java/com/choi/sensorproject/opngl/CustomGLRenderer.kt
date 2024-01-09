@@ -83,7 +83,8 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height) // 뷰포트를 전체화면으로 맞춤
         aspectRatio = width.toFloat() / height // 가로 세로 비율을 구함
-        resetPhoneAngle()
+        resetPhoneMatrix()
+        resetPinMatrix()
     }
 
     fun rotatePhone(dx:Float, dy:Float){
@@ -100,7 +101,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         Matrix.translateM(pinVPMatrix, 0, dx, dy, dz)
     }
 
-    fun resetPhoneAngle(){
+    fun resetPhoneMatrix(){
         Matrix.perspectiveM(phoneProjectionMatrix, 0, 60f, aspectRatio, 1f, 7f)
         Matrix.setLookAtM(
             phoneViewMatrix, 0,
@@ -112,8 +113,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         Matrix.multiplyMM(phoneVPMatrix, 0, phoneProjectionMatrix, 0, phoneViewMatrix, 0)
     }
 
-    fun resetPinLocation(){
-        // mvp = p * v * m (곱하는 순서 중요함)
+    fun resetPinMatrix(){
         Matrix.multiplyMM(pinVPMatrix, 0, pinProjectionMatrix, 0, pinViewMatrix, 0)
     }
 
