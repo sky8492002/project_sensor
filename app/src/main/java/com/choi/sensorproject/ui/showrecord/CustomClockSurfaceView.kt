@@ -116,6 +116,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
         return CoroutineScope(Dispatchers.Default).launch {
             val canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
+            regions.clear() // 데이터가 남아있을 수 있는 regions를 초기화
             drawCanvas(canvas)
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
         }
@@ -124,8 +125,8 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         Log.d("regionSize", regions.size.toString() + " " + curModel!!.records.size.toString())
-        if(regions.size == curModel!!.records.size){ // regions가 채워지는 속도보다 터치가 빠름으로 인해 index가 어긋나는 경우 방지
-            event?.let{
+        event?.let{
+            if(regions.size == curModel!!.records.size) { // regions가 채워지는 속도보다 터치가 빠름으로 인해 index가 어긋나는 경우 방지
                 val point = Point()
                 point.x = it.x.toInt()
                 point.y = it.y.toInt()
@@ -133,20 +134,21 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 Log.d("touched", point.x.toString() + " " + point.y.toString())
 
                 for (index in 0 until regions.size) {
-                    if (regions[index].contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
-                        touchListener?.onSensorRecordTouch(curModel!!.records[index])
-                        Log.d("touched", curModel!!.records[index].recordTime)
-                        break
+                    // for문이 돌아가는 중에 다른 곳에서 regions.clear()가 발생할 수 있기 때문에 예외처리
+                    val curRegion = if(regions.size > index) regions[index] else null
+                    curRegion?.let{
+                        if (it.contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
+                            touchListener?.onSensorRecordTouch(curModel!!.records[index])
+                            Log.d("touched", curModel!!.records[index].recordTime)
+                        }
                     }
                 }
-
             }
         }
         return true
     }
 
     fun drawCanvas(canvas: Canvas) {
-        regions.clear() // 데이터가 남아있을 수 있는 regions를 초기화
 
         val centerX = (width.div(2)).toFloat()
         val centerY = (height.div(2)).toFloat()
@@ -272,7 +274,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
 //                            })
 //                        }
 
-                        curIndex += 1
+                        curIndex += 1 // regions의 index와 records의 index가 매칭되도록 카운트
                     } else {
                         canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
                             color = Color.GRAY

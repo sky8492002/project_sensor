@@ -205,11 +205,11 @@ class ShowRecordFragment: Fragment() {
                 // 시간을 가리키는 Pin 업데이트
                 //binding.customPinView.setPin(curTotalSeconds, getAppIcon(record.runningAppName))
                 val pinPoint = getPinPoint(curTotalSeconds)
-                binding.surfaceView.changePinLocation(pinPoint[0], pinPoint[1], 0f)
-                binding.surfaceView.changeAppIcon(getAppIcon(record.runningAppName))
+                binding.glSurfaceView.changePinLocation(pinPoint[0], pinPoint[1], 0f)
+                binding.glSurfaceView.changeAppIcon(getAppIcon(record.runningAppName))
 
                 // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
-                binding.surfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
+                binding.glSurfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
                 binding.timeTextView.text = record.recordTime
                 binding.angleTextView.text = record.runningAppName
 
@@ -220,12 +220,12 @@ class ShowRecordFragment: Fragment() {
                     for(n in 1..10){
                         val xAngle = lastxAngle!! + diffxAngle / 10 * n
                         val zAngle = lastzAngle!! + diffzAngle / 10 * n
-                        binding.surfaceView.changePhoneAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
+                        binding.glSurfaceView.changePhoneAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
                         delay(10)
                     }
                 }
                 else{
-                    binding.surfaceView.changePhoneAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
+                    binding.glSurfaceView.changePhoneAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
                     delay(100)
                 }
 
@@ -237,13 +237,13 @@ class ShowRecordFragment: Fragment() {
 
     private fun getPinPoint(sec: Int): FloatArray{
         val insideRecF = RectF()
-        val min = Math.min(binding.surfaceView.width, binding.surfaceView.height)
-        val radius = (min - binding.surfaceView.paddingLeft - 90) / 2
+        val min = Math.min(binding.glSurfaceView.width, binding.glSurfaceView.height)
+        val radius = (min - binding.glSurfaceView.paddingLeft - 90) / 2
         val arcStrokeWidth = 100f
         val insideRadius = radius - arcStrokeWidth.toInt() / 2
 
-        val centerX = (binding.surfaceView.width.div(2)).toFloat()
-        val centerY = (binding.surfaceView.height.div(2)).toFloat()
+        val centerX = (binding.glSurfaceView.width.div(2)).toFloat()
+        val centerY = (binding.glSurfaceView.height.div(2)).toFloat()
 
         insideRecF.apply {
             set(centerX - insideRadius, centerY - insideRadius, centerX + insideRadius, centerY + insideRadius)
@@ -261,8 +261,8 @@ class ShowRecordFragment: Fragment() {
         pm.getPosTan(pm.getLength() * 0.5f, point, null) // distance 만큼 시작 지점을 이동한 후의 위치를 point 변수에 담음
 
         // opengl 내부 좌표에 맞게 변환
-        point[0] = (point[0] - centerX) / (binding.surfaceView.width / 2)
-        point[1] = -(point[1] - centerY) / (binding.surfaceView.height / 2)
+        point[0] = (point[0] - centerX) / (binding.glSurfaceView.width / 2)
+        point[1] = -(point[1] - centerY) / (binding.glSurfaceView.height / 2)
 
         return point
     }
