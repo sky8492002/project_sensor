@@ -14,12 +14,12 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Region
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
+import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,9 +52,9 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     private var outsideRadius = 0
     private var arcStrokeWidth = 100f
 
-    private var curModel: RecordsForHourUIModel? = null
-
+    // onTouchEvent에서 필요 (regions의 index는 sensorRecordMap의 key와 초단위로 1:1대응)
     private var regions: MutableList<Region> = mutableListOf()
+    private var sensorRecordMap: MutableMap<Int, SensorRecordUIModel> = mutableMapOf()
 
     @SuppressLint("SimpleDateFormat")
     private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -76,19 +76,17 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     }
 
     fun setCurModel(recordsForHourUIModel: RecordsForHourUIModel){
-        curModel = recordsForHourUIModel
         // SurfaceView는 MainThread가 아닌 Thread를 활용하여 화면을 그릴 수 있음
-        //DrawingThread().start()
-
         // 이전 coroutine job cancel 필수
         curDrawingJob?.let{ job ->
             if(job.isActive) {
                 job.cancel()
             }
         }
-        curDrawingJob = runDrawingJob()
+        curDrawingJob = runDrawingJob(recordsForHourUIModel)
     }
 
+    @SuppressLint("DrawAllocation")
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = getDefaultSize(suggestedMinimumWidth, widthMeasureSpec)
         val height = getDefaultSize(suggestedMinimumHeight, heightMeasureSpec)
@@ -97,68 +95,6 @@ class CustomClockSurfaceView @JvmOverloads constructor(
         radius = (min - paddingLeft - 90) / 2
         insideRadius = radius - arcStrokeWidth.toInt() / 2
         outsideRadius = radius + arcStrokeWidth.toInt() / 2
-
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-    }
-
-    @SuppressLint("DrawAllocation")
-    private inner class DrawingThread(): Thread() {
-        override fun run() {
-            val canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY) // 이전에 그려진 것 제거
-            drawCanvas(canvas)
-            surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
-        }
-    }
-
-    // Dispatchers.Main이 아닌 CorutineScope를 launch하면 빠른 속도로 화면에 그릴 수 있음
-    fun runDrawingJob(): Job {
-        return CoroutineScope(Dispatchers.Default).launch {
-            regions.clear() // 데이터가 남아있을 수 있는 regions를 초기화
-
-            delay(100)
-
-            var canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
-            surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
-
-            // 특이점: lockHardwareCanvas와 unlockCanvasAndPost 사이에 delay를 사용할 수 없음
-            // 한꺼번에 Post하면 지워지는 것이 보이지 않으므로 각각 Post 하되, 그리기 전에 한번 더 지워줌 (잔상 방지)
-
-            canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
-            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
-            drawCanvas(canvas)
-            surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
-        }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        Log.d("regionSize", regions.size.toString() + " " + curModel!!.records.size.toString())
-        event?.let{
-            if(regions.size == curModel!!.records.size) { // regions가 채워지는 속도보다 터치가 빠름으로 인해 index가 어긋나는 경우 방지
-                val point = Point()
-                point.x = it.x.toInt()
-                point.y = it.y.toInt()
-
-                Log.d("touched", point.x.toString() + " " + point.y.toString())
-
-                for (index in 0 until regions.size) {
-                    // for문이 돌아가는 중에 다른 곳에서 regions.clear()가 발생할 수 있기 때문에 예외처리
-                    val curRegion = if(regions.size > index) regions[index] else null
-                    curRegion?.let{
-                        if (it.contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
-                            touchListener?.onSensorRecordTouch(curModel!!.records[index])
-                            Log.d("touched", curModel!!.records[index].recordTime)
-                        }
-                    }
-                }
-            }
-        }
-        return true
-    }
-
-    fun drawCanvas(canvas: Canvas) {
 
         val centerX = (width.div(2)).toFloat()
         val centerY = (height.div(2)).toFloat()
@@ -184,122 +120,146 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             )
         }
 
-        curModel?.let { curModel ->
-            var curIndex = 0
-            for (sec in 0 until 3600) {
+        regions.clear()
+        for(sec in 0 until 3600){
+            val startAngle = -90f + 0.1f * sec
+            val sweepAngle = 0.1f
 
-                val startAngle = -90f + 0.1f * sec
-                val sweepAngle = 0.1f
+            // 터치 범위 설정 (touchPath는 두 호를 잇는 경로를 설정함)
+            val touchPath = Path()
+            touchPath.arcTo(insideRecF, startAngle, sweepAngle)
+            touchPath.arcTo(outsideRecF, startAngle, sweepAngle)
+            touchPath.close()
+            //touchPath.computeBounds(centerRecF, true)
+            val curRegion = Region(Rect().apply {
+                set(
+                    outsideRecF.left.toInt(), outsideRecF.top.toInt(),
+                    outsideRecF.right.toInt(), outsideRecF.bottom.toInt()
+                )
+            })
+            curRegion.setPath(touchPath, curRegion)
+            regions.add(curRegion)
+        }
 
-                if (curIndex >= curModel.records.size) {
-                    break
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    // Dispatchers.Main이 아닌 CorutineScope를 launch하면 빠른 속도로 화면에 그릴 수 있음
+    private fun runDrawingJob(recordsForHourUIModel: RecordsForHourUIModel): Job {
+        return CoroutineScope(Dispatchers.Default).launch {
+            delay(100)
+
+            var canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
+            surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
+
+            // 특이점: lockHardwareCanvas와 unlockCanvasAndPost 사이에 delay를 사용할 수 없음
+            // 한꺼번에 Post하면 지워지는 것이 보이지 않으므로 각각 Post 하되, 그리기 전에 한번 더 지워줌 (잔상 방지)
+
+            canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
+            drawCanvas(canvas, recordsForHourUIModel)
+            surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        event?.let{
+
+            val point = Point()
+            point.x = it.x.toInt()
+            point.y = it.y.toInt()
+
+            for (sec in 0 until regions.size) {
+                if (regions[sec].contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
+                    // 해당 초와 일치하는 sensorRecord 찾기 (map을 활용하여 탐색 속도 향상)
+                    sensorRecordMap.get(sec)?.let { curRecord ->
+                        touchListener?.onSensorRecordTouch(curRecord)
+                    }
                 }
-                val curRecord = curModel.records[curIndex]
-                val curDate = timeFormat.parse(curRecord.recordTime)
-                if (curDate != null) {
-                    val curMinute = minuteFormat.format(curDate).toInt()
-                    val curSecond = secondFormat.format(curDate).toInt()
-                    val curTotalSeconds = curMinute * 60 + curSecond
+            }
+        }
+        return true
+    }
 
-                    if (curTotalSeconds == sec) {
+    private fun drawCanvas(canvas: Canvas, recordsForHourUIModel: RecordsForHourUIModel) {
+        updateSensorRecordMap(recordsForHourUIModel)
+        for (sec in 0 until 3600) {
+            val startAngle = -90f + 0.1f * sec
+            val sweepAngle = 0.1f
+            sensorRecordMap.get(sec)?.let{ curRecord ->
+                // 기기가 앞쪽으로 쏠림: 연한색, 뒤쪽: 진한색
+                // 기기가 왼쪽으로 쏠림: 주황색, 오른쪽: 보라색
+                var frontLeaning = false
+                var leftLeaning = false
 
-                        // 기기가 앞쪽으로 쏠림: 연한색, 뒤쪽: 진한색
-                        // 기기가 왼쪽으로 쏠림: 주황색, 오른쪽: 보라색
-                        var frontLeaning = false
-                        var leftLeaning = false
-
-                        when (curRecord.orientation) {
-                            Orientation.Portrait -> {
-                                frontLeaning = curRecord.zAngle < 0
-                                leftLeaning = curRecord.xAngle >= 0
-                            }
-
-                            Orientation.LandScape -> {
-                                frontLeaning = curRecord.zAngle < 0
-                                leftLeaning = curRecord.xAngle.let { xAngle ->
-                                    if (xAngle >= 0) {
-                                        if (xAngle >= 90) {
-                                            true
-                                        } else false
-                                    } else {
-                                        if (xAngle >= -90) {
-                                            true
-                                        } else false
-                                    }
-                                }
-                            }
-                        }
-
-                        if (frontLeaning && leftLeaning) {
-                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                                color = Color.parseColor("#FFECB3")
-                                strokeWidth = arcStrokeWidth
-                                style = Paint.Style.STROKE
-                            })
-                        } else if (frontLeaning && leftLeaning.not()) {
-                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                                color = Color.parseColor("#E1BEE7")
-                                strokeWidth = arcStrokeWidth
-                                style = Paint.Style.STROKE
-                            })
-                        } else if (frontLeaning.not() && leftLeaning) {
-                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                                color = Color.parseColor("#FF8F00")
-                                strokeWidth = arcStrokeWidth
-                                style = Paint.Style.STROKE
-                            })
-                        } else if (frontLeaning.not() && leftLeaning.not()) {
-                            canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                                color = Color.parseColor("#6A1B9A")
-                                strokeWidth = arcStrokeWidth
-                                style = Paint.Style.STROKE
-                            })
-                        }
-
-                        // 터치 범위 설정 (touchPath는 두 호를 잇는 경로를 설정함)
-                        val touchPath = Path()
-                        touchPath.arcTo(insideRecF, startAngle, sweepAngle)
-                        touchPath.arcTo(outsideRecF, startAngle, sweepAngle)
-                        touchPath.close()
-                        //touchPath.computeBounds(centerRecF, true)
-                        val curRegion = Region(Rect().apply {
-                            set(
-                                outsideRecF.left.toInt(), outsideRecF.top.toInt(),
-                                outsideRecF.right.toInt(), outsideRecF.bottom.toInt()
-                            )
-                        })
-                        curRegion.setPath(touchPath, curRegion)
-                        regions.add(curRegion)
-
-//                        if(curTotalSeconds > 1800){
-//                            canvas.drawPath(touchPath,  paint.apply {
-//                                color = Color.parseColor("#FFFFFF")
-//                                style = Paint.Style.STROKE
-//                            })
-//                        }
-//                        else if(curTotalSeconds <= 1800){
-//                            canvas.drawPath(touchPath,  paint.apply {
-//                                color = Color.parseColor("#000000")
-//                                style = Paint.Style.STROKE
-//                            })
-//                        }
-
-                        curIndex += 1 // regions의 index와 records의 index가 매칭되도록 카운트
-                    } else {
-                        canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                            color = Color.GRAY
-                            strokeWidth = 100f
-                            style = Paint.Style.STROKE
-                        })
+                when (curRecord.orientation) {
+                    Orientation.Portrait -> {
+                        frontLeaning = curRecord.zAngle < 0
+                        leftLeaning = curRecord.xAngle >= 0
                     }
 
-                } else {
+                    Orientation.LandScape -> {
+                        frontLeaning = curRecord.zAngle < 0
+                        leftLeaning = curRecord.xAngle.let { xAngle ->
+                            if (xAngle >= 0) {
+                                if (xAngle >= 90) {
+                                    true
+                                } else false
+                            } else {
+                                if (xAngle >= -90) {
+                                    true
+                                } else false
+                            }
+                        }
+                    }
+                }
+
+                if (frontLeaning && leftLeaning) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.GRAY
-                        strokeWidth = 100f
+                        color = Color.parseColor("#FFECB3")
+                        strokeWidth = arcStrokeWidth
+                        style = Paint.Style.STROKE
+                    })
+                } else if (frontLeaning && leftLeaning.not()) {
+                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                        color = Color.parseColor("#E1BEE7")
+                        strokeWidth = arcStrokeWidth
+                        style = Paint.Style.STROKE
+                    })
+                } else if (frontLeaning.not() && leftLeaning) {
+                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                        color = Color.parseColor("#FF8F00")
+                        strokeWidth = arcStrokeWidth
+                        style = Paint.Style.STROKE
+                    })
+                } else if (frontLeaning.not() && leftLeaning.not()) {
+                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                        color = Color.parseColor("#6A1B9A")
+                        strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 }
+            } ?: run {
+                canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                    color = Color.GRAY
+                    strokeWidth = 100f
+                    style = Paint.Style.STROKE
+                })
+            }
+        }
+    }
+
+    private fun updateSensorRecordMap(recordsForHourUIModel: RecordsForHourUIModel){
+        sensorRecordMap.clear()
+        for(curRecord in recordsForHourUIModel.records){
+            val curDate = timeFormat.parse(curRecord.recordTime)
+            if (curDate != null) {
+                val curMinute = minuteFormat.format(curDate).toInt()
+                val curSecond = secondFormat.format(curDate).toInt()
+                val curTotalSeconds = curMinute * 60 + curSecond
+                sensorRecordMap.put(curTotalSeconds, curRecord)
             }
         }
     }
