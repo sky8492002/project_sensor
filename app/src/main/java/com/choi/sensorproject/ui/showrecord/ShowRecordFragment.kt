@@ -129,37 +129,42 @@ class ShowRecordFragment: Fragment() {
 
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
 
-                recyclerView.layoutManager?.let{ layoutManager ->
-                    val centerView = snapHelper.findSnapView(layoutManager)!!
-                    val centerPosition = layoutManager.getPosition(centerView)
-                    centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
+                when(newState){
+                    // 스크롤이 멈췄을 때에만 화면을 업데이트
+                    RecyclerView.SCROLL_STATE_IDLE -> {
+                        recyclerView.layoutManager?.let{ layoutManager ->
+                            val centerView = snapHelper.findSnapView(layoutManager)!!
+                            val centerPosition = layoutManager.getPosition(centerView)
+                            centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
 
-                    // 현재 model에 맞는 원형 custom view 설정
-                    binding.customClockView.setCurModel(centerModel)
+                            // 현재 model에 맞는 원형 custom view 설정
+                            binding.customClockView.setCurModel(centerModel)
 
-                    // 현재 시간일 경우만 refresh 버튼 활성화
-                    val curTime = System.currentTimeMillis()
-                    if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
-                        binding.refreshButton.isEnabled = true
-                        binding.refreshButton.setImageAlpha(0xFF)
-                    }
-                    else{
-                        binding.refreshButton.isEnabled = false
-                        binding.refreshButton.setImageAlpha(0x3F)
-                    }
+                            // 현재 시간일 경우만 refresh 버튼 활성화
+                            val curTime = System.currentTimeMillis()
+                            if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
+                                binding.refreshButton.isEnabled = true
+                                binding.refreshButton.setImageAlpha(0xFF)
+                            }
+                            else{
+                                binding.refreshButton.isEnabled = false
+                                binding.refreshButton.setImageAlpha(0x3F)
+                            }
 
-                    // 이전 coroutine job cancel 필수
-                    curUIJob?.let{ job ->
-                        if(job.isActive) {
-                            job.cancel()
+                            // 이전 coroutine job cancel 필수
+                            curUIJob?.let{ job ->
+                                if(job.isActive) {
+                                    job.cancel()
+                                }
+                            }
+
+                            // 새로운 coroutine job launch
+                            curUIJob = runUIJobByRecordsForHour(centerModel, null)
                         }
                     }
-
-                    // 새로운 coroutine job launch
-                    curUIJob = runUIJobByRecordsForHour(centerModel, null)
                 }
             }
         })
