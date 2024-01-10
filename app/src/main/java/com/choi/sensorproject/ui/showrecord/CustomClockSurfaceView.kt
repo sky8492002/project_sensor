@@ -123,10 +123,10 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
 
             // 특이점: lockHardwareCanvas와 unlockCanvasAndPost 사이에 delay를 사용할 수 없음
-            // 지우는 과정과 그리는 과정 사이에 delay가 있으면 잔상 생김
-            // delay 없이 각각 Post 하여 화면이 지워진 후 다시 그려지도록 함 (한꺼번에 Post하면 지워지는 것이 보이지 않음)
+            // 한꺼번에 Post하면 지워지는 것이 보이지 않으므로 각각 Post 하되, 그리기 전에 한번 더 지워줌 (잔상 방지)
 
             canvas = surfaceHolder.lockHardwareCanvas() // GPU에서 렌더링하기 위한 버퍼를 잠그고 그리기에 사용할 수 있도록 캔버스를 반환
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
             drawCanvas(canvas)
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
         }
