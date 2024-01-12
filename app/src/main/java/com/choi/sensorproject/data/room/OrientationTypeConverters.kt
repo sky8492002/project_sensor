@@ -1,4 +1,4 @@
-package com.choi.sensorproject.room
+package com.choi.sensorproject.data.room
 
 import androidx.room.TypeConverter
 import com.choi.sensorproject.service.Orientation

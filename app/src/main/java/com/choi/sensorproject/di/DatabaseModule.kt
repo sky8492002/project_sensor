@@ -2,7 +2,7 @@ package com.choi.sensorproject.di
 
 import android.content.Context
 import androidx.room.Room
-import com.choi.sensorproject.room.AppDatabase
+import com.choi.sensorproject.data.room.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

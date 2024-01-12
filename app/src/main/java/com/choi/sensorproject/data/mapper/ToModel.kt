@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import com.choi.sensorproject.domain.model.AppInfoModel
 import com.choi.sensorproject.domain.model.RecordsForHourModel
 import com.choi.sensorproject.domain.model.SensorRecordModel
-import com.choi.sensorproject.room.entity.AppInfoEntity
-import com.choi.sensorproject.room.entity.SensorRecordEntity
+import com.choi.sensorproject.data.room.entity.AppInfoEntity
+import com.choi.sensorproject.data.room.entity.SensorRecordEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
@@ -16,7 +16,8 @@ fun SensorRecordEntity.toModel(): SensorRecordModel {
         zAngle = zAngle,
         recordTime = recordTime,
         orientation = orientation,
-        runningAppName = runningAppName
+        runningAppName = runningAppName,
+        isScreenOn = isScreenOn
     )
 }
 

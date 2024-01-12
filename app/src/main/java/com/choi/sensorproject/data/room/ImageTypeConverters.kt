@@ -1,4 +1,4 @@
-package com.choi.sensorproject.room
+package com.choi.sensorproject.data.room
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory

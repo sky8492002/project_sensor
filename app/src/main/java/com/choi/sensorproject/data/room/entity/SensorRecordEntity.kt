@@ -1,10 +1,10 @@
-package com.choi.sensorproject.room.entity
+package com.choi.sensorproject.data.room.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.choi.sensorproject.room.OrientationTypeConverters
+import com.choi.sensorproject.data.room.OrientationTypeConverters
 import com.choi.sensorproject.service.Orientation
 import java.time.LocalDateTime
 
@@ -23,4 +23,6 @@ data class SensorRecordEntity (
     val recordTime: String,
     @ColumnInfo(name = "running_app_name")
     val runningAppName: String,
+    @ColumnInfo(name = "is_screen_on", defaultValue = "1")
+    val isScreenOn: Boolean,
 )

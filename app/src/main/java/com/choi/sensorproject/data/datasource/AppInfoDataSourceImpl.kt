@@ -5,8 +5,8 @@ import com.choi.sensorproject.data.mapper.toModel
 import com.choi.sensorproject.data.mapper.toModels
 import com.choi.sensorproject.data.mapper.toModelsFlow
 import com.choi.sensorproject.domain.model.AppInfoModel
-import com.choi.sensorproject.room.AppDatabase
-import com.choi.sensorproject.room.entity.AppInfoEntity
+import com.choi.sensorproject.data.room.AppDatabase
+import com.choi.sensorproject.data.room.entity.AppInfoEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

@@ -3,7 +3,7 @@ package com.choi.sensorproject.data.datasource
 import com.choi.sensorproject.data.mapper.toEntity
 import com.choi.sensorproject.data.mapper.toModel
 import com.choi.sensorproject.domain.model.SensorRecordModel
-import com.choi.sensorproject.room.AppDatabase
+import com.choi.sensorproject.data.room.AppDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow

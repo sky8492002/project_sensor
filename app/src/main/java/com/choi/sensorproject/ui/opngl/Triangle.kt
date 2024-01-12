@@ -1,4 +1,4 @@
-package com.choi.sensorproject.opngl
+package com.choi.sensorproject.ui.opngl
 
 import android.opengl.GLES20
 import java.nio.ByteBuffer

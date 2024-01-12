@@ -11,7 +11,8 @@ fun SensorRecordUIModel.toModel(): SensorRecordModel {
         zAngle = zAngle,
         orientation = orientation,
         recordTime = recordTime,
-        runningAppName = runningAppName
+        runningAppName = runningAppName,
+        isScreenOn = isScreenOn
     )
 }
 fun AppInfoUIModel.toModel():AppInfoModel{

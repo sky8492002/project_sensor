@@ -7,5 +7,6 @@ data class SensorRecordUIModel(
     val zAngle: Float,
     val orientation: Orientation,
     val recordTime: String,
-    val runningAppName: String
+    val runningAppName: String,
+    val isScreenOn: Boolean
 )

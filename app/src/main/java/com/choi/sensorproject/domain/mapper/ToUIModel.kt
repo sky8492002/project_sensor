@@ -17,7 +17,8 @@ fun SensorRecordModel.toUIModel(): SensorRecordUIModel {
         zAngle = zAngle,
         orientation = orientation,
         recordTime = recordTime,
-        runningAppName = runningAppName
+        runningAppName = runningAppName,
+        isScreenOn = isScreenOn
     )
 }
 @JvmName("callFromSensorRecordModel")
@@ -28,7 +29,8 @@ fun List<SensorRecordModel>.toUIModels(): List<SensorRecordUIModel> {
             zAngle = it.zAngle,
             orientation = it.orientation,
             recordTime = it.recordTime,
-            runningAppName = it.runningAppName
+            runningAppName = it.runningAppName,
+            isScreenOn = it.isScreenOn
         )
     }
 }

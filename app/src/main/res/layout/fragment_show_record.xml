@@ -43,7 +43,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
 
-        <com.choi.sensorproject.opngl.CustomGLSurfaceView
+        <com.choi.sensorproject.ui.opngl.CustomGLSurfaceView
             android:id="@+id/gl_surface_view"
             android:layout_width="match_parent"
             android:layout_height="500dp"

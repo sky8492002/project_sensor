@@ -1,10 +1,10 @@
-package com.choi.sensorproject.room.dao
+package com.choi.sensorproject.data.room.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.choi.sensorproject.room.entity.AppInfoEntity
+import com.choi.sensorproject.data.room.entity.AppInfoEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

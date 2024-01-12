@@ -16,6 +16,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.display.DisplayManager
 import android.os.Build
+import android.os.PowerManager
 import android.util.Log
 import android.view.Display
 import android.view.Surface
@@ -58,6 +59,7 @@ class SensorWorker @AssistedInject constructor(
 
     var sensorManager: SensorManager
     var usageStatsManager: UsageStatsManager
+    var powerManager: PowerManager
 
     private var curXAngle : Float = 0f
     private var curZAngle : Float = 0f
@@ -77,6 +79,9 @@ class SensorWorker @AssistedInject constructor(
         usageStatsManager =
             context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
+        // 화면 켜짐/꺼짐 정보를 불러오기 위해 필요
+        powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -92,7 +97,7 @@ class SensorWorker @AssistedInject constructor(
                         val currentTimeMillis : Long = System.currentTimeMillis()
                         updateCurAppPackageName()
                         val curSensorRecordUIModel =
-                            SensorRecordUIModel(curXAngle, curZAngle, curOrientation, timeFormat.format(currentTimeMillis), curAppPackageName)
+                            SensorRecordUIModel(curXAngle, curZAngle, curOrientation, timeFormat.format(currentTimeMillis), curAppPackageName, powerManager.isInteractive)
                         insertSensorRecordUseCase(curSensorRecordUIModel)
                         setForeground(getForegroundInfo())
                         delay(1000)
@@ -147,7 +152,7 @@ class SensorWorker @AssistedInject constructor(
             var y = event.values[1].toDouble()
             val z = event.values[2].toDouble()
 
-            // curXAngle, curZAngle: 0 ~ 360 , curXAngle, curZAngle: 0 ~ 180, -180 ~ 0 (가까운 쪽으로 회전하게 함)
+            // curXAngle: -180 ~ 180, curZAngle: -90 ~ 90
             val sqrtXY = Math.sqrt(x.pow(2) + y.pow(2) )
             var baseXAngle = (90 - Math.acos(x / sqrtXY) * 180 / Math.PI).toFloat()
             if(y < 0) baseXAngle = 180 - baseXAngle
@@ -199,7 +204,6 @@ class SensorWorker @AssistedInject constructor(
         }
         Log.d("시간 event 체크", timeFormat.format(startTime) + " " + timeFormat.format(endTime) + " " + eventCount)
         curAppPackageName = cacheAppPackageName
-
 
     }
 

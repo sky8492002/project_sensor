@@ -4,7 +4,7 @@ import com.choi.sensorproject.data.datasource.AppInfoDataSource
 import com.choi.sensorproject.data.datasource.AppInfoDataSourceImpl
 import com.choi.sensorproject.data.datasource.SensorRecordDataSource
 import com.choi.sensorproject.data.datasource.SensorRecordDataSourceImpl
-import com.choi.sensorproject.room.AppDatabase
+import com.choi.sensorproject.data.room.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

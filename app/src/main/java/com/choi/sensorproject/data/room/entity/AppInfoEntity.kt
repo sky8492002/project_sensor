@@ -1,12 +1,12 @@
-package com.choi.sensorproject.room.entity
+package com.choi.sensorproject.data.room.entity
 
 import android.graphics.Bitmap
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.choi.sensorproject.room.ImageTypeConverters
-import com.choi.sensorproject.room.ReductionImageTypeConverters
+import com.choi.sensorproject.data.room.ImageTypeConverters
+import com.choi.sensorproject.data.room.ReductionImageTypeConverters
 
 @Entity(tableName = "app_info")
 data class AppInfoEntity (
