@@ -14,11 +14,11 @@ import com.choi.sensorproject.data.room.entity.SensorRecordEntity
         SensorRecordEntity:: class,
         AppInfoEntity:: class
     ],
-    autoMigrations = [
-        AutoMigration (from = 1, to = 2)
-    ],
+//    autoMigrations = [
+//        AutoMigration (from = 1, to = 2)
+//    ],
     version = 2,
-    exportSchema = true // 다음 버전 migration을 위해 스키마를 저장 (app/schemas 폴더에서 확인 가능)
+    exportSchema = false // 다음 버전 migration을 위해 스키마를 저장할 지 결정 (app/schemas 폴더에서 확인 가능)
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sensorRecordDao(): SensorRecordDao

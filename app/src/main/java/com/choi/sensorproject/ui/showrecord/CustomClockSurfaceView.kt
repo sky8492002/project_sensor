@@ -216,27 +216,36 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                     }
                 }
 
-                if (frontLeaning && leftLeaning) {
+                // 화면이 꺼져 있으면 검은색으로 결정
+                if(curRecord.isScreenOn == false){
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#FFECB3")
+                        color = Color.parseColor("#000000")
+                        strokeWidth = arcStrokeWidth
+                        style = Paint.Style.STROKE
+                    })
+                }
+                // 화면이 켜져 있으면 각도에 따라 색 결정
+                else if (frontLeaning && leftLeaning) {
+                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                        color = Color.parseColor("#52E4DC")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning && leftLeaning.not()) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#E1BEE7")
+                        color = Color.parseColor("#20B2AA")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning.not() && leftLeaning) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#FF8F00")
+                        color = Color.parseColor("#FF9DFF")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning.not() && leftLeaning.not()) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#6A1B9A")
+                        color = Color.parseColor("#BA55D3")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
