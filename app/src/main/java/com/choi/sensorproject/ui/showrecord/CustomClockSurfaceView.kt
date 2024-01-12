@@ -229,25 +229,25 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 // 화면이 켜져 있으면 각도에 따라 색 결정
                 else if (frontLeaning && leftLeaning) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#52E4DC")
+                        color = Color.parseColor("#20B2AA")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning && leftLeaning.not()) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#20B2AA")
+                        color = Color.parseColor("#BA55D3")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning.not() && leftLeaning) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#FF9DFF")
+                        color = Color.parseColor("#52E4DC")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning.not() && leftLeaning.not()) {
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#BA55D3")
+                        color = Color.parseColor("#FF9DFF")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
