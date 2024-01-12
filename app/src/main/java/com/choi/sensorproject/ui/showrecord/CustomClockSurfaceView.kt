@@ -42,6 +42,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     }
 
     var touchListener: TouchListener? = null
+    var drawSuccessListener: DrawSuccessListener? = null
 
     private val totalRecF = RectF()
     private val insideRecF = RectF()
@@ -160,6 +161,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 이전에 그려진 것 제거
             drawCanvas(canvas, recordsForHourUIModel)
             surfaceHolder.unlockCanvasAndPost(canvas) // 버퍼를 잠금 해제하여 컴포지터로 전송
+            drawSuccessListener?.onDrawClockViewSuccess() // 작업이 완료되었다고 알림 (fragment에서 override하여 callback을 받을 수 있도록 함)
         }
     }
 

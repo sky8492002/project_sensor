@@ -140,9 +140,6 @@ class ShowRecordFragment: Fragment() {
                             val centerPosition = layoutManager.getPosition(centerView)
                             centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
 
-                            // 현재 model에 맞는 원형 custom view 설정
-                            binding.customClockView.setCurModel(centerModel)
-
                             // 현재 시간일 경우만 refresh 버튼 활성화
                             val curTime = System.currentTimeMillis()
                             if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
@@ -154,15 +151,38 @@ class ShowRecordFragment: Fragment() {
                                 binding.refreshButton.setImageAlpha(0x3F)
                             }
 
-                            // 이전 coroutine job cancel 필수
+                            // clockView를 다 그릴 때까지 dialog를 띄움
+                            val loadingDialog = LoadingDialog(requireContext())
+                            loadingDialog.show()
+
+                            // 변경된 데이터(centerModel)를 clockView에 적용
+                            binding.customClockView.setCurModel(centerModel)
+
+                            // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
                             curUIJob?.let{ job ->
                                 if(job.isActive) {
                                     job.cancel()
                                 }
                             }
 
-                            // 새로운 coroutine job launch
-                            curUIJob = runUIJobByRecordsForHour(centerModel, null)
+                            // clockView를 다 그렸을 때 dialog를 지우고 다음 과정으로 넘어감
+                            binding.customClockView.drawSuccessListener = object : DrawSuccessListener{
+                                override fun onDrawClockViewSuccess() {
+                                    if(loadingDialog.isShowing){
+                                        loadingDialog.cancel()
+                                    }
+
+                                    // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
+                                    curUIJob?.let{ job ->
+                                        if(job.isActive) {
+                                            job.cancel()
+                                        }
+                                    }
+
+                                    // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
+                                    curUIJob = runUIJobByRecordsForHour(centerModel, null)
+                                }
+                            }
                         }
                     }
                 }
