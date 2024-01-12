@@ -57,6 +57,8 @@ class ShowRecordFragment: Fragment() {
 
     private lateinit var centerModel: RecordsForHourUIModel
 
+    private lateinit var loadingDialog: LoadingDialog
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -127,6 +129,8 @@ class ShowRecordFragment: Fragment() {
             recordsForHourAdapter.refresh()
         }
 
+        loadingDialog = LoadingDialog(requireContext())
+
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -152,7 +156,6 @@ class ShowRecordFragment: Fragment() {
                             }
 
                             // clockView를 다 그릴 때까지 dialog를 띄움
-                            val loadingDialog = LoadingDialog(requireContext())
                             loadingDialog.show()
 
                             // 변경된 데이터(centerModel)를 clockView에 적용
