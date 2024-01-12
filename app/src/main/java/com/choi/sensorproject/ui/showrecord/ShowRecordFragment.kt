@@ -105,8 +105,20 @@ class ShowRecordFragment: Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             manageSensorRecordViewModel.uiState.collect(){ uiState ->
+                var timeRecyclerViewListener : View.OnLayoutChangeListener? = null
                 if (uiState is SensorRecordUIState.Success) {
-                    recordsForHourAdapter.submitData(uiState.records)
+                    recordsForHourAdapter.submitData(uiState.records) // submitData 내부에서 PagingData를 collect
+                    // 처음 받아오는 경우(오늘 날짜의 데이터) 현재 시간에 대한 데이터로 스크롤함
+                    if(recordsForHourAdapter.itemCount == 0){
+                        val curTime = System.currentTimeMillis()
+                        // 첫 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
+                        timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
+                            binding.timeRecyclerView.smoothScrollToPosition(hourFormat.format(curTime).toInt())
+                            // 첫 번째 이후 강제로 스크롤하지 않음
+                            binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
+                        }
+                        binding.timeRecyclerView.addOnLayoutChangeListener(timeRecyclerViewListener)
+                    }
                 }
                 else{
                     requireActivity().finish()
