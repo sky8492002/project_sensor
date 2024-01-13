@@ -118,8 +118,17 @@ class ShowRecordFragment: Fragment() {
                         }
                         // 첫 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
                         timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
-                            // 현재 시간에 대한 데이터로 스크롤함
-                            binding.timeRecyclerView.smoothScrollToPosition(hourFormat.format(System.currentTimeMillis()).toInt() + 2)
+                            // 현재 시간에 기록된 데이터로 스크롤함
+                            val adapter = binding.timeRecyclerView.adapter as RecordsForHourAdapter
+                            for(index in 0 until adapter.itemCount){
+                                val curModel = adapter.getRecordsForHourModel(index)
+                                val curTimeMillis = System.currentTimeMillis()
+                                if(curModel.hour == hourFormat.format(curTimeMillis)
+                                    && curModel.date == dayFormat.format(curTimeMillis)) {
+                                    binding.timeRecyclerView.smoothScrollToPosition(index + 2)
+                                    break
+                                }
+                            }
                             // 첫 번째 이후 강제로 스크롤하지 않음
                             binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
 
