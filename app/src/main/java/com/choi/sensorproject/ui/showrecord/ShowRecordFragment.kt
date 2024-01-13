@@ -153,51 +153,53 @@ class ShowRecordFragment: Fragment() {
                     // 스크롤이 멈췄을 때에만 화면을 업데이트
                     RecyclerView.SCROLL_STATE_IDLE -> {
                         recyclerView.layoutManager?.let{ layoutManager ->
-                            val centerView = snapHelper.findSnapView(layoutManager)!!
-                            val centerPosition = layoutManager.getPosition(centerView)
-                            centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
-                            binding.curRecordsForHourUIModel = centerModel // 시간에 따라 배경 변경하는 데 사용
+                            val centerView = snapHelper.findSnapView(layoutManager)
+                            centerView?.let{
+                                val centerPosition = layoutManager.getPosition(it)
+                                centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
+                                binding.curRecordsForHourUIModel = centerModel // 시간에 따라 배경 변경하는 데 사용
 
-                            // 현재 시간일 경우만 refresh 버튼 활성화
-                            val curTime = System.currentTimeMillis()
-                            if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
-                                binding.refreshButton.isEnabled = true
-                                binding.refreshButton.setImageAlpha(0xFF)
-                            }
-                            else{
-                                binding.refreshButton.isEnabled = false
-                                binding.refreshButton.setImageAlpha(0x3F)
-                            }
-
-                            // clockView를 다 그릴 때까지 dialog를 띄움
-                            loadingDialog.show()
-
-                            // 변경된 데이터(centerModel)를 clockView에 적용
-                            binding.customClockView.setCurModel(centerModel)
-
-                            // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
-                            curUIJob?.let{ job ->
-                                if(job.isActive) {
-                                    job.cancel()
+                                // 현재 시간일 경우만 refresh 버튼 활성화
+                                val curTime = System.currentTimeMillis()
+                                if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
+                                    binding.refreshButton.isEnabled = true
+                                    binding.refreshButton.setImageAlpha(0xFF)
                                 }
-                            }
+                                else{
+                                    binding.refreshButton.isEnabled = false
+                                    binding.refreshButton.setImageAlpha(0x3F)
+                                }
 
-                            // clockView를 다 그렸을 때 dialog를 지우고 다음 과정으로 넘어감
-                            binding.customClockView.drawSuccessListener = object : DrawSuccessListener{
-                                override fun onDrawClockViewSuccess() {
-                                    if(loadingDialog.isShowing){
-                                        loadingDialog.cancel()
+                                // clockView를 다 그릴 때까지 dialog를 띄움
+                                loadingDialog.show()
+
+                                // 변경된 데이터(centerModel)를 clockView에 적용
+                                binding.customClockView.setCurModel(centerModel)
+
+                                // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
+                                curUIJob?.let{ job ->
+                                    if(job.isActive) {
+                                        job.cancel()
                                     }
+                                }
 
-                                    // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
-                                    curUIJob?.let{ job ->
-                                        if(job.isActive) {
-                                            job.cancel()
+                                // clockView를 다 그렸을 때 dialog를 지우고 다음 과정으로 넘어감
+                                binding.customClockView.drawSuccessListener = object : DrawSuccessListener{
+                                    override fun onDrawClockViewSuccess() {
+                                        if(loadingDialog.isShowing){
+                                            loadingDialog.cancel()
                                         }
-                                    }
 
-                                    // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
-                                    curUIJob = runUIJobByRecordsForHour(centerModel, null)
+                                        // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
+                                        curUIJob?.let{ job ->
+                                            if(job.isActive) {
+                                                job.cancel()
+                                            }
+                                        }
+
+                                        // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
+                                        curUIJob = runUIJobByRecordsForHour(centerModel, null)
+                                    }
                                 }
                             }
                         }
