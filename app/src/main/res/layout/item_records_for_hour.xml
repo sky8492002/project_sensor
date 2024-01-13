@@ -37,6 +37,7 @@
                     android:gravity="center_horizontal"
                     app:layout_constraintTop_toTopOf="parent"
                     android:textSize="10sp"
+                    android:fontFamily="@font/godo_b"
                     android:text="@{recordsForHourUIModel.date}"/>
 
                 <TextView
@@ -57,7 +58,8 @@
                     android:gravity="center_horizontal"
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:textSize="10sp"
-                    android:text="@{recordsForHourUIModel.hour}"/>
+                    android:fontFamily="@font/godo_b"
+                    android:text="@{String.valueOf(recordsForHourUIModel.hour+'시')}"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

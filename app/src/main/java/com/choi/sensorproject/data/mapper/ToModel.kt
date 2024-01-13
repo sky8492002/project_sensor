@@ -31,7 +31,7 @@ fun List<SensorRecordModel>.toRecordsForHourModels(pageDate: String): List<Recor
     val recordsForHourModels: MutableList<RecordsForHourModel> = mutableListOf()
     for (hour in 0 until 24) {
         val emptyRecords: MutableList<SensorRecordModel> = mutableListOf()
-        recordsForHourModels.add(RecordsForHourModel(pageDate, hour.toString().padStart(2, '0'), emptyRecords))
+        recordsForHourModels.add(RecordsForHourModel(pageDate, hour.toString(), emptyRecords))
     }
 
     // SensorRecordModel list의 요소를 시간 별로 통합하여 RecordsForHourModel list로 변환

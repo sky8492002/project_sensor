@@ -15,7 +15,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:padding="5dp">
+        android:padding="5dp"
+        android:clipToPadding="false">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/record_for_hour_cardView"
@@ -28,7 +29,7 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/room"
+                android:background="@drawable/background_gray"
                 android:paddingVertical="5dp"
                 android:paddingHorizontal="20dp">
 
