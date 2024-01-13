@@ -113,7 +113,7 @@ class ShowRecordFragment: Fragment() {
                         val curTime = System.currentTimeMillis()
                         // 첫 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
                         timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
-                            binding.timeRecyclerView.smoothScrollToPosition(hourFormat.format(curTime).toInt())
+                            binding.timeRecyclerView.smoothScrollToPosition(hourFormat.format(curTime).toInt() + 2)
                             // 첫 번째 이후 강제로 스크롤하지 않음
                             binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
                         }

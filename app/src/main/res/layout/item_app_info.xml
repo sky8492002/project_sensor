@@ -39,7 +39,7 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent"
-                    bitmap_image = "@{appInfoUIModel.appIcon}"/>
+                    app:bitmap_image = "@{appInfoUIModel.appIcon}"/>
 
                 <ImageView
                     android:id="@+id/app_playing_image_imageView"
@@ -49,7 +49,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintRight_toLeftOf="@+id/set_image_from_gallery_button"
                     android:layout_marginEnd="20dp"
-                    bitmap_image = "@{appInfoUIModel.appPlayingImage}" />
+                    app:bitmap_image = "@{appInfoUIModel.appPlayingImage}" />
 
                 <ImageButton
                     android:id="@+id/set_image_from_gallery_button"

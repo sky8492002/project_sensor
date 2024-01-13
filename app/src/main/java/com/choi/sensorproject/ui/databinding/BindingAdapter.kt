@@ -2,8 +2,10 @@ package com.choi.sensorproject.ui.databinding
 
 import android.graphics.Bitmap
 import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.recyclerview.AppInfoAdapter
 import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
 import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
@@ -32,5 +34,32 @@ fun ImageView.setImage(bitmap: Bitmap?){
     }
     else{
         this.setImageResource(R.drawable.phone)
+    }
+}
+
+@BindingAdapter("hour")
+fun ConstraintLayout.setBackgroundByHour(hour: String?){
+    if(hour != null){
+        when(hour.toInt()){
+            // 시간에 따라 다른 이미지 적용 (낮, 노을, 밤)
+            in 0..4 ->{
+                this.setBackgroundResource(R.drawable.background_night_green)
+            }
+            in 5..7 ->{
+                this.setBackgroundResource(R.drawable.background_sunset_green)
+            }
+            in 8..16 ->{
+                this.setBackgroundResource(R.drawable.background_light_sky_green)
+            }
+            in 17..19 ->{
+                this.setBackgroundResource(R.drawable.background_sunset_green)
+            }
+            in 20..23 ->{
+                this.setBackgroundResource(R.drawable.background_night_green)
+            }
+        }
+    }
+    else{
+        this.setBackgroundResource(R.drawable.background_gray)
     }
 }
