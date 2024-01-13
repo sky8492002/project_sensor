@@ -221,7 +221,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 // 화면이 꺼져 있으면 검은색으로 결정
                 if(curRecord.isScreenOn == false){
                     canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
-                        color = Color.parseColor("#000000")
+                        color = Color.BLACK
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
@@ -259,6 +259,18 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                     style = Paint.Style.STROKE
                 })
             }
+
+            // 호의 안쪽, 바깥쪽에 검은 선 그리기
+            canvas.drawArc(insideRecF, startAngle, sweepAngle, false, paint.apply {
+                color = Color.BLACK
+                strokeWidth = 5f
+                style = Paint.Style.STROKE
+            })
+            canvas.drawArc(outsideRecF, startAngle, sweepAngle, false, paint.apply {
+                color = Color.BLACK
+                strokeWidth = 5f
+                style = Paint.Style.STROKE
+            })
         }
     }
 
