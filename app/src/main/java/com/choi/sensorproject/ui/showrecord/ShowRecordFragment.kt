@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -70,6 +71,8 @@ class ShowRecordFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // 로딩 Dialog 객체 생성
+        loadingDialog = LoadingDialog(requireContext())
 
         // recyclerview 스크롤 시 하나의 아이템이 반드시 중앙에 오도록 하는 PagerSnapHelper
         val snapHelper = PagerSnapHelper()
@@ -109,14 +112,20 @@ class ShowRecordFragment: Fragment() {
                 var timeRecyclerViewListener : View.OnLayoutChangeListener? = null
                 if (uiState is SensorRecordUIState.Success) {
                     recordsForHourAdapter.submitData(uiState.records) // submitData 내부에서 PagingData를 collect
-                    // 처음 받아오는 경우(오늘 날짜의 데이터) 현재 시간에 대한 데이터로 스크롤함
-                    if(recordsForHourAdapter.itemCount == 0){
-                        val curTime = System.currentTimeMillis()
+                    if(recordsForHourAdapter.itemCount == 0){ // 처음 받아오는 경우(오늘 날짜의 데이터)
+                        withContext(Dispatchers.Main) {
+                            loadingDialog.show() // 첫 데이터를 받을 때까지 로딩 Dialog 띄움 (이 부분만 IO 스레드 대신 Main 스레드 사용)
+                        }
                         // 첫 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
                         timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
-                            binding.timeRecyclerView.smoothScrollToPosition(hourFormat.format(curTime).toInt() + 2)
+                            // 현재 시간에 대한 데이터로 스크롤함
+                            binding.timeRecyclerView.smoothScrollToPosition(hourFormat.format(System.currentTimeMillis()).toInt() + 2)
                             // 첫 번째 이후 강제로 스크롤하지 않음
                             binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
+
+                            if(loadingDialog.isShowing){
+                                loadingDialog.cancel()
+                            }
                         }
                         binding.timeRecyclerView.addOnLayoutChangeListener(timeRecyclerViewListener)
                     }
@@ -141,8 +150,6 @@ class ShowRecordFragment: Fragment() {
         binding.refreshButton.setOnClickListener(){
             recordsForHourAdapter.refresh()
         }
-
-        loadingDialog = LoadingDialog(requireContext())
 
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
