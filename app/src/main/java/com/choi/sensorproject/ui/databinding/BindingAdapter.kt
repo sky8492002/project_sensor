@@ -37,8 +37,8 @@ fun ImageView.setImage(bitmap: Bitmap?){
     }
 }
 
-@BindingAdapter("hour")
-fun ConstraintLayout.setBackgroundByHour(hour: String?){
+@BindingAdapter("inside_hour") // recyclerview item의 배경
+fun ConstraintLayout.setInsideBackgroundByHour(hour: String?){
     if(hour != null){
         when(hour.toInt()){
             // 시간에 따라 다른 이미지 적용 (낮, 노을, 밤)
@@ -56,6 +56,33 @@ fun ConstraintLayout.setBackgroundByHour(hour: String?){
             }
             in 20..23 ->{
                 this.setBackgroundResource(R.drawable.background_night_green)
+            }
+        }
+    }
+    else{
+        this.setBackgroundResource(R.drawable.background_gray)
+    }
+}
+
+@BindingAdapter("outside_hour") // 전체 화면의 배경
+fun ConstraintLayout.setOutsideBackgroundByHour(hour: String?){
+    if(hour != null){
+        when(hour.toInt()){
+            // 시간에 따라 다른 이미지 적용 (낮, 노을, 밤)
+            in 0..4 ->{
+                this.setBackgroundResource(R.drawable.background_night_gray)
+            }
+            in 5..7 ->{
+                this.setBackgroundResource(R.drawable.background_sunset_gray)
+            }
+            in 8..16 ->{
+                this.setBackgroundResource(R.drawable.background_sky_gray)
+            }
+            in 17..19 ->{
+                this.setBackgroundResource(R.drawable.background_sunset_gray)
+            }
+            in 20..23 ->{
+                this.setBackgroundResource(R.drawable.background_night_gray)
             }
         }
     }

@@ -26,7 +26,7 @@
                 android:layout_height="match_parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:hour ="@{recordsForHourUIModel.hour}">
+                app:inside_hour ="@{recordsForHourUIModel.hour}">
 
 
                 <TextView

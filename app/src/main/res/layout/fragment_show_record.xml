@@ -9,12 +9,16 @@
             name="manageSensorRecordViewModel"
             type="com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel" />
 
+        <variable
+            name="curRecordsForHourUIModel"
+            type="com.choi.sensorproject.ui.model.RecordsForHourUIModel" />
+
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/background_gray">
+        app:outside_hour = "@{curRecordsForHourUIModel.hour}">
 
         <TextView
             android:id="@+id/time_textView"

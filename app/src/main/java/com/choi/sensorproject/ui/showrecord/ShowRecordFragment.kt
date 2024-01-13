@@ -83,6 +83,7 @@ class ShowRecordFragment: Fragment() {
         binding.timeRecyclerView.adapter = recordsForHourAdapter
         binding.timeRecyclerView.layoutManager = focusedLayoutManager
         binding.manageSensorRecordViewModel = manageSensorRecordViewModel
+        binding.curRecordsForHourUIModel = null
 
         // customClockView에서 시점을 터치하면 해당 시점의 데이터부터 보여줌
         binding.customClockView.touchListener = object : TouchListener {
@@ -155,6 +156,7 @@ class ShowRecordFragment: Fragment() {
                             val centerView = snapHelper.findSnapView(layoutManager)!!
                             val centerPosition = layoutManager.getPosition(centerView)
                             centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
+                            binding.curRecordsForHourUIModel = centerModel // 시간에 따라 배경 변경하는 데 사용
 
                             // 현재 시간일 경우만 refresh 버튼 활성화
                             val curTime = System.currentTimeMillis()
