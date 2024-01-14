@@ -123,9 +123,10 @@ class ShowRecordFragment: Fragment() {
                             for(index in 0 until adapter.itemCount){
                                 val curModel = adapter.getRecordsForHourModel(index)
                                 val curTimeMillis = System.currentTimeMillis()
-                                if(curModel.hour == hourFormat.format(curTimeMillis)
+                                if(curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
                                     && curModel.date == dayFormat.format(curTimeMillis)) {
-                                    binding.timeRecyclerView.smoothScrollToPosition(index + 2)
+                                    binding.timeRecyclerView.scrollToPosition(index + 1)
+                                    binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
                                     break
                                 }
                             }
@@ -177,7 +178,7 @@ class ShowRecordFragment: Fragment() {
 
                                 // 현재 시간일 경우만 refresh 버튼 활성화
                                 val curTime = System.currentTimeMillis()
-                                if(centerModel.date == dayFormat.format(curTime) && centerModel.hour == hourFormat.format(curTime)){
+                                if(centerModel.date == dayFormat.format(curTime) && centerModel.hour.toInt() == hourFormat.format(curTime).toInt()){
                                     binding.refreshButton.isEnabled = true
                                     binding.refreshButton.setImageAlpha(0xFF)
                                 }
