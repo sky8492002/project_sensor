@@ -7,5 +7,5 @@ interface SensorRecordRepository {
 
     suspend fun insertSensorRecord(sensorRecordModel: SensorRecordModel)
     suspend fun getSensorRecords(pageDate: String) : List<SensorRecordModel>
-    fun getSensorRecordPagingSource() : SensorRecordPagingSource
+    fun getSensorRecordPagingSource(initPageDate: String) : SensorRecordPagingSource
 }

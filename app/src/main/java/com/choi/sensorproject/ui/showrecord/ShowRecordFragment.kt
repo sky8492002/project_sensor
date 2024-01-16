@@ -60,6 +60,8 @@ class ShowRecordFragment: Fragment() {
 
     private lateinit var loadingDialog: LoadingDialog
 
+    private var isNeedToScrollAfterUpdate = true
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -78,7 +80,7 @@ class ShowRecordFragment: Fragment() {
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(binding.timeRecyclerView)
 
-        val recordsForHourAdapter = RecordsForHourAdapter()
+        var recordsForHourAdapter = RecordsForHourAdapter()
 
         val focusedLayoutManager = FocusedLayoutManager(requireActivity().baseContext, snapHelper, -200f)
         focusedLayoutManager.orientation = LinearLayoutManager.HORIZONTAL
@@ -112,29 +114,64 @@ class ShowRecordFragment: Fragment() {
                 var timeRecyclerViewListener : View.OnLayoutChangeListener? = null
                 if (uiState is SensorRecordUIState.Success) {
                     recordsForHourAdapter.submitData(uiState.records) // submitData 내부에서 PagingData를 collect
-                    if(recordsForHourAdapter.itemCount == 0){ // 처음 받아오는 경우(오늘 날짜의 데이터)
-                        withContext(Dispatchers.Main) {
-                            loadingDialog.show() // 첫 데이터를 받을 때까지 로딩 Dialog 띄움 (이 부분만 IO 스레드 대신 Main 스레드 사용)
-                        }
-                        // 첫 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
-                        timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
-                            // 현재 시간에 기록된 데이터로 스크롤함
-                            val adapter = binding.timeRecyclerView.adapter as RecordsForHourAdapter
-                            for(index in 0 until adapter.itemCount){
-                                val curModel = adapter.getRecordsForHourModel(index)
-                                val curTimeMillis = System.currentTimeMillis()
-                                if(curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
-                                    && curModel.date == dayFormat.format(curTimeMillis)) {
-                                    binding.timeRecyclerView.scrollToPosition(index + 1)
-                                    binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
-                                    break
-                                }
-                            }
-                            // 첫 번째 이후 강제로 스크롤하지 않음
-                            binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
 
-                            if(loadingDialog.isShowing){
-                                loadingDialog.cancel()
+                    // 데이터 업데이트 후 강제 스크롤이 필요한 경우 (처음 실행, 날짜 이동, 새로고침 등)
+                    if(isNeedToScrollAfterUpdate){
+                        withContext(Dispatchers.Main){
+                            if(loadingDialog.isShowing.not()){
+                                loadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
+                            }
+                        }
+
+                        // 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
+                        timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
+                            val adapter = binding.timeRecyclerView.adapter as RecordsForHourAdapter
+                            val curTimeMillis = System.currentTimeMillis()
+                            // pagingSource의 기준 날짜가 언제인지 확인
+                            when(manageSensorRecordViewModel.getInitPageDate()){
+                                // 오늘 날짜인 경우 현재 시간에 기록된 데이터로 스크롤함
+                                dayFormat.format(curTimeMillis) -> {
+                                    for(index in 0 until adapter.itemCount){
+                                        val curModel = adapter.getRecordsForHourModel(index)
+                                        if(curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
+                                            && curModel.date == dayFormat.format(curTimeMillis)) {
+                                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                                                binding.timeRecyclerView.scrollToPosition(index + 1)
+                                                binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
+                                                isNeedToScrollAfterUpdate = false
+
+                                                // 이후 강제로 스크롤하지 않음
+                                                binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
+
+                                                if(loadingDialog.isShowing){
+                                                    loadingDialog.cancel()
+                                                }
+                                            }
+                                            break
+                                        }
+                                    }
+                                }
+                                // 다른 날짜인 경우 해당 날짜로 스크롤함
+                                else -> {
+                                    for(index in 0 until adapter.itemCount){
+                                        val curModel = adapter.getRecordsForHourModel(index)
+                                        if(curModel.date == manageSensorRecordViewModel.getInitPageDate()){
+                                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                                                binding.timeRecyclerView.scrollToPosition(index + 10)
+                                                binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
+                                                isNeedToScrollAfterUpdate = false
+
+                                                // 이후 강제로 스크롤하지 않음
+                                                binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
+
+                                                if(loadingDialog.isShowing){
+                                                    loadingDialog.cancel()
+                                                }
+                                            }
+                                            break
+                                        }
+                                    }
+                                }
                             }
                         }
                         binding.timeRecyclerView.addOnLayoutChangeListener(timeRecyclerViewListener)
@@ -158,8 +195,28 @@ class ShowRecordFragment: Fragment() {
         }
 
         binding.refreshButton.setOnClickListener(){
+            manageSensorRecordViewModel.changeInitPageDate(dayFormat.format(System.currentTimeMillis()))
+            isNeedToScrollAfterUpdate = true
             recordsForHourAdapter.refresh()
+            if(loadingDialog.isShowing.not()){
+                loadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
+            }
         }
+
+        // 날짜 변경
+        binding.calendarView.setOnDateChangeListener { view, year, month, dayOfMonth ->
+            manageSensorRecordViewModel.changeInitPageDate(
+                year.toString() + "-" +
+                        (month + 1).toString().padStart(2, '0') + "-" +
+                        dayOfMonth.toString().padStart(2, '0')
+            )
+            isNeedToScrollAfterUpdate = true
+            recordsForHourAdapter.refresh()
+            if(loadingDialog.isShowing.not()){
+                loadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
+            }
+        }
+
 
         // 스크롤 할 때마다 중앙 View에 맞는 데이터를 불러와서 화면에 적용 (이전 coroutine job cancel 필수)
         binding.timeRecyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
@@ -188,7 +245,9 @@ class ShowRecordFragment: Fragment() {
                                 }
 
                                 // clockView를 다 그릴 때까지 dialog를 띄움
-                                loadingDialog.show()
+                                if(loadingDialog.isShowing.not()){
+                                    loadingDialog.show()
+                                }
 
                                 // 변경된 데이터(centerModel)를 clockView에 적용
                                 binding.customClockView.setCurModel(centerModel)

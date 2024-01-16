@@ -13,39 +13,36 @@ import java.util.Calendar
 
 // 페이지의 끝에 도달할 때 다음 날짜의 데이터를 room에서 가져오도록 하는 커스텀 PagingSource
 class SensorRecordPagingSource (
-    private val sensorRecordRepository: SensorRecordRepository
+    private val sensorRecordRepository: SensorRecordRepository,
+    private val initPageDate: String
 ) : PagingSource<String, RecordsForHourModel>() {
 
-    var INIT_PAGE_DATE: String
     @SuppressLint("SimpleDateFormat")
     val dayFormat = SimpleDateFormat("yyyy-MM-dd")
-    private val initTime : Long = System.currentTimeMillis()
 
-    // paging 시작 지점 초기값 = 오늘 날짜
-    init{
-        INIT_PAGE_DATE = dayFormat.format(initTime)
-    }
+    // paging 시작 지점 초기값 = 생성자로 받은 initPageDate
+    private var INIT_PAGE_DATE = initPageDate
 
     // 연결된 PagingAdapter가 refresh 함수 호출 시 실행됨
     override fun getRefreshKey(state: PagingState<String, RecordsForHourModel>): String? {
         // refresh 하기 직전에 보던 날짜로 위치 잡음
-        state.anchorPosition?.let { anchorPosition ->
-            val calendar = Calendar.getInstance()
-            state.closestPageToPosition(anchorPosition)?.nextKey?.let{ key ->
-                dayFormat.parse(key)?.let{ date ->
-                    calendar.time = date
-                    calendar.add(Calendar.DATE, -1)
-                    return dayFormat.format(calendar.time)
-                }
-            }
-            state.closestPageToPosition(anchorPosition)?.prevKey?.let{ key ->
-                dayFormat.parse(key)?.let{ date ->
-                    calendar.time = date
-                    calendar.add(Calendar.DATE, 1)
-                    return dayFormat.format(calendar.time)
-                }
-            }
-        }
+//        state.anchorPosition?.let { anchorPosition ->
+//            val calendar = Calendar.getInstance()
+//            state.closestPageToPosition(anchorPosition)?.nextKey?.let{ key ->
+//                dayFormat.parse(key)?.let{ date ->
+//                    calendar.time = date
+//                    calendar.add(Calendar.DATE, -1)
+//                    return dayFormat.format(calendar.time)
+//                }
+//            }
+//            state.closestPageToPosition(anchorPosition)?.prevKey?.let{ key ->
+//                dayFormat.parse(key)?.let{ date ->
+//                    calendar.time = date
+//                    calendar.add(Calendar.DATE, 1)
+//                    return dayFormat.format(calendar.time)
+//                }
+//            }
+//        }
         return null
     }
 

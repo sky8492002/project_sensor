@@ -13,7 +13,7 @@ class GetSensorRecordsUseCase @Inject constructor(
         return repository.getSensorRecords(pageDate)
     }
 
-    fun getSensorRecordPagingSource(): SensorRecordPagingSource {
-        return repository.getSensorRecordPagingSource()
+    fun getSensorRecordPagingSource(initPageDate: String): SensorRecordPagingSource {
+        return repository.getSensorRecordPagingSource(initPageDate)
     }
 }

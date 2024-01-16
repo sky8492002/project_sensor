@@ -17,7 +17,7 @@ class SensorRecordRepositoryImpl @Inject constructor(
         return dataSource.getSensorRecords(pageDate)
     }
 
-    override fun getSensorRecordPagingSource(): SensorRecordPagingSource {
-        return SensorRecordPagingSource(this)
+    override fun getSensorRecordPagingSource(initPageDate: String): SensorRecordPagingSource {
+        return SensorRecordPagingSource(this, initPageDate)
     }
 }

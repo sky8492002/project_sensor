@@ -3,46 +3,67 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:motion="http://schemas.android.com/tools">
 
-    <ConstraintSet android:id="@+id/start_calender">
-        <Constraint android:id="@+id/calender_cardView"
+    <ConstraintSet android:id="@+id/start_calendar">
+        <Constraint android:id="@+id/calendar_cardView"
             android:layout_width="50dp"
             android:layout_height="50dp"
             app:cardCornerRadius="20dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"/>
+
+        <Constraint
+            android:id="@+id/calendarView"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent" />
+
     </ConstraintSet>
 
-    <ConstraintSet android:id="@+id/end_calender">
-        <Constraint android:id="@+id/calender_cardView"
+    <ConstraintSet android:id="@+id/end_calendar">
+        <Constraint android:id="@+id/calendar_cardView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cardCornerRadius="20dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"/>
+
+        <Constraint
+            android:id="@+id/calendarView"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent" />
+
     </ConstraintSet>
 
     <Transition
-        app:constraintSetStart="@+id/start_calender"
-        app:constraintSetEnd="@id/end_calender"
+        app:constraintSetStart="@+id/start_calendar"
+        app:constraintSetEnd="@id/end_calendar"
         motion:duration="1000">
 
         <!--motion:targetId만 쓰면 MotionLayout 전체가 트리거가 됨-->
         <OnClick
-            motion:motionTarget = "@+id/calender_cardView"
-            app:targetId="@+id/open_calender_ImageButton" />
-        <KeyFrameSet >
+            app:motionTarget = "@+id/calendar_cardView"
+            app:targetId="@+id/open_calendar_ImageButton"/>
+        <KeyFrameSet>
             <KeyAttribute
-                app:motionTarget="@+id/calender_cardView"
+                app:motionTarget="@+id/calendar_cardView"
                 app:framePosition="0"
                 android:alpha="1"/>
+
             <KeyAttribute
-                app:motionTarget="@+id/calender_cardView"
+                app:motionTarget="@+id/calendar_cardView"
                 app:framePosition="100"
                 android:alpha="0.8" />
+
+<!--            <KeyAttribute-->
+<!--                app:motionTarget="@+id/calendarView"-->
+<!--                app:framePosition="0"-->
+<!--                android:alpha="100"/>-->
+
+<!--            <KeyAttribute-->
+<!--                app:motionTarget="@+id/calendarView"-->
+<!--                app:framePosition="100"-->
+<!--                android:alpha="100"/>-->
         </KeyFrameSet>
-
-
     </Transition>
 </MotionScene>
