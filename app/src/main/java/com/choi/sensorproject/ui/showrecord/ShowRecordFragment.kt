@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -29,6 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -58,7 +60,8 @@ class ShowRecordFragment: Fragment() {
 
     private lateinit var centerModel: RecordsForHourUIModel
 
-    private lateinit var loadingDialog: LoadingDialog
+    private lateinit var dataLoadingDialog: LoadingDialog
+    private lateinit var drawLoadingDialog: LoadingDialog
 
     private var isNeedToScrollAfterUpdate = true
 
@@ -74,7 +77,8 @@ class ShowRecordFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // 로딩 Dialog 객체 생성
-        loadingDialog = LoadingDialog(requireContext())
+        dataLoadingDialog = LoadingDialog(requireContext())
+        drawLoadingDialog = LoadingDialog(requireContext())
 
         // recyclerview 스크롤 시 하나의 아이템이 반드시 중앙에 오도록 하는 PagerSnapHelper
         val snapHelper = PagerSnapHelper()
@@ -109,73 +113,46 @@ class ShowRecordFragment: Fragment() {
             }
         }
 
+        // 데이터 로딩 상태에 따라 관리 (loadStateFlow(비동기)와 addLoadStateListener(동기)방식이 있음)
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            recordsForHourAdapter.loadStateFlow.collect(){
+                val pagingLoadStates = it.source
+
+                if(pagingLoadStates.refresh is LoadState.Loading){
+                    if(dataLoadingDialog.isShowing.not()){
+                        dataLoadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
+                    }
+                    isNeedToScrollAfterUpdate = true
+                }
+                else if(pagingLoadStates.refresh is LoadState.NotLoading){
+                    // refresh 후 강제 스크롤이 필요한 경우 (처음 실행, 날짜 이동, 새로고침 등)
+                    if(isNeedToScrollAfterUpdate){
+                        forceScroll()
+                        isNeedToScrollAfterUpdate = false
+                    }
+
+                    if(dataLoadingDialog.isShowing){
+                        dataLoadingDialog.cancel()
+                    }
+                }
+
+                if(pagingLoadStates.append is LoadState.Loading || pagingLoadStates.prepend is LoadState.Loading) {
+                    if(dataLoadingDialog.isShowing.not()){
+                        dataLoadingDialog.show() // 데이터를 받을 때까지 로딩 Dialog 띄움
+                    }
+                }
+                else if(pagingLoadStates.append is LoadState.NotLoading && pagingLoadStates.prepend is LoadState.NotLoading){
+                    if(dataLoadingDialog.isShowing){
+                        dataLoadingDialog.cancel()
+                    }
+                }
+            }
+        }
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             manageSensorRecordViewModel.uiState.collect(){ uiState ->
-                var timeRecyclerViewListener : View.OnLayoutChangeListener? = null
                 if (uiState is SensorRecordUIState.Success) {
                     recordsForHourAdapter.submitData(uiState.records) // submitData 내부에서 PagingData를 collect
-
-                    // 데이터 업데이트 후 강제 스크롤이 필요한 경우 (처음 실행, 날짜 이동, 새로고침 등)
-                    if(isNeedToScrollAfterUpdate){
-                        withContext(Dispatchers.Main){
-                            if(loadingDialog.isShowing.not()){
-                                loadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
-                            }
-                        }
-
-                        // 데이터가 들어오는 순간보다 스크롤이 빠를 수 있으므로 상태 변경을 확인할 수 있는 listener를 설정
-                        timeRecyclerViewListener = View.OnLayoutChangeListener{ _, _, _, _, _, _, _, _, _ ->
-                            val adapter = binding.timeRecyclerView.adapter as RecordsForHourAdapter
-                            val curTimeMillis = System.currentTimeMillis()
-                            // pagingSource의 기준 날짜가 언제인지 확인
-                            when(manageSensorRecordViewModel.getInitPageDate()){
-                                // 오늘 날짜인 경우 현재 시간에 기록된 데이터로 스크롤함
-                                dayFormat.format(curTimeMillis) -> {
-                                    for(index in 0 until adapter.itemCount){
-                                        val curModel = adapter.getRecordsForHourModel(index)
-                                        if(curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
-                                            && curModel.date == dayFormat.format(curTimeMillis)) {
-                                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                                                binding.timeRecyclerView.scrollToPosition(index + 1)
-                                                binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
-                                                isNeedToScrollAfterUpdate = false
-
-                                                // 이후 강제로 스크롤하지 않음
-                                                binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
-
-                                                if(loadingDialog.isShowing){
-                                                    loadingDialog.cancel()
-                                                }
-                                            }
-                                            break
-                                        }
-                                    }
-                                }
-                                // 다른 날짜인 경우 해당 날짜로 스크롤함
-                                else -> {
-                                    for(index in 0 until adapter.itemCount){
-                                        val curModel = adapter.getRecordsForHourModel(index)
-                                        if(curModel.date == manageSensorRecordViewModel.getInitPageDate()){
-                                            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                                                binding.timeRecyclerView.scrollToPosition(index + 10)
-                                                binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
-                                                isNeedToScrollAfterUpdate = false
-
-                                                // 이후 강제로 스크롤하지 않음
-                                                binding.timeRecyclerView.removeOnLayoutChangeListener(timeRecyclerViewListener)
-
-                                                if(loadingDialog.isShowing){
-                                                    loadingDialog.cancel()
-                                                }
-                                            }
-                                            break
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        binding.timeRecyclerView.addOnLayoutChangeListener(timeRecyclerViewListener)
-                    }
                 }
                 else{
                     requireActivity().finish()
@@ -196,11 +173,7 @@ class ShowRecordFragment: Fragment() {
 
         binding.refreshButton.setOnClickListener(){
             manageSensorRecordViewModel.changeInitPageDate(dayFormat.format(System.currentTimeMillis()))
-            isNeedToScrollAfterUpdate = true
             recordsForHourAdapter.refresh()
-            if(loadingDialog.isShowing.not()){
-                loadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
-            }
         }
 
         // 날짜 변경
@@ -210,11 +183,7 @@ class ShowRecordFragment: Fragment() {
                         (month + 1).toString().padStart(2, '0') + "-" +
                         dayOfMonth.toString().padStart(2, '0')
             )
-            isNeedToScrollAfterUpdate = true
             recordsForHourAdapter.refresh()
-            if(loadingDialog.isShowing.not()){
-                loadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
-            }
         }
 
 
@@ -245,8 +214,8 @@ class ShowRecordFragment: Fragment() {
                                 }
 
                                 // clockView를 다 그릴 때까지 dialog를 띄움
-                                if(loadingDialog.isShowing.not()){
-                                    loadingDialog.show()
+                                if(drawLoadingDialog.isShowing.not()){
+                                    drawLoadingDialog.show()
                                 }
 
                                 // 변경된 데이터(centerModel)를 clockView에 적용
@@ -262,8 +231,8 @@ class ShowRecordFragment: Fragment() {
                                 // clockView를 다 그렸을 때 dialog를 지우고 다음 과정으로 넘어감
                                 binding.customClockView.drawSuccessListener = object : DrawSuccessListener{
                                     override fun onDrawClockViewSuccess() {
-                                        if(loadingDialog.isShowing){
-                                            loadingDialog.cancel()
+                                        if(drawLoadingDialog.isShowing){
+                                            drawLoadingDialog.cancel()
                                         }
 
                                         // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
@@ -283,6 +252,42 @@ class ShowRecordFragment: Fragment() {
                 }
             }
         })
+    }
+
+    private fun forceScroll(){
+        val adapter = binding.timeRecyclerView.adapter as RecordsForHourAdapter
+        val curTimeMillis = System.currentTimeMillis()
+        // pagingSource의 기준 날짜가 언제인지 확인
+        when(manageSensorRecordViewModel.getInitPageDate()){
+            // 오늘 날짜인 경우 현재 시간에 기록된 데이터로 스크롤함
+            dayFormat.format(curTimeMillis) -> {
+                for(index in 0 until adapter.itemCount){
+                    val curModel = adapter.getRecordsForHourModel(index)
+                    if(curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
+                        && curModel.date == dayFormat.format(curTimeMillis)) {
+                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                            binding.timeRecyclerView.scrollToPosition(index + 1)
+                            binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
+                        }
+                        break
+                    }
+                }
+            }
+            // 다른 날짜인 경우 해당 날짜로 스크롤함
+            else -> {
+                for(index in 0 until adapter.itemCount){
+                    val curModel = adapter.getRecordsForHourModel(index)
+                    if(curModel.date == manageSensorRecordViewModel.getInitPageDate()){
+                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                            binding.timeRecyclerView.scrollToPosition(index + 10)
+                            binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
+                            isNeedToScrollAfterUpdate = false
+                        }
+                        break
+                    }
+                }
+            }
+        }
     }
 
     private fun getPlayingImage(appName: String): Bitmap? {
@@ -307,7 +312,7 @@ class ShowRecordFragment: Fragment() {
     private fun runUIJobByRecordsForHour(recordsForHourUIModel: RecordsForHourUIModel, startTime: Date?): Job{
         // 새로운 coroutine job launch
         // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
-        return viewLifecycleOwner.lifecycleScope.launch {
+        return viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
             // job이 변경되면 관련된 변수도 초기화해야 하므로 지역 변수로 둠
             var lastxAngle: Float? = null
             var lastzAngle: Float? = null
