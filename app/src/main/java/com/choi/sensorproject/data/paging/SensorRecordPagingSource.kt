@@ -61,7 +61,7 @@ class SensorRecordPagingSource (
                 val sensorRecordModelList = sensorRecordRepository.getSensorRecords(pageDate)
 
                 // 시간 별로 통합하여 분류
-                val recordsForHourUIModelList = sensorRecordModelList.toRecordsForHourModels(pageDate)
+                val recordsForHourModelList = sensorRecordModelList.toRecordsForHourModels(pageDate)
 
                 // 어제, 내일 날짜 구하기
                 val calendar = Calendar.getInstance()
@@ -75,7 +75,7 @@ class SensorRecordPagingSource (
 
                 // 갱신된 LoadResult를 return
                 LoadResult.Page(
-                    data = recordsForHourUIModelList,
+                    data = recordsForHourModelList,
                     prevKey = prevKey,
                     nextKey = nextKey
                 )
