@@ -60,7 +60,9 @@ class ShowRecordFragment: Fragment() {
 
     private lateinit var centerModel: RecordsForHourUIModel
 
-    private lateinit var dataLoadingDialog: LoadingDialog
+    private lateinit var dataRefreshLoadingDialog: LoadingDialog
+    private lateinit var dataAppendLoadingDialog: LoadingDialog
+    private lateinit var dataPrependLoadingDialog: LoadingDialog
     private lateinit var drawLoadingDialog: LoadingDialog
 
     private var isNeedToScrollAfterUpdate = true
@@ -77,7 +79,9 @@ class ShowRecordFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // 로딩 Dialog 객체 생성
-        dataLoadingDialog = LoadingDialog(requireContext())
+        dataRefreshLoadingDialog = LoadingDialog(requireContext())
+        dataAppendLoadingDialog = LoadingDialog(requireContext())
+        dataPrependLoadingDialog = LoadingDialog(requireContext())
         drawLoadingDialog = LoadingDialog(requireContext())
 
         // recyclerview 스크롤 시 하나의 아이템이 반드시 중앙에 오도록 하는 PagerSnapHelper
@@ -119,8 +123,9 @@ class ShowRecordFragment: Fragment() {
                 val pagingLoadStates = it.source
 
                 if(pagingLoadStates.refresh is LoadState.Loading){
-                    if(dataLoadingDialog.isShowing.not()){
-                        dataLoadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
+                    if(dataRefreshLoadingDialog.isShowing.not()){
+                        dataRefreshLoadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
+                        delay(1000)
                     }
                     isNeedToScrollAfterUpdate = true
                 }
@@ -131,19 +136,30 @@ class ShowRecordFragment: Fragment() {
                         isNeedToScrollAfterUpdate = false
                     }
 
-                    if(dataLoadingDialog.isShowing){
-                        dataLoadingDialog.cancel()
+                    if(dataRefreshLoadingDialog.isShowing){
+                        dataRefreshLoadingDialog.cancel()
                     }
                 }
 
-                if(pagingLoadStates.append is LoadState.Loading || pagingLoadStates.prepend is LoadState.Loading) {
-                    if(dataLoadingDialog.isShowing.not()){
-                        dataLoadingDialog.show() // 데이터를 받을 때까지 로딩 Dialog 띄움
+                if(pagingLoadStates.append is LoadState.Loading) {
+                    if(dataAppendLoadingDialog.isShowing.not()){
+                        dataAppendLoadingDialog.show() // 데이터를 받을 때까지 로딩 Dialog 띄움
                     }
                 }
-                else if(pagingLoadStates.append is LoadState.NotLoading && pagingLoadStates.prepend is LoadState.NotLoading){
-                    if(dataLoadingDialog.isShowing){
-                        dataLoadingDialog.cancel()
+                else if(pagingLoadStates.append is LoadState.NotLoading){
+                    if(dataAppendLoadingDialog.isShowing){
+                        dataAppendLoadingDialog.cancel()
+                    }
+                }
+
+                if(pagingLoadStates.prepend is LoadState.Loading) {
+                    if(dataPrependLoadingDialog.isShowing.not()){
+                        dataPrependLoadingDialog.show() // 데이터를 받을 때까지 로딩 Dialog 띄움
+                    }
+                }
+                else if(pagingLoadStates.prepend is LoadState.NotLoading){
+                    if(dataPrependLoadingDialog.isShowing){
+                        dataPrependLoadingDialog.cancel()
                     }
                 }
             }
