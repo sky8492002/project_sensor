@@ -1,11 +1,18 @@
 package com.choi.sensorproject.ui.opngl
 
+import android.R.attr.bitmap
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+
 
 class Phone2D {
     private val COORDS = 3;
@@ -157,7 +164,29 @@ class Phone2D {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
 
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmapImage, 0)
+        // 폰 테두리가 있는 bitmap을 새로 만들어서 적용
+        val phoneBitmapImage =
+            Bitmap.createBitmap(bitmapImage.getWidth(), bitmapImage.getHeight(), bitmapImage.getConfig())
+        val canvas = Canvas(phoneBitmapImage) // canvas의 변경 사항이 newBitmapImage에 적용됨
+
+        // 이미지를 화면에 표시할 범위 설정
+        val fillPaint = Paint()
+        fillPaint.style = Paint.Style.FILL
+        canvas.drawRoundRect(0f, 0f, phoneBitmapImage.getWidth().toFloat(), phoneBitmapImage.getHeight().toFloat(), 80f, 80f, fillPaint)
+
+        // 이미지 그리기
+        val bitmapPaint = Paint()
+        bitmapPaint.setXfermode(PorterDuffXfermode(PorterDuff.Mode.SRC_IN)) // 앞서 설정한 사각형 범위 내에만 이미지가 그려짐
+        canvas.drawBitmap(bitmapImage, 0f, 0f, bitmapPaint)
+
+        // 테두리 그리기
+        val borderPaint = Paint()
+        borderPaint.color = Color.BLACK
+        borderPaint.strokeWidth = 5f
+        borderPaint.style = Paint.Style.STROKE
+        canvas.drawRoundRect(0f, 0f, phoneBitmapImage.getWidth().toFloat(), phoneBitmapImage.getHeight().toFloat(), 80f, 80f, borderPaint)
+
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, phoneBitmapImage, 0)
         GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D) // 메모리 캐싱 문제 해결 기능
     }
 
