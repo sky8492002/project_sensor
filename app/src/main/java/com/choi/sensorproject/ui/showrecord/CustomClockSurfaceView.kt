@@ -44,13 +44,17 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     var touchListener: TouchListener? = null
     var drawSuccessListener: DrawSuccessListener? = null
 
-    private val totalRecF = RectF()
-    private val insideRecF = RectF()
-    private val outsideRecF = RectF()
+    private val totalRectF = RectF()
+    private val insideRectF = RectF()
+    private val outsideRectF = RectF()
+    private val insideExpansionRectF = RectF()
+    private val outsideExpansionRectF = RectF()
     private val paint = Paint()
     private var radius = 0
     private var insideRadius = 0
     private var outsideRadius = 0
+    private var insideExpansionRadius = 0
+    private var outsideExpansionRadius = 0
     private var arcStrokeWidth = 100f
 
     // onTouchEvent에서 필요 (regions의 index는 sensorRecordMap의 key와 초단위로 1:1대응)
@@ -96,15 +100,17 @@ class CustomClockSurfaceView @JvmOverloads constructor(
         radius = (min - paddingLeft - 90) / 2
         insideRadius = radius - arcStrokeWidth.toInt() / 2
         outsideRadius = radius + arcStrokeWidth.toInt() / 2
+        insideExpansionRadius = radius - arcStrokeWidth.toInt()
+        outsideExpansionRadius = radius + arcStrokeWidth.toInt()
 
         val centerX = (width.div(2)).toFloat()
         val centerY = (height.div(2)).toFloat()
 
         // totalRectF: 도형을 그리는 최대 범위 설정
-        totalRecF.apply {
+        totalRectF.apply {
             set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
         }
-        insideRecF.apply {
+        insideRectF.apply {
             set(
                 centerX - insideRadius,
                 centerY - insideRadius,
@@ -112,7 +118,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 centerY + insideRadius
             )
         }
-        outsideRecF.apply {
+        outsideRectF.apply {
             set(
                 centerX - outsideRadius,
                 centerY - outsideRadius,
@@ -121,21 +127,40 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             )
         }
 
+        insideExpansionRectF.apply {
+            set(
+                centerX - insideExpansionRadius,
+                centerY - insideExpansionRadius,
+                centerX + insideExpansionRadius,
+                centerY + insideExpansionRadius
+            )
+        }
+
+        outsideExpansionRectF.apply {
+            set(
+                centerX - outsideExpansionRadius,
+                centerY - outsideExpansionRadius,
+                centerX + outsideExpansionRadius,
+                centerY + outsideExpansionRadius
+            )
+        }
+
         regions.clear()
         for(sec in 0 until 3600){
-            val startAngle = -90f + 0.1f * sec
-            val sweepAngle = 0.1f
 
-            // 터치 범위 설정 (touchPath는 두 호를 잇는 경로를 설정함)
+            val midAngle = -90f + 0.1f * sec + 0.05f // drawCanvas에서 그릴 호의 중간 각도
+            val sweepAngle = 2f // 0.1f는 너무 작아서 터치 포인트가 어떠한 region에도 포함되지 않을 수 있음
+            val startAngle = midAngle - sweepAngle / 2
+
+            // midAngle 각도를 중심으로 양쪽으로 sweepAngle/2 씩 확장된 범위를 region으로 설정 (touchPath는 두 호를 잇는 경로를 설정함)
             val touchPath = Path()
-            touchPath.arcTo(insideRecF, startAngle, sweepAngle)
-            touchPath.arcTo(outsideRecF, startAngle, sweepAngle)
+            touchPath.arcTo(insideExpansionRectF, startAngle, sweepAngle)
+            touchPath.arcTo(outsideExpansionRectF, startAngle, sweepAngle)
             touchPath.close()
-            //touchPath.computeBounds(centerRecF, true)
             val curRegion = Region(Rect().apply {
                 set(
-                    outsideRecF.left.toInt(), outsideRecF.top.toInt(),
-                    outsideRecF.right.toInt(), outsideRecF.bottom.toInt()
+                    outsideExpansionRectF.left.toInt(), outsideExpansionRectF.top.toInt(),
+                    outsideExpansionRectF.right.toInt(), outsideExpansionRectF.bottom.toInt()
                 )
             })
             curRegion.setPath(touchPath, curRegion)
@@ -173,12 +198,23 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             point.x = it.x.toInt()
             point.y = it.y.toInt()
 
-            for (sec in 0 until regions.size) {
-                if (regions[sec].contains(point.x, point.y) && event.action == MotionEvent.ACTION_DOWN) {
-                    // 해당 초와 일치하는 sensorRecord 찾기 (map을 활용하여 탐색 속도 향상)
-                    sensorRecordMap.get(sec)?.let { curRecord ->
-                        touchListener?.onSensorRecordTouch(curRecord)
+            val secList = mutableListOf<Int>()
+
+            if(event.action == MotionEvent.ACTION_DOWN) {
+                // 터치 포인트를 포함하는 region 중 sensorRecord가 있는 시간초를 secList에 담음
+                for (sec in 0 until regions.size) {
+                    if (regions[sec].contains(point.x, point.y)) {
+                        sensorRecordMap.get(sec)?.let{
+                            secList.add(sec)
+                        }
                     }
+                }
+            }
+
+            if(secList.isEmpty().not()){
+                // secList의 중간 시간초에 기록된 sensorRecord를 찾아 넘겨줌 (map을 활용하여 탐색 속도 향상)
+                sensorRecordMap.get(secList[secList.size/2])?.let { curRecord ->
+                    touchListener?.onSensorRecordTouch(curRecord)
                 }
             }
         }
@@ -220,7 +256,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
 
                 // 화면이 꺼져 있으면 검은색으로 결정
                 if(curRecord.isScreenOn == false){
-                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                    canvas.drawArc(totalRectF, startAngle, sweepAngle, false, paint.apply {
                         color = Color.BLACK
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
@@ -228,32 +264,32 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 }
                 // 화면이 켜져 있으면 각도에 따라 색 결정
                 else if (frontLeaning && leftLeaning) {
-                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                    canvas.drawArc(totalRectF, startAngle, sweepAngle, false, paint.apply {
                         color = Color.parseColor("#20B2AA")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning && leftLeaning.not()) {
-                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                    canvas.drawArc(totalRectF, startAngle, sweepAngle, false, paint.apply {
                         color = Color.parseColor("#BA55D3")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning.not() && leftLeaning) {
-                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                    canvas.drawArc(totalRectF, startAngle, sweepAngle, false, paint.apply {
                         color = Color.parseColor("#52E4DC")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 } else if (frontLeaning.not() && leftLeaning.not()) {
-                    canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                    canvas.drawArc(totalRectF, startAngle, sweepAngle, false, paint.apply {
                         color = Color.parseColor("#FF9DFF")
                         strokeWidth = arcStrokeWidth
                         style = Paint.Style.STROKE
                     })
                 }
             } ?: run {
-                canvas.drawArc(totalRecF, startAngle, sweepAngle, false, paint.apply {
+                canvas.drawArc(totalRectF, startAngle, sweepAngle, false, paint.apply {
                     color = Color.GRAY
                     strokeWidth = 100f
                     style = Paint.Style.STROKE
@@ -261,12 +297,12 @@ class CustomClockSurfaceView @JvmOverloads constructor(
             }
 
             // 호의 안쪽, 바깥쪽에 검은 선 그리기
-            canvas.drawArc(insideRecF, startAngle, sweepAngle, false, paint.apply {
+            canvas.drawArc(insideRectF, startAngle, sweepAngle, false, paint.apply {
                 color = Color.BLACK
                 strokeWidth = 5f
                 style = Paint.Style.STROKE
             })
-            canvas.drawArc(outsideRecF, startAngle, sweepAngle, false, paint.apply {
+            canvas.drawArc(outsideRectF, startAngle, sweepAngle, false, paint.apply {
                 color = Color.BLACK
                 strokeWidth = 5f
                 style = Paint.Style.STROKE
