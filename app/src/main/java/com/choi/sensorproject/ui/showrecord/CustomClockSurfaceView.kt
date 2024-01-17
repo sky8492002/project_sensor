@@ -2,17 +2,13 @@ package com.choi.sensorproject.ui.showrecord
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.PorterDuff
-import android.graphics.Rect
 import android.graphics.RectF
-import android.graphics.Region
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.SurfaceHolder
@@ -26,6 +22,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import kotlin.math.atan2
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @SuppressLint("SimpleDateFormat")
 class CustomClockSurfaceView @JvmOverloads constructor(
@@ -47,18 +46,15 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     private val totalRectF = RectF()
     private val insideRectF = RectF()
     private val outsideRectF = RectF()
-    private val insideExpansionRectF = RectF()
-    private val outsideExpansionRectF = RectF()
     private val paint = Paint()
     private var radius = 0
     private var insideRadius = 0
     private var outsideRadius = 0
-    private var insideExpansionRadius = 0
-    private var outsideExpansionRadius = 0
     private var arcStrokeWidth = 100f
 
-    // onTouchEvent에서 필요 (regions의 index는 sensorRecordMap의 key와 초단위로 1:1대응)
-    private var regions: MutableList<Region> = mutableListOf()
+    private var centerX: Float = 0f
+    private var centerY: Float = 0f
+
     private var sensorRecordMap: MutableMap<Int, SensorRecordUIModel> = mutableMapOf()
 
     @SuppressLint("SimpleDateFormat")
@@ -100,11 +96,9 @@ class CustomClockSurfaceView @JvmOverloads constructor(
         radius = (min - paddingLeft - 90) / 2
         insideRadius = radius - arcStrokeWidth.toInt() / 2
         outsideRadius = radius + arcStrokeWidth.toInt() / 2
-        insideExpansionRadius = radius - arcStrokeWidth.toInt()
-        outsideExpansionRadius = radius + arcStrokeWidth.toInt()
 
-        val centerX = (width.div(2)).toFloat()
-        val centerY = (height.div(2)).toFloat()
+        centerX = (width/2).toFloat()
+        centerY = (height/2).toFloat()
 
         // totalRectF: 도형을 그리는 최대 범위 설정
         totalRectF.apply {
@@ -125,46 +119,6 @@ class CustomClockSurfaceView @JvmOverloads constructor(
                 centerX + outsideRadius,
                 centerY + outsideRadius
             )
-        }
-
-        insideExpansionRectF.apply {
-            set(
-                centerX - insideExpansionRadius,
-                centerY - insideExpansionRadius,
-                centerX + insideExpansionRadius,
-                centerY + insideExpansionRadius
-            )
-        }
-
-        outsideExpansionRectF.apply {
-            set(
-                centerX - outsideExpansionRadius,
-                centerY - outsideExpansionRadius,
-                centerX + outsideExpansionRadius,
-                centerY + outsideExpansionRadius
-            )
-        }
-
-        regions.clear()
-        for(sec in 0 until 3600){
-
-            val midAngle = -90f + 0.1f * sec + 0.05f // drawCanvas에서 그릴 호의 중간 각도
-            val sweepAngle = 10f // 0.1f는 너무 작아서 터치 포인트가 어떠한 region에도 포함되지 않을 수 있음
-            val startAngle = midAngle - sweepAngle / 2
-
-            // midAngle 각도를 중심으로 양쪽으로 sweepAngle/2 씩 확장된 범위를 region으로 설정 (touchPath는 두 호를 잇는 경로를 설정함)
-            val touchPath = Path()
-            touchPath.arcTo(insideExpansionRectF, startAngle, sweepAngle)
-            touchPath.arcTo(outsideExpansionRectF, startAngle, sweepAngle)
-            touchPath.close()
-            val curRegion = Region(Rect().apply {
-                set(
-                    outsideExpansionRectF.left.toInt(), outsideExpansionRectF.top.toInt(),
-                    outsideExpansionRectF.right.toInt(), outsideExpansionRectF.bottom.toInt()
-                )
-            })
-            curRegion.setPath(touchPath, curRegion)
-            regions.add(curRegion)
         }
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -194,29 +148,17 @@ class CustomClockSurfaceView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         event?.let{
 
-            val point = Point()
-            point.x = it.x.toInt()
-            point.y = it.y.toInt()
+            // 원의 중심점과 터치 포인트 사이의 각도와 거리를 계산
+            val angle = 180 - atan2((it.x - centerX).toDouble(), (it.y - centerY).toDouble()) * 180 / Math.PI
+            val distance = sqrt((it.x - centerX).pow(2) +(it.y - centerY).pow(2))
 
-            val secList = mutableListOf<Int>()
-
-            if(event.action == MotionEvent.ACTION_DOWN) {
-                // 터치 포인트를 포함하는 region 중 sensorRecord가 있는 시간초를 secList에 담음
-                for (sec in 0 until regions.size) {
-                    if (regions[sec].contains(point.x, point.y)) {
-                        sensorRecordMap.get(sec)?.let{
-                            secList.add(sec)
-                        }
-                    }
-                }
-            }
-
-            if(secList.isEmpty().not()){
-                // secList의 중간 시간초에 기록된 sensorRecord를 찾아 넘겨줌 (map을 활용하여 탐색 속도 향상)
-                sensorRecordMap.get(secList[secList.size/2])?.let { curRecord ->
+            // 터치 포인트가 그려진 범위 안에 있으면 각도->시간초 변환 후 시간초에 기록된 sensorRecord를 넘겨줌
+            if(insideRadius <= distance && distance <= outsideRadius){
+                sensorRecordMap.get((angle * 10).toInt())?.let { curRecord ->
                     touchListener?.onSensorRecordTouch(curRecord)
                 }
             }
+
         }
         return true
     }
