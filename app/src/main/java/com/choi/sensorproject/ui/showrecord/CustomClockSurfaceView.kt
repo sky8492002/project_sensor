@@ -149,7 +149,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
         for(sec in 0 until 3600){
 
             val midAngle = -90f + 0.1f * sec + 0.05f // drawCanvas에서 그릴 호의 중간 각도
-            val sweepAngle = 2f // 0.1f는 너무 작아서 터치 포인트가 어떠한 region에도 포함되지 않을 수 있음
+            val sweepAngle = 10f // 0.1f는 너무 작아서 터치 포인트가 어떠한 region에도 포함되지 않을 수 있음
             val startAngle = midAngle - sweepAngle / 2
 
             // midAngle 각도를 중심으로 양쪽으로 sweepAngle/2 씩 확장된 범위를 region으로 설정 (touchPath는 두 호를 잇는 경로를 설정함)
