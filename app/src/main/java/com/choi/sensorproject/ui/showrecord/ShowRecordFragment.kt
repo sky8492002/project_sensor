@@ -30,9 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -88,7 +86,7 @@ class ShowRecordFragment: Fragment() {
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(binding.timeRecyclerView)
 
-        var recordsForHourAdapter = RecordsForHourAdapter()
+        val recordsForHourAdapter = RecordsForHourAdapter()
 
         val focusedLayoutManager = FocusedLayoutManager(requireActivity().baseContext, snapHelper, -200f)
         focusedLayoutManager.orientation = LinearLayoutManager.HORIZONTAL
@@ -125,14 +123,13 @@ class ShowRecordFragment: Fragment() {
                 if(pagingLoadStates.refresh is LoadState.Loading){
                     if(dataRefreshLoadingDialog.isShowing.not()){
                         dataRefreshLoadingDialog.show() // 데이터를 받아서 스크롤 위치가 조정될 때까지 로딩 Dialog 띄움
-                        delay(1000)
                     }
                     isNeedToScrollAfterUpdate = true
                 }
                 else if(pagingLoadStates.refresh is LoadState.NotLoading){
                     // refresh 후 강제 스크롤이 필요한 경우 (처음 실행, 날짜 이동, 새로고침 등)
                     if(isNeedToScrollAfterUpdate){
-                        forceScroll()
+                        forceScroll(manageSensorRecordViewModel.getInitPageDate())
                         isNeedToScrollAfterUpdate = false
                     }
 
@@ -270,21 +267,22 @@ class ShowRecordFragment: Fragment() {
         })
     }
 
-    private fun forceScroll(){
+    private fun forceScroll(initPageDate: String){
         val adapter = binding.timeRecyclerView.adapter as RecordsForHourAdapter
+        val layoutManager = binding.timeRecyclerView.layoutManager as FocusedLayoutManager
         val curTimeMillis = System.currentTimeMillis()
-        // pagingSource의 기준 날짜가 언제인지 확인
-        when(manageSensorRecordViewModel.getInitPageDate()){
-            // 오늘 날짜인 경우 현재 시간에 기록된 데이터로 스크롤함
+
+        // pagingSource의 INIT_PAGE_DATE에 따라 스크롤 위치가 달라짐
+        when(initPageDate){
+            // 오늘 날짜인 경우 현재 시간으로 스크롤함
             dayFormat.format(curTimeMillis) -> {
                 for(index in 0 until adapter.itemCount){
                     val curModel = adapter.getRecordsForHourModel(index)
                     if(curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
-                        && curModel.date == dayFormat.format(curTimeMillis)) {
-                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                            binding.timeRecyclerView.scrollToPosition(index + 1)
-                            binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
-                        }
+                        && curModel.date == initPageDate) {
+                        // position 번째 아이템을 offset 위치에 오도록 스크롤
+                        layoutManager.scrollToPositionWithOffset(index, binding.timeRecyclerView.width / 2)
+                        binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
                         break
                     }
                 }
@@ -293,12 +291,10 @@ class ShowRecordFragment: Fragment() {
             else -> {
                 for(index in 0 until adapter.itemCount){
                     val curModel = adapter.getRecordsForHourModel(index)
-                    if(curModel.date == manageSensorRecordViewModel.getInitPageDate()){
-                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                            binding.timeRecyclerView.scrollToPosition(index + 10)
-                            binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
-                            isNeedToScrollAfterUpdate = false
-                        }
+                    if(curModel.date == initPageDate){
+                        // position 번째 아이템을 offset 위치에 오도록 스크롤
+                        layoutManager.scrollToPositionWithOffset(index + 12, binding.timeRecyclerView.width / 2)
+                        binding.timeRecyclerView.smoothScrollBy(1, 0) // snapHelper가 스냅 액션을 트리거하도록 함
                         break
                     }
                 }
