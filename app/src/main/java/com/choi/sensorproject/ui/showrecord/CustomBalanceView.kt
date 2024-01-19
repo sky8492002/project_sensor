@@ -69,8 +69,14 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
             if(leftLeaning) leftLeaningCount +=1 else rightLeaningCount +=1
         }
 
-        balanceLineStartY = centerY + (leftLeaningCount - rightLeaningCount).toFloat() / (leftLeaningCount + rightLeaningCount).toFloat() * 50
-        balanceLineEndY = centerY + (rightLeaningCount - leftLeaningCount).toFloat() / (leftLeaningCount + rightLeaningCount).toFloat() * 50
+        if(leftLeaningCount + rightLeaningCount != 0){
+            balanceLineStartY = centerY + (leftLeaningCount - rightLeaningCount).toFloat() / (leftLeaningCount + rightLeaningCount).toFloat() * 50
+            balanceLineEndY = centerY + (rightLeaningCount - leftLeaningCount).toFloat() / (leftLeaningCount + rightLeaningCount).toFloat() * 50
+        }
+        else{
+            balanceLineStartY = centerY
+            balanceLineEndY = centerY
+        }
 
         postInvalidate()
     }
@@ -84,6 +90,9 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
 
         centerX = (width/2).toFloat()
         centerY = (height/2).toFloat()
+
+        balanceLineStartY = centerY
+        balanceLineEndY = centerY
 
         // totalRectF: 도형을 그리는 최대 범위 설정
         totalRectF.apply {

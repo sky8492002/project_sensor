@@ -328,6 +328,15 @@ class ShowRecordFragment: Fragment() {
         // 새로운 coroutine job launch
         // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
         return viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            // 이전에 보던 Pin, Phone 초기화
+            val initPinPoint = getPinPoint(0)
+            binding.glSurfaceView.changePinLocation(initPinPoint[0], initPinPoint[1], 0f)
+            binding.glSurfaceView.changeAppIcon(null)
+            binding.glSurfaceView.changeAppPlayingImage(null)
+            binding.timeTextView.text = ""
+            binding.angleTextView.text = ""
+            binding.glSurfaceView.changePhoneAngle(0f, 0f, 0f)
+
             // job이 변경되면 관련된 변수도 초기화해야 하므로 지역 변수로 둠
             var lastxAngle: Float? = null
             var lastzAngle: Float? = null
