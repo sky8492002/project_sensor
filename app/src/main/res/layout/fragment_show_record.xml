@@ -75,6 +75,16 @@
             android:scaleType = "fitCenter"
             android:layout_marginBottom="115dp" />
 
+        <com.choi.sensorproject.ui.showrecord.CustomBalanceView
+            android:id="@+id/custom_balanceView"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+
+
+
         <androidx.constraintlayout.motion.widget.MotionLayout
             android:id="@+id/menus_motionLayout"
             android:layout_height="290dp"

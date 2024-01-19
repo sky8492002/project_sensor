@@ -226,6 +226,9 @@ class ShowRecordFragment: Fragment() {
                                     binding.refreshButton.setImageAlpha(0x3F)
                                 }
 
+                                // 변경된 데이터(centerModel)를 balanceView에 적용
+                                binding.customBalanceView.setCurModel(centerModel)
+
                                 // clockView를 다 그릴 때까지 dialog를 띄움
                                 if(drawLoadingDialog.isShowing.not()){
                                     drawLoadingDialog.show()
