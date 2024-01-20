@@ -61,7 +61,7 @@ class ShowRecordFragment: Fragment() {
     private lateinit var dataRefreshLoadingDialog: LoadingDialog
     private lateinit var dataAppendLoadingDialog: LoadingDialog
     private lateinit var dataPrependLoadingDialog: LoadingDialog
-    private lateinit var drawLoadingDialog: LoadingDialog
+    private lateinit var clockViewLoadingDialog: LoadingDialog
 
     private var isNeedToScrollAfterUpdate = true
 
@@ -80,7 +80,7 @@ class ShowRecordFragment: Fragment() {
         dataRefreshLoadingDialog = LoadingDialog(requireContext())
         dataAppendLoadingDialog = LoadingDialog(requireContext())
         dataPrependLoadingDialog = LoadingDialog(requireContext())
-        drawLoadingDialog = LoadingDialog(requireContext())
+        clockViewLoadingDialog = LoadingDialog(requireContext())
 
         // recyclerview 스크롤 시 하나의 아이템이 반드시 중앙에 오도록 하는 PagerSnapHelper
         val snapHelper = PagerSnapHelper()
@@ -215,6 +215,13 @@ class ShowRecordFragment: Fragment() {
                                 centerModel = recordsForHourAdapter.getRecordsForHourModel(centerPosition)
                                 binding.curRecordsForHourUIModel = centerModel // 시간에 따라 배경 변경하는 데 사용
 
+                                // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
+                                curUIJob?.let{ job ->
+                                    if(job.isActive) {
+                                        job.cancel()
+                                    }
+                                }
+
                                 if(centerModel.records.isEmpty()){
                                     // 이전에 보던 Pin, Phone 초기화
                                     val initPinPoint = getPinPoint(0)
@@ -237,29 +244,19 @@ class ShowRecordFragment: Fragment() {
                                     binding.refreshButton.setImageAlpha(0x3F)
                                 }
 
-                                // 변경된 데이터(centerModel)를 balanceView에 적용
-                                binding.customBalanceView.setCurModel(centerModel)
-
                                 // clockView를 다 그릴 때까지 dialog를 띄움
-                                if(drawLoadingDialog.isShowing.not()){
-                                    drawLoadingDialog.show()
+                                if(clockViewLoadingDialog.isShowing.not()){
+                                    clockViewLoadingDialog.show()
                                 }
 
                                 // 변경된 데이터(centerModel)를 clockView에 적용
                                 binding.customClockView.setCurModel(centerModel)
 
-                                // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
-                                curUIJob?.let{ job ->
-                                    if(job.isActive) {
-                                        job.cancel()
-                                    }
-                                }
-
                                 // clockView를 다 그렸을 때 dialog를 지우고 다음 과정으로 넘어감
                                 binding.customClockView.drawSuccessListener = object : DrawSuccessListener{
-                                    override fun onDrawClockViewSuccess() {
-                                        if(drawLoadingDialog.isShowing){
-                                            drawLoadingDialog.cancel()
+                                    override fun onDrawSuccess() {
+                                        if(clockViewLoadingDialog.isShowing){
+                                            clockViewLoadingDialog.cancel()
                                         }
 
                                         // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
@@ -268,6 +265,9 @@ class ShowRecordFragment: Fragment() {
                                                 job.cancel()
                                             }
                                         }
+
+                                        // 변경된 데이터(centerModel)를 balanceView에 적용
+                                        binding.customBalanceView.setCurModel(centerModel)
 
                                         // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
                                         curUIJob = runUIJobByRecordsForHour(centerModel, null)

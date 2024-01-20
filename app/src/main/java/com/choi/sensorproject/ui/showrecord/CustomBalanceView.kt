@@ -7,12 +7,17 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.View
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.example.sensorproject.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.pow
 
 class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
@@ -30,6 +35,11 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
 
     private var balanceLineStartY = 0f
     private var balanceLineEndY = 0f
+
+    private var curStartY = 0f
+    private var curEndY = 0f
+
+    private var curDrawingJob: Job? = null
 
     fun setCurModel(recordsForHourUIModel: RecordsForHourUIModel){
         frontLeaningCount = 0
@@ -78,7 +88,27 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
             balanceLineEndY = centerY
         }
 
-        postInvalidate()
+        // 이전 coroutine job cancel 필수
+        curDrawingJob?.let{ job ->
+            if(job.isActive) {
+                job.cancel()
+            }
+        }
+        curDrawingJob = CoroutineScope(Dispatchers.Main).launch {
+            // 이전에 진행되던 천칭의 위치를 기준으로 변화
+            val lastStartY = curStartY
+            val lastEndY = curEndY
+
+            // 지수함수 그래프 진행도에 따라 서서히 천칭을 변화시킴
+            val endGraphY = 1.1f.pow(100)
+            for(n in 1.. 100){
+                val curGraphYRatio = 1.1f.pow(n) / endGraphY
+                curStartY = lastStartY + (balanceLineStartY - lastStartY) * curGraphYRatio
+                curEndY = lastEndY + (balanceLineEndY - lastEndY) * curGraphYRatio
+                invalidate()
+                delay(5)
+            }
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -94,6 +124,9 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
         balanceLineStartY = centerY
         balanceLineEndY = centerY
 
+        curStartY = centerY
+        curEndY = centerY
+
         // totalRectF: 도형을 그리는 최대 범위 설정
         totalRectF.apply {
             set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
@@ -108,36 +141,41 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
 
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
-        val leaningCountTextSize = 40f
 
+        drawBalance(canvas, curStartY, curEndY)
+        super.onDraw(canvas)
+    }
+
+    private fun drawBalance(canvas : Canvas, startY: Float, endY : Float){
+        val leaningCountTextSize = 40f
         val leftBounds = Rect()
         paint.getTextBounds(leftLeaningCount.toString(), 0, leftLeaningCount.toString().length, leftBounds)
         val leftTextX = centerX - 100f - leftBounds.width() / 2
-        canvas.drawText(leftLeaningCount.toString(), leftTextX, balanceLineStartY - 30, paint.apply {
+        canvas.drawText(leftLeaningCount.toString(), leftTextX, startY - 30, paint.apply {
             color = Color.parseColor("#000000")
             typeface = resources.getFont(R.font.godo_m)
             strokeWidth = 2f
             style = Paint.Style.STROKE
             textSize = leaningCountTextSize
         })
-        canvas.drawText(leftLeaningCount.toString(), leftTextX, balanceLineStartY - 30, paint.apply {
+        canvas.drawText(leftLeaningCount.toString(), leftTextX, startY - 30, paint.apply {
             color = Color.parseColor("#52E4DC")
             typeface = resources.getFont(R.font.godo_m)
             strokeWidth = 1f
             style = Paint.Style.FILL
             textSize = leaningCountTextSize
         })
-        canvas.drawLine(centerX - 100f, balanceLineStartY, centerX, centerY, paint.apply {
+        canvas.drawLine(centerX - 100f, startY, centerX, centerY, paint.apply {
             color = Color.parseColor("#000000")
             strokeWidth = 12f
             style = Paint.Style.STROKE
         })
-        canvas.drawLine(centerX - 100f, balanceLineStartY, centerX, centerY, paint.apply {
+        canvas.drawLine(centerX - 100f, startY, centerX, centerY, paint.apply {
             color = Color.parseColor("#52E4DC")
             strokeWidth = 10f
             style = Paint.Style.STROKE
         })
-        drawBasket(canvas, centerX - 100f, balanceLineStartY, paint.apply {
+        drawBasket(canvas, centerX - 100f, startY, paint.apply {
             color = Color.parseColor("#52E4DC")
             strokeWidth = 2f
             style = Paint.Style.STROKE
@@ -146,37 +184,35 @@ class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, a
         val rightBounds = Rect()
         paint.getTextBounds(rightLeaningCount.toString(), 0, rightLeaningCount.toString().length, rightBounds)
         val rightTextX = centerX + 100f - rightBounds.width() / 2
-        canvas.drawText(rightLeaningCount.toString(), rightTextX, balanceLineEndY - 30, paint.apply {
+        canvas.drawText(rightLeaningCount.toString(), rightTextX, endY - 30, paint.apply {
             color = Color.parseColor("#000000")
             typeface = resources.getFont(R.font.godo_m)
             strokeWidth = 2f
             style = Paint.Style.STROKE
             textSize = leaningCountTextSize
         })
-        canvas.drawText(rightLeaningCount.toString(), rightTextX, balanceLineEndY - 30, paint.apply {
+        canvas.drawText(rightLeaningCount.toString(), rightTextX, endY - 30, paint.apply {
             color = Color.parseColor("#FF9DFF")
             typeface = resources.getFont(R.font.godo_m)
             strokeWidth = 1f
             style = Paint.Style.FILL
             textSize = leaningCountTextSize
         })
-        canvas.drawLine(centerX, centerY, centerX + 100f, balanceLineEndY, paint.apply {
+        canvas.drawLine(centerX, centerY, centerX + 100f, endY, paint.apply {
             color = Color.parseColor("#000000")
             strokeWidth = 12f
             style = Paint.Style.STROKE
         })
-        canvas.drawLine(centerX, centerY, centerX + 100f, balanceLineEndY, paint.apply {
+        canvas.drawLine(centerX, centerY, centerX + 100f, endY, paint.apply {
             color = Color.parseColor("#FF9DFF")
             strokeWidth = 10f
             style = Paint.Style.STROKE
         })
-        drawBasket(canvas, centerX + 100f, balanceLineEndY, paint.apply {
+        drawBasket(canvas, centerX + 100f, endY, paint.apply {
             color = Color.parseColor("#FF9DFF")
             strokeWidth = 2f
             style = Paint.Style.STROKE
         })
-
-        super.onDraw(canvas)
     }
 
     private fun drawBasket(canvas: Canvas, locateX: Float, locateY: Float, paint: Paint){
