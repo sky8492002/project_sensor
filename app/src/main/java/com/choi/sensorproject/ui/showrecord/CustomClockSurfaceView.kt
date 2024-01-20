@@ -124,7 +124,7 @@ class CustomClockSurfaceView @JvmOverloads constructor(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    // Dispatchers.Main이 아닌 CorutineScope를 launch하면 빠른 속도로 화면에 그릴 수 있음
+    // lockHardwareCanvas와 unlockCanvasAndPost를 활용하면 GPU가 작업을 담당하여 빠른 속도로 화면에 그릴 수 있음
     private fun runDrawingJob(recordsForHourUIModel: RecordsForHourUIModel): Job {
         return CoroutineScope(Dispatchers.Default).launch {
             delay(100) // dialog 를 띄우기에 충분한 시간 부여
