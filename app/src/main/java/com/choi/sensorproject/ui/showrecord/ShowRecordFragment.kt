@@ -2,6 +2,7 @@ package com.choi.sensorproject.ui.showrecord
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
@@ -25,6 +26,7 @@ import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
+import com.example.sensorproject.R
 import com.example.sensorproject.databinding.FragmentShowRecordBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -229,7 +231,7 @@ class ShowRecordFragment: Fragment() {
                                     binding.glSurfaceView.changeAppIcon(null)
                                     binding.glSurfaceView.changeAppPlayingImage(null)
                                     binding.timeTextView.text = ""
-                                    binding.angleTextView.text = ""
+                                    binding.appNameTextView.text = ""
                                     binding.glSurfaceView.changePhoneAngle(0f, 0f, 0f)
                                 }
 
@@ -359,10 +361,15 @@ class ShowRecordFragment: Fragment() {
                 binding.glSurfaceView.changePinLocation(pinPoint[0], pinPoint[1], 0f)
                 binding.glSurfaceView.changeAppIcon(getAppIcon(record.runningAppName))
 
-                // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
-                binding.glSurfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
+                // 화면이 켜진 기록일 경우 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움
+                if(record.isScreenOn == true){
+                    binding.glSurfaceView.changeAppPlayingImage(getPlayingImage(record.runningAppName))
+                }
+                else{
+                    binding.glSurfaceView.changeAppPlayingImage(BitmapFactory.decodeResource(resources, R.drawable.phone_off))
+                }
                 binding.timeTextView.text = record.recordTime
-                binding.angleTextView.text = record.runningAppName
+                binding.appNameTextView.text = record.runningAppName
 
                 // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
                 if(lastxAngle != null && lastzAngle != null){

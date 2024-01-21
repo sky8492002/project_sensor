@@ -12,10 +12,10 @@ class Pin {
     private val STRIDE: Int = COORDS * 4
 
     private var vertices = floatArrayOf(
-        -0.15f, -0.1f, 0.0f,
-        0.15f, -0.1f, 0.0f,
-        -0.15f, 0.1f, 0.0f,
-        0.15f, 0.1f, 0.0f
+        -0.12f, -0.1f, 0.0f,
+        0.12f, -0.1f, 0.0f,
+        -0.12f, 0.1f, 0.0f,
+        0.12f, 0.1f, 0.0f
     )
 
     private var texCoords = floatArrayOf(
