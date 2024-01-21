@@ -378,12 +378,12 @@ class ShowRecordFragment: Fragment() {
                     for(n in 1..10){
                         val xAngle = lastxAngle!! + diffxAngle / 10 * n
                         val zAngle = lastzAngle!! + diffzAngle / 10 * n
-                        binding.glSurfaceView.changePhoneAngle(-zAngle / 180f * 250f, 0f, xAngle / 180f * 250f)
+                        binding.glSurfaceView.changePhoneAngle(-zAngle / 180f * 200f, 0f, xAngle / 180f * 200f)
                         delay(10)
                     }
                 }
                 else{
-                    binding.glSurfaceView.changePhoneAngle(-record.zAngle / 180f * 250f, 0f, record.xAngle / 180f * 250f)
+                    binding.glSurfaceView.changePhoneAngle(-record.zAngle / 180f * 200f, 0f, record.xAngle / 180f * 200f)
                     delay(100)
                 }
 
