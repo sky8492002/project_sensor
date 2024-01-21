@@ -90,13 +90,13 @@ class Pin {
         val vertexShader : Int = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)
         val fragmentShader : Int = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_CODE)
 
-        mProgram = GLES20.glCreateProgram();
+        mProgram = GLES20.glCreateProgram()
 
         //  vertexShader, fragmentShader을 프로그램에 장착
         GLES20.glAttachShader(mProgram, vertexShader)
         GLES20.glAttachShader(mProgram, fragmentShader)
 
-        // 실행
+        // OpenGL ES 환경에 프로그램을 추가함 (Shader가 장착된 후여야 함)
         GLES20.glLinkProgram(mProgram)
         GLES20.glUseProgram(mProgram)
 
@@ -137,8 +137,9 @@ class Pin {
 
     fun draw(mvpMatrix: FloatArray) {
 
-        // OpenGL ES 환경에 프로그램을 추가함
-        GLES20.glUseProgram(mProgram)
+        // 뒷면을 그리지 않도록 설정
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+        GLES20.glCullFace(GLES20.GL_BACK)
 
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
 

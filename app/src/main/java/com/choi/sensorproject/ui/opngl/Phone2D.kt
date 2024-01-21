@@ -1,6 +1,5 @@
 package com.choi.sensorproject.ui.opngl
 
-import android.R.attr.bitmap
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -14,7 +13,7 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 
-class Phone2D {
+class Phone2D(val isFrontScreen: Boolean) {
     private val COORDS = 3;
     private val STRIDE: Int = COORDS * 4
 
@@ -25,38 +24,28 @@ class Phone2D {
         0.4f, 0.7f, 0.0f
     )
 
-    private var texCoords = floatArrayOf(
-        0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-    )
+    // 폰의 앞면, 뒷면 중 어디를 그릴지에 따라 이미지를 뒤집어서 적용할 지 결정
+    private var texCoords =
+        if (isFrontScreen)
+            floatArrayOf(
+                0.0f, 1.0f, 0.0f,
+                1.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+            )
+        else
+            floatArrayOf(
+                1.0f, 1.0f, 0.0f,
+                0.0f, 1.0f, 0.0f,
+                1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,
+            )
 
-//    val order = arrayOf(0,1,2,0,2,3).toIntArray() //삼각형 그리는 순서 (012),(023)
-//
-//    val orderBuffer = ByteBuffer.allocateDirect(order.size * 4).let { //
-//        it.order(ByteOrder.nativeOrder())
-//        it.asIntBuffer()
-//    }.apply {
-//        put(order)
-//        position(0)
-//    } //드로잉 순서 버퍼를 만듭니다.
-
-//    private val color : FloatArray = arrayOf(
-//        0.0f, 1.0f, 1.0f, 1.0f,
-//        1.0f, 0.0f, 0.0f, 1.0f,
-//        1.0f, 1.0f, 0.0f, 1.0f,
-//        0.0f, 1.0f, 0.0f, 1.0f,
-//        0.0f, 0.0f, 1.0f, 1.0f,
-//        1.0f, 0.0f, 1.0f, 1.0f,
-//        1.0f, 1.0f, 1.0f, 1.0f,
-//        0.0f, 1.0f, 1.0f, 1.0f).toFloatArray()
 
     private var vertexBuffer: FloatBuffer
     private var texCoordBuffer: FloatBuffer
 
-    val VERTEX_SHADER_CODE =
-            "attribute vec4 vPosition;" +
+    val VERTEX_SHADER_CODE = "attribute vec4 vPosition;" +
             "uniform mat4 uMVPMatrix;" +
             "attribute vec2 aTexCoord;" +
             "varying vec2 vTexCoord;" +
@@ -73,12 +62,6 @@ class Phone2D {
             "void main() {" +
             "gl_FragColor = texture2D(sTexture, vTexCoord);" +
             "}"
-
-//    val FRAGMENT_SHADER_CODE = "precision mediump float;" +
-//            "uniform vec4 vColor;" +
-//            "void main(){" +
-//            "gl_FragColor = vColor;" +
-//            "}"
 
     private var mProgram : Int = -1;
 
@@ -123,13 +106,13 @@ class Phone2D {
         val vertexShader : Int = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)
         val fragmentShader : Int = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_CODE)
 
-        mProgram = GLES20.glCreateProgram();
+        mProgram = GLES20.glCreateProgram()
 
         //  vertexShader, fragmentShader을 프로그램에 장착
         GLES20.glAttachShader(mProgram, vertexShader)
         GLES20.glAttachShader(mProgram, fragmentShader)
 
-        // 실행
+        // OpenGL ES 환경에 프로그램을 추가함 (Shader가 장착된 후여야 함)
         GLES20.glLinkProgram(mProgram)
         GLES20.glUseProgram(mProgram)
 
@@ -167,7 +150,7 @@ class Phone2D {
         // 폰 테두리가 있는 bitmap을 새로 만들어서 적용
         val phoneBitmapImage =
             Bitmap.createBitmap(bitmapImage.getWidth(), bitmapImage.getHeight(), bitmapImage.getConfig())
-        val canvas = Canvas(phoneBitmapImage) // canvas의 변경 사항이 newBitmapImage에 적용됨
+        val canvas = Canvas(phoneBitmapImage) // canvas의 변경 사항이 phoneBitmapImage에 적용됨
 
         // 이미지를 화면에 표시할 범위 설정
         val fillPaint = Paint()
@@ -192,10 +175,15 @@ class Phone2D {
 
     fun draw(mvpMatrix: FloatArray) {
 
-        // OpenGL ES 환경에 프로그램을 추가함
-        GLES20.glUseProgram(mProgram)
-
-        //GLES20.glUniform1i(textureHandle, 0)
+        // 앞면 또는 뒷면을 그리지 않도록 설정
+        if(isFrontScreen){
+            GLES20.glEnable(GLES20.GL_CULL_FACE)
+            GLES20.glCullFace(GLES20.GL_BACK)
+        }
+        else{
+            GLES20.glEnable(GLES20.GL_CULL_FACE)
+            GLES20.glCullFace(GLES20.GL_FRONT)
+        }
 
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
         //GLES20.glUniform4fv(colorHandle, 1, color, 0)
