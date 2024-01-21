@@ -1,8 +1,10 @@
 package com.choi.sensorproject.ui.showrecord
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
@@ -17,6 +19,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
@@ -35,6 +38,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
+import kotlin.math.abs
 
 
 @SuppressLint("SimpleDateFormat")
@@ -66,6 +70,9 @@ class ShowRecordFragment: Fragment() {
     private lateinit var clockViewLoadingDialog: LoadingDialog
 
     private var isNeedToScrollAfterUpdate = true
+
+    // 가로모드, 세로모드일 때 각각 화면이 거꾸로 되는 경우 폰 뒷면을 대신 보여줄 지 결정
+    private var allowPhoneScreenBackwards = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -199,6 +206,16 @@ class ShowRecordFragment: Fragment() {
                         dayOfMonth.toString().padStart(2, '0')
             )
             recordsForHourAdapter.refresh()
+        }
+
+        binding.allowPhoneScreenBackwardsImageButton.setOnClickListener(){
+            allowPhoneScreenBackwards = !allowPhoneScreenBackwards
+            if(allowPhoneScreenBackwards){
+                it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#495057"))
+            }
+            else{
+                it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#D0FC5C"))
+            }
         }
 
 
@@ -371,24 +388,37 @@ class ShowRecordFragment: Fragment() {
                 binding.timeTextView.text = record.recordTime
                 binding.appNameTextView.text = record.runningAppName
 
+                var curXAngle = record.xAngle
+                var curZAngle = record.zAngle
+
+                if(allowPhoneScreenBackwards.not()){
+                    // 가로모드, 세로모드일 때 각각 화면이 거꾸로 되는 경우 폰 뒷면을 대신 보여주도록 설정
+                    if(record.orientation == Orientation.LandScape && record.xAngle < 0) {
+                        curZAngle = -180 - record.zAngle
+                    }
+                    else if(record.orientation == Orientation.Portrait && abs(record.xAngle) > 90){
+                        curZAngle = 180 - record.zAngle
+                    }
+                }
+
                 // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
                 if(lastxAngle != null && lastzAngle != null){
-                    val diffxAngle = record.xAngle - lastxAngle!!
-                    val diffzAngle = record.zAngle - lastzAngle!!
+                    val diffxAngle = curXAngle - lastxAngle!!
+                    val diffzAngle = curZAngle - lastzAngle!!
                     for(n in 1..10){
-                        val xAngle = lastxAngle!! + diffxAngle / 10 * n
-                        val zAngle = lastzAngle!! + diffzAngle / 10 * n
-                        binding.glSurfaceView.changePhoneAngle(-zAngle / 180f * 200f, 0f, xAngle / 180f * 200f)
+                        val splitedXAngle = lastxAngle!! + diffxAngle / 10 * n
+                        val splitedZAngle = lastzAngle!! + diffzAngle / 10 * n
+                        binding.glSurfaceView.changePhoneAngle(-splitedZAngle / 180f * 200f, 0f, splitedXAngle / 180f * 200f)
                         delay(10)
                     }
                 }
                 else{
-                    binding.glSurfaceView.changePhoneAngle(-record.zAngle / 180f * 200f, 0f, record.xAngle / 180f * 200f)
+                    binding.glSurfaceView.changePhoneAngle(-curZAngle / 180f * 200f, 0f, curXAngle / 180f * 200f)
                     delay(100)
                 }
 
-                lastxAngle = record.xAngle
-                lastzAngle = record.zAngle
+                lastxAngle = curXAngle
+                lastzAngle = curZAngle
             }
         }
     }
