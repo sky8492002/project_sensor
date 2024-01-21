@@ -359,8 +359,9 @@ class ShowRecordFragment: Fragment() {
         // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
         return viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
             // job이 변경되면 관련된 변수도 초기화해야 하므로 지역 변수로 둠
-            var lastxAngle: Float? = null
-            var lastzAngle: Float? = null
+            var lastXAngle: Float? = null
+            var lastZAngle: Float? = null
+            var lastYAngle: Float? = null
             for(record in recordsForHourUIModel.records){
                 // 시작 시간보다 이르면 화면에 표시하지 않고 넘어감
                 if((startTime != null) && (startTime > timeFormat.parse(record.recordTime))){
@@ -388,37 +389,39 @@ class ShowRecordFragment: Fragment() {
                 binding.timeTextView.text = record.recordTime
                 binding.appNameTextView.text = record.runningAppName
 
-                var curXAngle = record.xAngle
-                var curZAngle = record.zAngle
+                val curXAngle = record.xAngle
+                val curZAngle = record.zAngle
+                var curYAngle = 0f
 
                 if(allowPhoneScreenBackwards.not()){
                     // 가로모드, 세로모드일 때 각각 화면이 거꾸로 되는 경우 폰 뒷면을 대신 보여주도록 설정
                     if(record.orientation == Orientation.LandScape && record.xAngle < 0) {
-                        curZAngle = -180 - record.zAngle
+                        curYAngle = 180f
                     }
                     else if(record.orientation == Orientation.Portrait && abs(record.xAngle) > 90){
-                        curZAngle = 180 - record.zAngle
+                        curYAngle = 180f
                     }
                 }
 
                 // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
-                if(lastxAngle != null && lastzAngle != null){
-                    val diffxAngle = curXAngle - lastxAngle!!
-                    val diffzAngle = curZAngle - lastzAngle!!
+                if(lastXAngle != null && lastZAngle != null && lastYAngle != null){
+                    val diffXAngle = curXAngle - lastXAngle!!
+                    val diffZAngle = curZAngle - lastZAngle!!
                     for(n in 1..10){
-                        val splitedXAngle = lastxAngle!! + diffxAngle / 10 * n
-                        val splitedZAngle = lastzAngle!! + diffzAngle / 10 * n
-                        binding.glSurfaceView.changePhoneAngle(-splitedZAngle / 180f * 200f, 0f, splitedXAngle / 180f * 200f)
+                        val splitedXAngle = lastXAngle!! + diffXAngle / 10 * n
+                        val splitedZAngle = lastZAngle!! + diffZAngle / 10 * n
+                        binding.glSurfaceView.changePhoneAngle(-splitedZAngle / 180f * 200f, curYAngle / 180f * 200f, splitedXAngle / 180f * 200f)
                         delay(10)
                     }
                 }
                 else{
-                    binding.glSurfaceView.changePhoneAngle(-curZAngle / 180f * 200f, 0f, curXAngle / 180f * 200f)
+                    binding.glSurfaceView.changePhoneAngle(-curZAngle / 180f * 200f, curYAngle / 180f * 200f, curXAngle / 180f * 200f)
                     delay(100)
                 }
 
-                lastxAngle = curXAngle
-                lastzAngle = curZAngle
+                lastXAngle = curXAngle
+                lastYAngle = curYAngle
+                lastZAngle = curZAngle
             }
         }
     }
