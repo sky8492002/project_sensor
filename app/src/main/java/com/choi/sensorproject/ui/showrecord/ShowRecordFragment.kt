@@ -217,11 +217,11 @@ class ShowRecordFragment: Fragment() {
             when(curPhoneViewPoint){
                 PhoneViewPoint.FRONT -> {
                     curPhoneViewPoint = PhoneViewPoint.BACK
-                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#495057"))
+                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#D0FC5C"))
                 }
                 PhoneViewPoint.BACK -> {
                     curPhoneViewPoint = PhoneViewPoint.FRONT
-                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#D0FC5C"))
+                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#495057"))
                 }
             }
         }
