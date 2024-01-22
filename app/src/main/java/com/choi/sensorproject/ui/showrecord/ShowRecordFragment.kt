@@ -402,10 +402,6 @@ class ShowRecordFragment: Fragment() {
                 var curZAngle = record.zAngle
 
                 // 보는 시점이 뒤쪽이면 curYAngle, curZAngle 다르게 설정
-                // xAngle 범위는 -180 ~ 180, zAngle 범위는 -90 ~ 90이므로 curXAngle은 변경하지 않음
-                // xAngle 범위가 -180 ~ 180인 이유: 가로 상태에서 왼쪽, 오른쪽으로 기울였을 경우 xAngle 값이 서로 달라야 하기 때문
-                // zAngle 범위가 -90 ~ 90인 이유: 가로 상태에서 왼쪽, 오른쪽으로 기울였을 경우 zAngle 값이 서로 동일해야 하기 때문
-                // 세로 상태에서는 기기를 거꾸로 잡지 않는 한 xAngle이 -90 ~ 90 사이에 있음, zAngle 범위가 -180 ~ 180이었어도 zAngle이 -90 ~ 90 사이에 있음
                 if(curPhoneViewPoint == PhoneViewPoint.BACK){
                     curYAngle = 180f
                     curZAngle = -curZAngle

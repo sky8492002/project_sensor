@@ -20,7 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.recyclerview.AppInfoAdapter
 import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
@@ -100,7 +100,7 @@ class SettingFragment: Fragment(), SettingClickHandler {
 
         val appInfoAdapter = AppInfoAdapter(this)
         binding.appInfoRecyclerView.adapter = appInfoAdapter
-        binding.appInfoRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.appInfoRecyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
         binding.manageAppInfoViewModel = manageAppInfoViewModel
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {

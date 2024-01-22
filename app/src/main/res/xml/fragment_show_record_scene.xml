@@ -11,12 +11,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"/>
-
-        <Constraint
-            android:id="@+id/calendarView"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent" />
-
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/end_calendar">
@@ -27,12 +21,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"/>
-
-        <Constraint
-            android:id="@+id/calendarView"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent" />
-
     </ConstraintSet>
 
     <Transition
@@ -40,10 +28,9 @@
         app:constraintSetEnd="@id/end_calendar"
         motion:duration="1000">
 
-        <!--motion:targetId만 쓰면 MotionLayout 전체가 트리거가 됨-->
         <OnClick
             app:motionTarget = "@+id/calendar_cardView"
-            app:targetId="@+id/open_calendar_ImageButton"/>
+            app:targetId="@+id/open_calendar_imageButton"/>
         <KeyFrameSet>
             <KeyAttribute
                 app:motionTarget="@+id/calendar_cardView"
@@ -55,15 +42,6 @@
                 app:framePosition="100"
                 android:alpha="0.8" />
 
-<!--            <KeyAttribute-->
-<!--                app:motionTarget="@+id/calendarView"-->
-<!--                app:framePosition="0"-->
-<!--                android:alpha="100"/>-->
-
-<!--            <KeyAttribute-->
-<!--                app:motionTarget="@+id/calendarView"-->
-<!--                app:framePosition="100"-->
-<!--                android:alpha="100"/>-->
         </KeyFrameSet>
     </Transition>
 </MotionScene>

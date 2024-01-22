@@ -152,7 +152,10 @@ class SensorWorker @AssistedInject constructor(
             var y = event.values[1].toDouble()
             val z = event.values[2].toDouble()
 
-            // curXAngle: -180 ~ 180, curZAngle: -90 ~ 90
+            // xAngle 범위는 -180 ~ 180, zAngle 범위는 -90 ~ 90
+            // xAngle 범위가 -180 ~ 180인 이유: 가로 상태에서 왼쪽, 오른쪽으로 기울였을 경우 xAngle 값이 서로 달라야 하기 때문
+            // zAngle 범위가 -90 ~ 90인 이유: 가로 상태에서 왼쪽, 오른쪽으로 기울였을 경우 zAngle 값이 서로 동일해야 하기 때문
+            // 세로 상태에서는 기기를 거꾸로 잡지 않는 한 xAngle이 -90 ~ 90 사이에 있음, zAngle 범위가 -180 ~ 180이었어도 zAngle이 -90 ~ 90 사이에 있음
             val sqrtXY = Math.sqrt(x.pow(2) + y.pow(2) )
             var baseXAngle = (90 - Math.acos(x / sqrtXY) * 180 / Math.PI).toFloat()
             if(y < 0) baseXAngle = 180 - baseXAngle
