@@ -71,8 +71,12 @@ class ShowRecordFragment: Fragment() {
 
     private var isNeedToScrollAfterUpdate = true
 
-    // 가로모드, 세로모드일 때 각각 화면이 거꾸로 되는 경우 폰 뒷면을 대신 보여줄 지 결정
-    private var allowPhoneScreenBackwards = true
+    // 폰을 보는 시점 결정 (앞/뒤)
+    private var curPhoneViewPoint = PhoneViewPoint.FRONT
+
+    enum class PhoneViewPoint{
+        FRONT, BACK
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -208,13 +212,17 @@ class ShowRecordFragment: Fragment() {
             recordsForHourAdapter.refresh()
         }
 
-        binding.allowPhoneScreenBackwardsImageButton.setOnClickListener(){
-            allowPhoneScreenBackwards = !allowPhoneScreenBackwards
-            if(allowPhoneScreenBackwards){
-                it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#495057"))
-            }
-            else{
-                it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#D0FC5C"))
+        binding.changePhoneViewPointImageButton.setOnClickListener(){
+
+            when(curPhoneViewPoint){
+                PhoneViewPoint.FRONT -> {
+                    curPhoneViewPoint = PhoneViewPoint.BACK
+                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#495057"))
+                }
+                PhoneViewPoint.BACK -> {
+                    curPhoneViewPoint = PhoneViewPoint.FRONT
+                    it.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#D0FC5C"))
+                }
             }
         }
 
@@ -390,27 +398,29 @@ class ShowRecordFragment: Fragment() {
                 binding.appNameTextView.text = record.runningAppName
 
                 val curXAngle = record.xAngle
-                val curZAngle = record.zAngle
                 var curYAngle = 0f
+                var curZAngle = record.zAngle
 
-                if(allowPhoneScreenBackwards.not()){
-                    // 가로모드, 세로모드일 때 각각 화면이 거꾸로 되는 경우 폰 뒷면을 대신 보여주도록 설정
-                    if(record.orientation == Orientation.LandScape && record.xAngle < 0) {
-                        curYAngle = 180f
-                    }
-                    else if(record.orientation == Orientation.Portrait && abs(record.xAngle) > 90){
-                        curYAngle = 180f
-                    }
+                // 보는 시점이 뒤쪽이면 curYAngle, curZAngle 다르게 설정
+                // xAngle 범위는 -180 ~ 180, zAngle 범위는 -90 ~ 90이므로 curXAngle은 변경하지 않음
+                // xAngle 범위가 -180 ~ 180인 이유: 가로 상태에서 왼쪽, 오른쪽으로 기울였을 경우 xAngle 값이 서로 달라야 하기 때문
+                // zAngle 범위가 -90 ~ 90인 이유: 가로 상태에서 왼쪽, 오른쪽으로 기울였을 경우 zAngle 값이 서로 동일해야 하기 때문
+                // 세로 상태에서는 기기를 거꾸로 잡지 않는 한 xAngle이 -90 ~ 90 사이에 있음, zAngle 범위가 -180 ~ 180이었어도 zAngle이 -90 ~ 90 사이에 있음
+                if(curPhoneViewPoint == PhoneViewPoint.BACK){
+                    curYAngle = 180f
+                    curZAngle = -curZAngle
                 }
 
                 // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
                 if(lastXAngle != null && lastZAngle != null && lastYAngle != null){
                     val diffXAngle = curXAngle - lastXAngle!!
+                    val diffYAngle = curYAngle - lastYAngle!!
                     val diffZAngle = curZAngle - lastZAngle!!
                     for(n in 1..10){
                         val splitedXAngle = lastXAngle!! + diffXAngle / 10 * n
+                        val splitedYAngle = lastYAngle!! + diffYAngle / 10 * n
                         val splitedZAngle = lastZAngle!! + diffZAngle / 10 * n
-                        binding.glSurfaceView.changePhoneAngle(-splitedZAngle / 180f * 200f, curYAngle / 180f * 200f, splitedXAngle / 180f * 200f)
+                        binding.glSurfaceView.changePhoneAngle(-splitedZAngle / 180f * 200f, splitedYAngle / 180f * 200f, splitedXAngle / 180f * 200f)
                         delay(10)
                     }
                 }

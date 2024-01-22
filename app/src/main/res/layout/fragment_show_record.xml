@@ -131,7 +131,7 @@
                 android:elevation="10dp"/>
 
             <ImageButton
-                android:id="@+id/allow_phone_screen_backwards_imageButton"
+                android:id="@+id/change_phone_view_point_imageButton"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:padding="10dp"
