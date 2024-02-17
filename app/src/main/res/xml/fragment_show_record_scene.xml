@@ -24,6 +24,7 @@
     </ConstraintSet>
 
     <Transition
+        android:id="@+id/open_calendar_transition"
         app:constraintSetStart="@+id/start_calendar"
         app:constraintSetEnd="@id/end_calendar"
         motion:duration="1000">

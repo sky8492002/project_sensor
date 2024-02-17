@@ -9,9 +9,13 @@ import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
 import android.os.Bundle
+import android.transition.Transition
+import android.transition.TransitionInflater
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.motion.widget.MotionScene
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -87,6 +91,7 @@ class ShowRecordFragment: Fragment() {
         return binding.root
     }
 
+    @SuppressLint("ResourceType", "ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // 로딩 Dialog 객체 생성
@@ -202,15 +207,30 @@ class ShowRecordFragment: Fragment() {
             recordsForHourAdapter.refresh()
         }
 
-        // 날짜 변경
-        binding.calendarView.setOnDateChangeListener { view, year, month, dayOfMonth ->
-            manageSensorRecordViewModel.changeInitPageDate(
-                year.toString() + "-" +
-                        (month + 1).toString().padStart(2, '0') + "-" +
-                        dayOfMonth.toString().padStart(2, '0')
-            )
-            recordsForHourAdapter.refresh()
+        val models: List<RecordsForHourUIModel> = mutableListOf()
+
+        binding.openCalendarImageButton.setOnTouchListener(){ // MotionScene의 onClick에 영향을 주지 않음
+        _, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                    for(n in 0 until 10){
+                        binding.calendarView.reset()
+                        delay(100)
+                    }
+                }
+            }
+            false
         }
+
+        // 날짜 변경
+//        binding.calendarView.setOnDateChangeListener { view, year, month, dayOfMonth ->
+//            manageSensorRecordViewModel.changeInitPageDate(
+//                year.toString() + "-" +
+//                        (month + 1).toString().padStart(2, '0') + "-" +
+//                        dayOfMonth.toString().padStart(2, '0')
+//            )
+//            recordsForHourAdapter.refresh()
+//        }
 
         binding.changePhoneViewPointImageButton.setOnClickListener(){
 
