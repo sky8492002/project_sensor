@@ -33,15 +33,23 @@ class CustomCalendarGLSurfaceView @JvmOverloads constructor(
         renderer.resetAllMatrix()
     }
 
+
+    private var lastTouchY: Float? = null
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
 
-        val x: Float = event.getX()
-        val y: Float = event.getY()
+        val curX = event.getX()
+        val curY = event.getY()
         when (event.getAction()) {
+            MotionEvent.ACTION_MOVE ->{
+                lastTouchY?.let{
+                    renderer.dragY(curY - it)
+                }
+                lastTouchY = curY
+            }
             MotionEvent.ACTION_UP -> {
-                renderer.selectTouchedDate(x, y)
-                requestRender()
+                renderer.selectTouchedDate(curX, curY)
+                lastTouchY = null
             }
         }
         return true

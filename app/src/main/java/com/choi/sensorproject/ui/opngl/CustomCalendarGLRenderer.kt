@@ -25,6 +25,8 @@ import kotlin.math.pow
 class CustomCalendarGLRenderer(val context: Context, val resources: Resources): GLSurfaceView.Renderer {
 
     private val dayCubeCount = 70
+    private val horizontalSize = 7
+    private val verticalSize = dayCubeCount / horizontalSize
 
     private var aspectRatio: Float = 0f
 
@@ -34,36 +36,42 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
 
     private val baseBitmapImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.calendar_tile)
 
-    inner class DayCube(val locateX: Float, val locateY :Float, var locateZ: Float, val dayNumber: Int){
+    // 드레그에 따라 붙는 가중치 Y
+    private var additionalY = 0f
+    // 드레그에 따라 붙는 가중치 Z
+    private var additionalZ = 0f
+
+    inner class DayCube(val dayNumber: Int, val horizontalNum: Int, var verticalNum: Int){
         val vPMatrix = FloatArray(16)
         val projectionMatrix = FloatArray(16)
         val viewMatrix = FloatArray(16)
-        var finalBitmapImage: Bitmap
         val cube = Pin()
-        val transparency = 255 - (abs(dayNumber - dayCubeCount / 2) * 1.9f / dayCubeCount * 255).toInt()
+
+        var dayBitmapImage: Bitmap
+
+        var locateX = 0f
+        var locateY = 0f
+        var locateZ = 0f
 
         init{
-            // canvas에 이미지를 그리고 텍스트를 추가하는 작업을 미리 수행
-            finalBitmapImage =
+            // 이미지를 그리고 텍스트를 추가하는 작업을 미리 수행
+            dayBitmapImage =
                 Bitmap.createBitmap(baseBitmapImage.getWidth(), baseBitmapImage.getHeight(), baseBitmapImage.getConfig())
-            val canvas = Canvas(finalBitmapImage)
-            canvas.drawBitmap(baseBitmapImage, 0f, 0f, Paint().apply {
-                alpha = transparency
-            })
+            val canvas = Canvas(dayBitmapImage)
+            canvas.drawBitmap(baseBitmapImage, 0f, 0f, Paint())
             val dayNumberPaint = Paint().apply {
                 color = Color.parseColor("#20B2AA")
                 typeface = resources.getFont(R.font.godo_m)
                 strokeWidth = 1f
                 style = Paint.Style.FILL
                 textSize = 200f
-                alpha = transparency
             }
 
             val dayNumberTextBounds = Rect()
             dayNumberPaint.getTextBounds(dayNumber.toString(), 0, dayNumber.toString().length, dayNumberTextBounds)
-            val dayNumberTextX = finalBitmapImage.getWidth()/2f - dayNumberTextBounds.width() / 2
+            val dayNumberTextX = dayBitmapImage.getWidth()/2f - dayNumberTextBounds.width() / 2
 
-            canvas.drawText(dayNumber.toString(),dayNumberTextX , finalBitmapImage.getHeight()/2f, dayNumberPaint)
+            canvas.drawText(dayNumber.toString(),dayNumberTextX , dayBitmapImage.getHeight()/2f, dayNumberPaint)
         }
 
         fun readyToDraw(){
@@ -72,11 +80,18 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         }
         fun draw(){
             // draw 직전에 texImage2D를 호출하여 적용할 bitmap를 확정
-            cube.changeImage(finalBitmapImage)
+            cube.changeImage(dayBitmapImage)
             cube.draw(vPMatrix)
         }
 
         fun resetMatrix(){
+            val horizontalRatio = horizontalNum.toFloat() / horizontalSize
+            val verticalRatio = verticalNum.toFloat() / verticalSize // 0 ~ 1 사이에 위치
+            // x: -0.9 ~ 0.9 사이에 위치, y: -0.9 ~ 0.9 사이에 위치, z: -1.1f ~ 0f 사이에 위치
+            locateX = horizontalRatio * 1.8f - 0.9f
+            locateY = -(verticalRatio * 1.8f - 0.9f) + additionalY
+            locateZ = verticalRatio * 1.1f - 1.1f + additionalZ
+
             Matrix.perspectiveM(projectionMatrix, 0, 80f, aspectRatio, 1f, 10f)
             Matrix.setLookAtM(
                 viewMatrix, 0,
@@ -114,10 +129,9 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
 
     init{
         for(n in 0 until dayCubeCount){
-            val dayOfWeek = (n % 7).toFloat() / 7
-            val week = (n / 7).toFloat() / (dayCubeCount / 7)
-            // x: -0.9 ~ 0.9 사이에 위치, y: -0.9 ~ 0.9 사이에 위치
-            val dayCube = DayCube(dayOfWeek * 1.8f - 0.9f, -(week * 1.8f - 0.9f), week * 1.1f - 1f, n)
+
+            val dayCube = DayCube(n, n % horizontalSize, n / horizontalSize)
+
             Matrix.setIdentityM(dayCube.vPMatrix, 0)
             Matrix.setIdentityM(dayCube.projectionMatrix, 0)
             Matrix.setIdentityM(dayCube.viewMatrix, 0)
@@ -169,10 +183,6 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             val curModel = dayCubes[n]
 
             val realLocate = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
-//            val result = GLU.gluUnProject(
-//                touchX, touchY, 0.2f, curModel.viewMatrix, 0, curModel.projectionMatrix, 0, viewPort, 0,
-//                realLocate, 0
-//            )
 
             // 객체의 중심점을 화면에 보여지는 위치로 변환
             val result = GLU.gluProject(
@@ -199,6 +209,41 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             else{
                 curModel.resetZ()
             }
+        }
+    }
+
+    // 위, 아래로 드래그하면 이전 달, 다음 달이 표시됨
+    fun dragY(movedY: Float){
+        additionalY += -movedY / 1000
+        additionalZ += movedY / 1000
+
+        if(additionalY > 0.2){
+            for(n in 0 until dayCubeCount) {
+                val curModel = dayCubes[n]
+                if(curModel.verticalNum == 0){
+                    curModel.verticalNum = verticalSize - 1
+                }
+                else{
+                    curModel.verticalNum -=1
+                }
+            }
+        }
+        else if(additionalY < -0.2){
+            for(n in 0 until dayCubeCount) {
+                val curModel = dayCubes[n]
+                if(curModel.verticalNum == verticalSize - 1){
+                    curModel.verticalNum = 0
+                }
+                else{
+                    curModel.verticalNum +=1
+                }
+            }
+        }
+        resetAllMatrix()
+
+        if(abs(additionalY) > 0.2){
+            additionalY = 0f
+            additionalZ = 0f
         }
     }
 
