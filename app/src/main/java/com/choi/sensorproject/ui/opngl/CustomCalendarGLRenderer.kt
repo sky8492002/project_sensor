@@ -2,6 +2,7 @@ package com.choi.sensorproject.ui.opngl
 
 import android.R.attr.height
 import android.R.attr.width
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -9,12 +10,16 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.PorterDuff
 import android.graphics.Rect
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLU
 import android.opengl.Matrix
 import com.example.sensorproject.R
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.Float.Companion.POSITIVE_INFINITY
@@ -24,13 +29,17 @@ import kotlin.math.pow
 
 class CustomCalendarGLRenderer(val context: Context, val resources: Resources): GLSurfaceView.Renderer {
 
-    private val dayCubeCount = 70
+    private val calendar = Calendar.getInstance()
+
+    @SuppressLint("SimpleDateFormat")
+    private val dayFormat = SimpleDateFormat("dd")
+
     private val horizontalSize = 7
-    private val verticalSize = dayCubeCount / horizontalSize
+    private val verticalSize = 9
 
     private var aspectRatio: Float = 0f
 
-    private val dayCubes: MutableList<DayCube> = mutableListOf()
+    private val dayCubes: ArrayDeque<MutableList<DayCube>> = ArrayDeque()
 
     private var viewPort = intArrayOf(0, 0, 0, 0)
 
@@ -41,13 +50,16 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
     // 드레그에 따라 붙는 가중치 Z
     private var additionalZ = 0f
 
-    inner class DayCube(val dayNumber: Int, val horizontalNum: Int, var verticalNum: Int){
+    inner class DayCube(var date: Date){
+        var verticalNum = 0
+        var horizontalNum = 0
         val vPMatrix = FloatArray(16)
         val projectionMatrix = FloatArray(16)
         val viewMatrix = FloatArray(16)
         val cube = Pin()
 
-        var dayBitmapImage: Bitmap
+        var dayBitmapImage = Bitmap.createBitmap(baseBitmapImage.getWidth(), baseBitmapImage.getHeight(), baseBitmapImage.getConfig())
+        val canvas = Canvas(dayBitmapImage)
 
         var locateX = 0f
         var locateY = 0f
@@ -55,9 +67,28 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
 
         init{
             // 이미지를 그리고 텍스트를 추가하는 작업을 미리 수행
-            dayBitmapImage =
-                Bitmap.createBitmap(baseBitmapImage.getWidth(), baseBitmapImage.getHeight(), baseBitmapImage.getConfig())
-            val canvas = Canvas(dayBitmapImage)
+            updateDayImage()
+        }
+
+        fun setCurDate(date : Date){
+            this.date = date
+            updateDayImage()
+        }
+
+        fun updateLocateInDayCubes(){
+            for(vNum in 0 until verticalSize) {
+                for (hNum in 0 until horizontalSize) {
+                    if(dayCubes[vNum][hNum] == this){
+                        verticalNum = vNum
+                        horizontalNum = hNum
+                        break
+                    }
+                }
+            }
+        }
+
+        fun updateDayImage(){
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
             canvas.drawBitmap(baseBitmapImage, 0f, 0f, Paint())
             val dayNumberPaint = Paint().apply {
                 color = Color.parseColor("#20B2AA")
@@ -67,11 +98,13 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
                 textSize = 200f
             }
 
+            val day = dayFormat.format(date.time)
+
             val dayNumberTextBounds = Rect()
-            dayNumberPaint.getTextBounds(dayNumber.toString(), 0, dayNumber.toString().length, dayNumberTextBounds)
+            dayNumberPaint.getTextBounds(day.toString(), 0, day.toString().length, dayNumberTextBounds)
             val dayNumberTextX = dayBitmapImage.getWidth()/2f - dayNumberTextBounds.width() / 2
 
-            canvas.drawText(dayNumber.toString(),dayNumberTextX , dayBitmapImage.getHeight()/2f, dayNumberPaint)
+            canvas.drawText(day.toString(),dayNumberTextX , dayBitmapImage.getHeight()/2f, dayNumberPaint)
         }
 
         fun readyToDraw(){
@@ -85,6 +118,7 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         }
 
         fun resetMatrix(){
+            updateLocateInDayCubes()
             val horizontalRatio = horizontalNum.toFloat() / horizontalSize
             val verticalRatio = verticalNum.toFloat() / verticalSize // 0 ~ 1 사이에 위치
             // x: -0.9 ~ 0.9 사이에 위치, y: -0.9 ~ 0.9 사이에 위치, z: -1.1f ~ 0f 사이에 위치
@@ -128,16 +162,26 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
     }
 
     init{
-        for(n in 0 until dayCubeCount){
+        // 현재 날짜가 중앙에 오도록 달력 설정
+        calendar.time = Date(System.currentTimeMillis())
+        calendar.add(Calendar.WEEK_OF_YEAR, - verticalSize / 2)
+        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+        calendar.add(Calendar.DATE, -dayOfWeek + 1)
 
-            val dayCube = DayCube(n, n % horizontalSize, n / horizontalSize)
+        for(vNum in 0 until verticalSize){
+            dayCubes.addLast(mutableListOf())
+            for(hNum in 0 until horizontalSize){
+                val dayCube = DayCube(calendar.time)
+                Matrix.setIdentityM(dayCube.vPMatrix, 0)
+                Matrix.setIdentityM(dayCube.projectionMatrix, 0)
+                Matrix.setIdentityM(dayCube.viewMatrix, 0)
+                dayCubes[vNum].add(dayCube)
 
-            Matrix.setIdentityM(dayCube.vPMatrix, 0)
-            Matrix.setIdentityM(dayCube.projectionMatrix, 0)
-            Matrix.setIdentityM(dayCube.viewMatrix, 0)
-            dayCube.resetMatrix()
-            dayCubes.add(dayCube)
+                calendar.add(Calendar.DATE, 1)
+            }
         }
+        calendar.clear()
+        resetAllMatrix()
     }
 
 
@@ -145,9 +189,11 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         GLES20.glClearDepthf(1.0f)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glDepthFunc(GLES20.GL_LEQUAL)
-        for(n in 0 until dayCubeCount){
-            // 여러 개의 객체에 대해 draw 없이 readyToDraw만 반복하면 모든 객체가 마지막으로 readyToDraw를 호출한 객체와 같게 적용되는 문제가 생김
-            dayCubes[n].readyToDraw()
+        for(vNum in 0 until verticalSize){
+            for(hNum in 0 until horizontalSize) {
+                // 여러 개의 객체에 대해 draw 없이 readyToDraw만 반복하면 모든 객체가 마지막으로 readyToDraw를 호출한 객체와 같게 적용되는 문제가 생김
+                dayCubes[vNum][hNum].readyToDraw()
+            }
         }
     }
 
@@ -155,9 +201,11 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT) // 없으면 움직일 때마다 잔상 남음
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
 
-        for(n in 0 until dayCubeCount){
-            // readyToDraw를 onDrawFrame에서 실행 시 오류
-            dayCubes[n].draw()
+        for(vNum in 0 until verticalSize){
+            for(hNum in 0 until horizontalSize) {
+                // readyToDraw를 onDrawFrame에서 실행 시 오류
+                dayCubes[vNum][hNum].draw()
+            }
         }
     }
 
@@ -169,8 +217,10 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
     }
 
     fun resetAllMatrix(){
-        for(n in 0 until dayCubeCount){
-            dayCubes[n].resetMatrix()
+        for(vNum in 0 until verticalSize){
+            for(hNum in 0 until horizontalSize) {
+                dayCubes[vNum][hNum].resetMatrix()
+            }
         }
     }
 
@@ -179,35 +229,40 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         var mostNearModel: DayCube? = null
         var mostNearDistance = POSITIVE_INFINITY
 
-        for(n in 0 until dayCubeCount) {
-            val curModel = dayCubes[n]
+        for(vNum in 0 until verticalSize){
+            for(hNum in 0 until horizontalSize) {
+                val curModel = dayCubes[vNum][hNum]
 
-            val realLocate = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
+                val realLocate = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
 
-            // 객체의 중심점을 화면에 보여지는 위치로 변환
-            val result = GLU.gluProject(
-                curModel.locateX, -curModel.locateY, curModel.locateZ, curModel.viewMatrix, 0, curModel.projectionMatrix, 0, viewPort, 0,
-                realLocate, 0
-            )
+                // 객체의 중심점을 화면에 보여지는 위치로 변환
+                val result = GLU.gluProject(curModel.locateX, -curModel.locateY, curModel.locateZ,
+                    curModel.viewMatrix, 0, curModel.projectionMatrix, 0,
+                    viewPort, 0, realLocate, 0
+                )
 
 
-            // 실제 좌표와 가장 가까운 모델을 구함
-            if (result == GLES20.GL_TRUE) {
-                val curDistance =
-                    (touchX - realLocate[0]).pow(2) + (touchY - realLocate[1]).pow(2)
-                if (curDistance < mostNearDistance) {
-                    mostNearDistance = curDistance
-                    mostNearModel = curModel
+                // 실제 좌표와 가장 가까운 모델을 구함
+                if (result == GLES20.GL_TRUE) {
+                    val curDistance =
+                        (touchX - realLocate[0]).pow(2) + (touchY - realLocate[1]).pow(2)
+                    if (curDistance < mostNearDistance) {
+                        mostNearDistance = curDistance
+                        mostNearModel = curModel
+                    }
                 }
             }
         }
-        for(n in 0 until dayCubeCount) {
-            val curModel = dayCubes[n]
-            if(curModel == mostNearModel){
-                curModel.moveZToFront()
-            }
-            else{
-                curModel.resetZ()
+
+        for(vNum in 0 until verticalSize) {
+            for (hNum in 0 until horizontalSize) {
+                val curModel = dayCubes[vNum][hNum]
+                if(curModel == mostNearModel){
+                    curModel.moveZToFront()
+                }
+                else{
+                    curModel.resetZ()
+                }
             }
         }
     }
@@ -218,26 +273,29 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         additionalZ += movedY / 1000
 
         if(additionalY > 0.2){
-            for(n in 0 until dayCubeCount) {
-                val curModel = dayCubes[n]
-                if(curModel.verticalNum == 0){
-                    curModel.verticalNum = verticalSize - 1
-                }
-                else{
-                    curModel.verticalNum -=1
-                }
+
+            val verticalFirstDayCubes = dayCubes.first()
+            for(dayCube in verticalFirstDayCubes){
+                calendar.time = dayCubes[verticalSize - 1][dayCube.horizontalNum].date
+                calendar.add(Calendar.DATE, 7)
+                dayCube.setCurDate(calendar.time)
+                calendar.clear()
+                dayCube.draw()
             }
+            dayCubes.removeFirst()
+            dayCubes.addLast(verticalFirstDayCubes)
         }
         else if(additionalY < -0.2){
-            for(n in 0 until dayCubeCount) {
-                val curModel = dayCubes[n]
-                if(curModel.verticalNum == verticalSize - 1){
-                    curModel.verticalNum = 0
-                }
-                else{
-                    curModel.verticalNum +=1
-                }
+            val verticalLastDayCubes = dayCubes.last()
+            for(dayCube in verticalLastDayCubes){
+                calendar.time = dayCubes[0][dayCube.horizontalNum].date
+                calendar.add(Calendar.DATE, -7)
+                dayCube.setCurDate(calendar.time)
+                calendar.clear()
+                dayCube.draw()
             }
+            dayCubes.removeLast()
+            dayCubes.addFirst(verticalLastDayCubes)
         }
         resetAllMatrix()
 
