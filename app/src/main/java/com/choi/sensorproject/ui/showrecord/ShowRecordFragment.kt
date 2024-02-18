@@ -9,13 +9,10 @@ import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
 import android.os.Bundle
-import android.transition.Transition
-import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.motion.widget.MotionScene
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +20,6 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
@@ -42,7 +38,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
-import kotlin.math.abs
 
 
 @SuppressLint("SimpleDateFormat")
@@ -130,6 +125,20 @@ class ShowRecordFragment: Fragment() {
                 curUIJob = timeFormat.parse(sensorRecordUIModel.recordTime)
                     ?.let { runUIJobByRecordsForHour(centerModel, it) }
 
+            }
+        }
+
+        // 달력에서 날짜를 터치하면 해당 날짜의 데이터를 보여줌
+        binding.calendarView.renderer.calendarListener = object : CalendarListener{
+            override fun onSelectedDateUpdate(selectedDate: Date) {
+                manageSensorRecordViewModel.changeInitPageDate(
+                    dayFormat.format(selectedDate)
+                )
+                recordsForHourAdapter.refresh()
+            }
+
+            override fun onShowingYearMonthUpdate(showingYearMonth: String) {
+                binding.calendarTextView.text = showingYearMonth
             }
         }
 

@@ -16,6 +16,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLU
 import android.opengl.Matrix
+import com.choi.sensorproject.ui.showrecord.CalendarListener
 import com.example.sensorproject.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -27,12 +28,15 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 
-class CustomCalendarGLRenderer(val context: Context, val resources: Resources): GLSurfaceView.Renderer {
+class CustomCalendarGLRenderer(val context: Context, val resources: Resources): GLSurfaceView.Renderer{
 
     private val calendar = Calendar.getInstance()
+    var calendarListener: CalendarListener? = null
 
     @SuppressLint("SimpleDateFormat")
     private val dayFormat = SimpleDateFormat("dd")
+    @SuppressLint("SimpleDateFormat")
+    private val yearMonthFormat = SimpleDateFormat("yyyy년 MM월")
 
     private val horizontalSize = 7
     private val verticalSize = 9
@@ -168,6 +172,8 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
         calendar.add(Calendar.DATE, -dayOfWeek + 1)
 
+        calendarListener?.onShowingYearMonthUpdate(yearMonthFormat.format(calendar.time))
+
         for(vNum in 0 until verticalSize){
             dayCubes.addLast(mutableListOf())
             for(hNum in 0 until horizontalSize){
@@ -259,12 +265,14 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
                 val curModel = dayCubes[vNum][hNum]
                 if(curModel == mostNearModel){
                     curModel.moveZToFront()
+                    calendarListener?.onSelectedDateUpdate(curModel.date)
                 }
                 else{
                     curModel.resetZ()
                 }
             }
         }
+
     }
 
     // 위, 아래로 드래그하면 이전 달, 다음 달이 표시됨
@@ -298,11 +306,11 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             dayCubes.addFirst(verticalLastDayCubes)
         }
         resetAllMatrix()
+        calendarListener?.onShowingYearMonthUpdate(yearMonthFormat.format(dayCubes[verticalSize / 2][0].date))
 
         if(abs(additionalY) > 0.2){
             additionalY = 0f
             additionalZ = 0f
         }
     }
-
 }
