@@ -85,7 +85,7 @@
         <androidx.constraintlayout.motion.widget.MotionLayout
             android:id="@+id/menus_motionLayout"
             android:layout_width="match_parent"
-            android:layout_height="500dp"
+            android:layout_height="400dp"
             android:padding="10dp"
             app:layoutDescription="@xml/fragment_show_record_scene"
             app:layout_constraintBottom_toBottomOf="parent"

@@ -9,6 +9,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
@@ -52,6 +53,7 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
 
     private val dayCubes: ArrayDeque<MutableList<DayCube>> = ArrayDeque()
     private val backgroundCalendar = BackgroundCalendar()
+    private var lastYearMonth = ""
 
     // 드레그에 따라 붙는 가중치 Y
     private var additionalY = 0f
@@ -73,9 +75,25 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         }
         fun updateBackgroundImage(){
             backgroundCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-            backgroundCanvas.drawBitmap(baseBackgroundImage, 0f, 0f, Paint().apply {
+
+            // 이미지를 화면에 표시할 범위 설정
+            val fillPaint = Paint()
+            fillPaint.style = Paint.Style.FILL
+            backgroundCanvas.drawRoundRect(0f, 0f, baseBackgroundImage.getWidth().toFloat(), baseBackgroundImage.getHeight().toFloat(), 80f, 80f, fillPaint)
+
+            val backgroundPaint = Paint().apply {
                 alpha = 220
-            })
+            }
+            backgroundPaint.setXfermode(PorterDuffXfermode(PorterDuff.Mode.SRC_IN)) // 앞서 설정한 사각형 범위 내에만 이미지가 그려짐
+            backgroundCanvas.drawBitmap(baseBackgroundImage, 0f, 0f, backgroundPaint)
+
+            // 테두리 그리기
+            val borderPaint = Paint()
+            borderPaint.color = Color.BLACK
+            borderPaint.strokeWidth = 5f
+            borderPaint.style = Paint.Style.STROKE
+            backgroundCanvas.drawRoundRect(0f, 0f, baseBackgroundImage.getWidth().toFloat(), baseBackgroundImage.getHeight().toFloat(), 80f, 80f, borderPaint)
+
             val yearMonthPaint = Paint().apply {
                 color = Color.parseColor("#000000")
                 typeface = resources.getFont(R.font.godo_m)
@@ -105,13 +123,18 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             Matrix.perspectiveM(projectionMatrix, 0, 80f, aspectRatio, 1f, 10f)
             Matrix.setLookAtM(
                 viewMatrix, 0,
-                0.0f, 0.0f, 3f,
+                0.0f, 0.0f, 2.0f,
                 0.0f, 0.0f, 0.0f,
                 0.0f, 1.0f, 0.0f
             )
             // mvp = p * v * m (곱하는 순서 중요함)
             Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
             Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+            translate(0f, 0f, -1.5f)
+        }
+
+        fun translate(dx:Float, dy:Float, dz: Float){
+            Matrix.translateM(vPMatrix, 0, dx, dy, dz)
         }
     }
 
@@ -152,8 +175,9 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
 
         fun updateDayImage(){
             // 날짜로부터 요일 구하기
-            calendar.time = curDate
-            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+            val curDateCalendar = Calendar.getInstance()
+            curDateCalendar.time = curDate
+            val dayOfWeek = curDateCalendar.get(Calendar.DAY_OF_WEEK)
 
             val baseDayImage = when(dayOfWeek){
                 1 ->{
@@ -167,11 +191,16 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
                 }
             }
 
+            var dayColor = "#0000FF"
+            // 년월(짝수, 홀수)에 따라 text 색상 결정
+            if(curDateCalendar.get(Calendar.MONTH) % 2 == 0){
+                dayColor = "#000000"
+            }
 
             dayCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
             dayCanvas.drawBitmap(baseDayImage, 0f, 0f, Paint())
             val dayNumberPaint = Paint().apply {
-                color = Color.parseColor("#20B2AA")
+                color = Color.parseColor(dayColor)
                 typeface = resources.getFont(R.font.godo_m)
                 strokeWidth = 1f
                 style = Paint.Style.FILL
@@ -201,10 +230,10 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             updateLocateInDayCubes()
             val horizontalRatio = horizontalNum.toFloat() / horizontalSize
             val verticalRatio = verticalNum.toFloat() / verticalSize // 0 ~ 1 사이에 위치
-            // x: -0.9 ~ 0.9 사이에 위치, y: -0.9 ~ 0.9 사이에 위치, z: -1.1f ~ 0f 사이에 위치
+            // x: -0.9 ~ 0.9 사이에 위치, y: -0.9 ~ 0.9 사이에 위치, z: -0.7f ~ 0.5f 사이에 위치
             locateX = horizontalRatio * 1.8f - 0.9f + 0.9f / horizontalSize // 시작점이 제일 왼쪽 아이템의 중심이 아닌 것을 감안하여 설정
             locateY = -(verticalRatio * 1.8f - 0.9f) + additionalY
-            locateZ = verticalRatio * 1.1f - 1.1f + additionalZ
+            locateZ = verticalRatio * 1.2f - 0.7f + additionalZ
 
             Matrix.perspectiveM(projectionMatrix, 0, 80f, aspectRatio, 1f, 10f)
             Matrix.setLookAtM(
@@ -218,7 +247,7 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
             translate(locateX, locateY, locateZ)
-            rotate(-50f, 0f, 0f)
+            rotate(-40f, 0f, 0f)
         }
 
         fun moveZToFront(){
@@ -249,7 +278,6 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
         calendar.add(Calendar.DATE, -dayOfWeek + 1)
 
         backgroundCalendar.setInfo(yearMonthFormat.format(calendar.time))
-        backgroundCalendar.resetMatrix()
 
         for(vNum in 0 until verticalSize){
             dayCubes.addLast(mutableListOf())
@@ -391,8 +419,15 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             dayCubes.removeLast()
             dayCubes.addFirst(verticalLastDayCubes)
         }
+
+        // 중심 위치의 년월이 변경되었을 때만 배경 업데이트
+        var curYearMonth = yearMonthFormat.format(dayCubes[verticalSize / 2][0].curDate)
+        if(curYearMonth != lastYearMonth){
+            backgroundCalendar.setInfo(yearMonthFormat.format(dayCubes[verticalSize / 2][0].curDate))
+            lastYearMonth = curYearMonth
+        }
+
         resetAllMatrix()
-        backgroundCalendar.setInfo(yearMonthFormat.format(dayCubes[verticalSize / 2][0].curDate))
 
         if(abs(additionalY) > 0.2){
             additionalY = 0f

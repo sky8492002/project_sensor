@@ -18,10 +18,10 @@ class Background2D() {
     private val STRIDE: Int = COORDS * 4
 
     private var vertices = floatArrayOf(
-        -2.0f, -2.5f, 0.0f,
-        2.0f, -2.5f, 0.0f,
-        -2.0f, 2.5f, 0.0f,
-        2.0f, 2.5f, 0.0f
+        -2.5f, -3.0f, 0.0f,
+        2.5f, -3.0f, 0.0f,
+        -2.5f, 3.0f, 0.0f,
+        2.5f, 3.0f, 0.0f
     )
 
     // 폰의 앞면, 뒷면 중 어디를 그릴지에 따라 이미지를 뒤집어서 적용할 지 결정
