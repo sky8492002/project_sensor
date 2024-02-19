@@ -136,9 +136,6 @@ class ShowRecordFragment: Fragment() {
                 )
                 recordsForHourAdapter.refresh()
             }
-
-            override fun onShowingYearMonthUpdate(showingYearMonth: String) {
-            }
         }
 
         // 데이터 로딩 상태에 따라 관리 (loadStateFlow(비동기)와 addLoadStateListener(동기)방식이 있음)
