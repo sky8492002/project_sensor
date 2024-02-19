@@ -138,7 +138,6 @@ class ShowRecordFragment: Fragment() {
             }
 
             override fun onShowingYearMonthUpdate(showingYearMonth: String) {
-                binding.calendarTextView.text = showingYearMonth
             }
         }
 

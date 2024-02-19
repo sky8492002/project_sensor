@@ -17,6 +17,7 @@ import android.opengl.GLSurfaceView
 import android.opengl.GLU
 import android.opengl.Matrix
 import com.choi.sensorproject.ui.showrecord.CalendarListener
+import com.choi.sensorproject.ui.showrecord.RequestRenderListener
 import com.example.sensorproject.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -32,6 +33,7 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
 
     private val calendar = Calendar.getInstance()
     var calendarListener: CalendarListener? = null
+    var requestRenderListener: RequestRenderListener? = null
 
     @SuppressLint("SimpleDateFormat")
     private val dayFormat = SimpleDateFormat("dd")
@@ -273,6 +275,8 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             }
         }
 
+        // onDrawFrame을 호출하도록 상위 GLSurfaceView에 요청
+        requestRenderListener?.onRequestRender()
     }
 
     // 위, 아래로 드래그하면 이전 달, 다음 달이 표시됨
@@ -312,5 +316,8 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
             additionalY = 0f
             additionalZ = 0f
         }
+
+        // onDrawFrame을 호출하도록 상위 GLSurfaceView에 요청
+        requestRenderListener?.onRequestRender()
     }
 }
