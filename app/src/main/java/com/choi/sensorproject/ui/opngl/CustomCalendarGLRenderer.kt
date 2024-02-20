@@ -273,11 +273,10 @@ class CustomCalendarGLRenderer(val context: Context, val resources: Resources): 
     init{
         // 현재 날짜가 중앙에 오도록 달력 설정
         calendar.time = Date(System.currentTimeMillis())
+        backgroundCalendar.setInfo(yearMonthFormat.format(calendar.time))
         calendar.add(Calendar.WEEK_OF_YEAR, - verticalSize / 2)
         val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
         calendar.add(Calendar.DATE, -dayOfWeek + 1)
-
-        backgroundCalendar.setInfo(yearMonthFormat.format(calendar.time))
 
         for(vNum in 0 until verticalSize){
             dayCubes.addLast(mutableListOf())
