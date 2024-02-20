@@ -18,7 +18,7 @@ class SensorRecordDataSourceImpl @Inject constructor(
 
     override suspend fun getSensorRecords(pageDate: String): List<SensorRecordModel> {
 
-        val pageDateQuery = "%$pageDate%"
+        val pageDateQuery = "$pageDate%"
 
         val sensorRecordModelList : MutableList<SensorRecordModel> = mutableListOf()
         val sensorRecordEntityList = appDatabase.sensorRecordDao().getSensorRecords(pageDateQuery)

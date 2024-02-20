@@ -36,10 +36,12 @@ fun List<SensorRecordModel>.toRecordsForHourModels(pageDate: String): List<Recor
 
     // SensorRecordModel list의 요소를 시간 별로 통합하여 RecordsForHourModel list로 변환
     for (sensorRecordModel in this) {
-        timeFormat.parse(sensorRecordModel.recordTime)?.let {
-            val hour = hourFormat.format(it).toInt()
-            recordsForHourModels[hour].records.add(sensorRecordModel)
-        }
+        val hour = sensorRecordModel.recordTime.split(" ")[1].split(":")[0].toInt()
+        recordsForHourModels[hour].records.add(sensorRecordModel)
+//        timeFormat.parse(sensorRecordModel.recordTime)?.let {
+//            val hour = hourFormat.format(it).toInt()
+//            recordsForHourModels[hour].records.add(sensorRecordModel)
+//        }
     }
 
     return recordsForHourModels.toList()

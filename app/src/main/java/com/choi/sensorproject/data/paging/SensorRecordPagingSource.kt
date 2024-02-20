@@ -1,6 +1,7 @@
 package com.choi.sensorproject.data.paging
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.choi.sensorproject.data.mapper.toRecordsForHourModels
@@ -53,12 +54,18 @@ class SensorRecordPagingSource (
                 val pageDate = (params.key ?: INIT_PAGE_DATE) as String
                 val pageDateTime = dayFormat.parse(pageDate)
 
+                Log.d("getFromDB", "$pageDate 가져오기 시작")
+
                 // 해당 날짜에 기록된 데이터를 가져옴 (UseCase에 요청)
                 // LoadResult을 바로 return해야 하기 때문에 flow collect 사용하기 어려움
                 val sensorRecordModelList = sensorRecordRepository.getSensorRecords(pageDate)
 
+                Log.d("getFromDB", "$pageDate 가져오기 완료")
+
                 // 시간 별로 통합하여 분류
                 val recordsForHourModelList = sensorRecordModelList.toRecordsForHourModels(pageDate)
+
+                Log.d("getFromDB", "$pageDate 분류 완료")
 
                 // 어제, 내일 날짜 구하기
                 val calendar = Calendar.getInstance()

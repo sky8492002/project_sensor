@@ -2,13 +2,16 @@ package com.choi.sensorproject.data.room.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.choi.sensorproject.data.room.OrientationTypeConverters
 import com.choi.sensorproject.service.Orientation
 import java.time.LocalDateTime
 
-@Entity(tableName = "sensor_record")
+@Entity(tableName = "sensor_record",
+    indices = [Index(value = ["record_time"],
+    unique = true)])
 data class SensorRecordEntity (
     @PrimaryKey(autoGenerate = true)
     val sensorAngleId: Long = 0, // 자동 id 생성
