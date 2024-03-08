@@ -130,7 +130,7 @@ class SensorWorker @AssistedInject constructor(
         }
 
         return ForegroundInfo(
-            NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
         )
     }
 
