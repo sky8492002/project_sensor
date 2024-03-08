@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.pm.ServiceInfo
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.content.res.Resources
@@ -129,7 +130,7 @@ class SensorWorker @AssistedInject constructor(
         }
 
         return ForegroundInfo(
-            NOTIFICATION_ID, notification
+            NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
     }
 
