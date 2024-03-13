@@ -9,13 +9,19 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
@@ -27,6 +33,8 @@ import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.choi.sensorproject.ui.opngl.CustomGLSurfaceView
+import com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.example.sensorproject.R
@@ -55,8 +63,42 @@ class SensorRecordComposeFragment: Fragment() {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center){
-            Text(text = "Loading...")
+            Text(text = "기록 시간")
+            Text(text = "앱 패키지명")
+
+            Box{
+                ClockView()
+                OpenGLView()
+            }
+
         }
+    }
+
+    @Composable
+    fun ClockView(){
+        // AndroidView를 사용하여 기존의 View를 호출할 수 있음
+        AndroidView(
+            factory = { context ->
+                CustomClockSurfaceView(context)
+            },
+            modifier = Modifier.fillMaxWidth().height(400.dp),
+            update = { view ->
+
+            }
+        )
+    }
+
+    @Composable
+    fun OpenGLView(){
+        // AndroidView를 사용하여 기존의 View를 호출할 수 있음
+        AndroidView(
+            factory = { context ->
+                CustomGLSurfaceView(context)
+            },
+            modifier = Modifier.fillMaxWidth().height(400.dp),
+            update = { view ->
+            }
+        )
     }
 
     @Composable
