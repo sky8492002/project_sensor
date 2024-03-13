@@ -112,8 +112,8 @@ class SettingFragment: Fragment(), SettingClickHandler {
         }
 
 
-        binding.imageTestButon.setOnClickListener(){
-            getImageFromGallery()
+        binding.composeNavigateButton.setOnClickListener(){
+            findNavController().navigate(R.id.action_settingFragment_to_sensorRecordComposeFragment)
         }
         binding.navigateButton.setOnClickListener(){
             findNavController().navigate(R.id.action_settingFragment_to_sensorRecordFragment)

@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.showrecord
+package com.choi.sensorproject.ui.showrecord.deprecated
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -6,27 +6,18 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PixelFormat
-import android.graphics.Point
 import android.graphics.PorterDuff
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.widget.CalendarView
-import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
-import com.choi.sensorproject.ui.model.SensorRecordUIModel
 import com.example.sensorproject.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import kotlin.math.atan2
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 @SuppressLint("SimpleDateFormat")
 class CustomCalendarSurfaceView @JvmOverloads constructor(

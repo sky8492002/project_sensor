@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.showrecord
+package com.choi.sensorproject.ui.showrecord.deprecated
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -16,6 +16,7 @@ import android.view.MotionEvent
 import android.view.View
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
+import com.choi.sensorproject.ui.showrecord.TouchListener
 import java.text.SimpleDateFormat
 
 @SuppressLint("SimpleDateFormat")

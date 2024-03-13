@@ -15,5 +15,12 @@
         <action
             android:id="@+id/action_settingFragment_to_sensorRecordFragment"
             app:destination="@id/sensorRecordFragment" />
+        <action
+            android:id="@+id/action_settingFragment_to_sensorRecordComposeFragment"
+            app:destination="@id/sensorRecordComposeFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/sensorRecordComposeFragment"
+        android:name="com.choi.sensorproject.ui.showrecord.composeui.SensorRecordComposeFragment"
+        android:label="SensorRecordComposeFragment" />
 </navigation>

@@ -28,17 +28,17 @@
             android:id="@+id/navigate_button"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            app:layout_constraintBottom_toTopOf="@+id/image_test_buton"
+            app:layout_constraintBottom_toTopOf="@+id/compose_navigate_button"
             android:fontFamily="@font/godo_m"
             android:text="화면 이동"/>
 
         <Button
-            android:id="@+id/image_test_buton"
+            android:id="@+id/compose_navigate_button"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             app:layout_constraintBottom_toBottomOf="parent"
             android:fontFamily="@font/godo_m"
-            android:text="이미지 저장 테스트"/>
+            android:text="Compose 화면 이동"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
