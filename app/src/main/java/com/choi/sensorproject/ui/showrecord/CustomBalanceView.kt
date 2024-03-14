@@ -21,7 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.pow
 
-class CustomBalanceView(context: Context, attrs: AttributeSet) : View(context, attrs) {
+class CustomBalanceView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
     private val paint = Paint()
     private val totalRectF = RectF()
