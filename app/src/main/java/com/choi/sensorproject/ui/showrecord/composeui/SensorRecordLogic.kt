@@ -1,8 +1,10 @@
 package com.choi.sensorproject.ui.showrecord.composeui
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
@@ -295,5 +297,9 @@ object SensorRecordLogic{
 
     fun refreshPage(selectedDate: Date){
         pagingViewChangeListener?.onRefreshPage(dayFormat.format(selectedDate))
+    }
+
+    fun changePhoneViewPoint(phoneViewPoint: PhoneViewPoint){
+        curPhoneViewPoint = phoneViewPoint
     }
 }

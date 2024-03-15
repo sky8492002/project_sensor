@@ -22,11 +22,13 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +37,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
@@ -151,8 +157,14 @@ class SensorRecordComposeFragment: Fragment() {
             Column(modifier = Modifier.align(Alignment.BottomCenter)){
                 CalendarGLView()
             }
-            Column(modifier = Modifier.align(Alignment.BottomCenter)){
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
+            ){
                 CalendarButton()
+                ChangePhoneViewPointButton()
             }
         }
 
@@ -493,11 +505,8 @@ class SensorRecordComposeFragment: Fragment() {
                     CustomCalendarGLSurfaceView(context)
                 },
                 modifier = Modifier
-                    .width(350.dp)
-                    .height(350.dp)
-                    .onGloballyPositioned {
-                        clockSize = it.size
-                    },
+                    .width(400.dp)
+                    .height(400.dp),
                 update = { view ->
                     view.reset()
                     view.renderer.calendarListener = object: CalendarListener{
@@ -514,10 +523,16 @@ class SensorRecordComposeFragment: Fragment() {
     fun CalendarButton(){
         var calendarVisible by remember { mutableStateOf(false) }
 
-        Image(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
+                .width(40.dp)
+                .height(40.dp)
+                .background(
+                    color = androidx.compose.ui.graphics.Color(Color.DKGRAY),
+                    shape = RoundedCornerShape(12.dp)
+                )
                 .clickable {
                     calendarVisible = if (calendarVisible) {
                         SensorRecordLogic.changeCalendarGLView(false)
@@ -526,11 +541,60 @@ class SensorRecordComposeFragment: Fragment() {
                         SensorRecordLogic.changeCalendarGLView(true)
                         true
                     }
-                },
-            painter = painterResource(id = R.drawable.loading),
-            contentDescription = "",
-            contentScale = ContentScale.Crop
-        )
+                }){
+            Image(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(40.dp),
+                painter = painterResource(id = R.drawable.loading),
+                contentDescription = "",
+                contentScale = ContentScale.Crop
+            )
+        }
+    }
+    @Composable
+    fun ChangePhoneViewPointButton(){
+        var curPhoneViewPoint by remember { mutableStateOf(SensorRecordLogic.PhoneViewPoint.FRONT) }
+
+         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+             modifier = Modifier
+                .width(40.dp)
+                .height(40.dp)
+                .background(
+                    color = when(curPhoneViewPoint) {
+                        SensorRecordLogic.PhoneViewPoint.FRONT -> {
+                            androidx.compose.ui.graphics.Color(Color.GRAY)
+                        }
+                        SensorRecordLogic.PhoneViewPoint.BACK -> {
+                            androidx.compose.ui.graphics.Color(Color.GREEN)
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .clickable {
+                    curPhoneViewPoint = when(curPhoneViewPoint){
+                        SensorRecordLogic.PhoneViewPoint.FRONT -> {
+                            SensorRecordLogic.changePhoneViewPoint(SensorRecordLogic.PhoneViewPoint.BACK)
+                            SensorRecordLogic.PhoneViewPoint.BACK
+                        }
+                        SensorRecordLogic.PhoneViewPoint.BACK -> {
+                            SensorRecordLogic.changePhoneViewPoint(SensorRecordLogic.PhoneViewPoint.FRONT)
+                            SensorRecordLogic.PhoneViewPoint.FRONT
+                        }
+                    }
+            }){
+
+            Image(
+                modifier = Modifier
+                    .width(20.dp)
+                    .height(25.dp),
+                painter = painterResource(id = R.drawable.phone_back),
+                contentDescription = "",
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 
     @Composable
