@@ -9,8 +9,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,7 +69,9 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
+import com.choi.sensorproject.ui.opngl.CustomCalendarGLSurfaceView
 import com.choi.sensorproject.ui.opngl.CustomGLSurfaceView
+import com.choi.sensorproject.ui.showrecord.CalendarListener
 import com.choi.sensorproject.ui.showrecord.CustomBalanceView
 import com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
 import com.choi.sensorproject.ui.showrecord.DrawSuccessListener
@@ -69,6 +83,7 @@ import com.example.sensorproject.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import java.util.Date
 import kotlin.math.abs
 
 class SensorRecordComposeFragment: Fragment() {
@@ -110,26 +125,37 @@ class SensorRecordComposeFragment: Fragment() {
 
         LoadingDialog()
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .onGloballyPositioned {
-                    deviceSize = it.size
-                }){
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned {
+                deviceSize = it.size
+            }){
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize()
+            ){
 
-            RecordTextView()
+                RecordTextView()
 
-            Box{
-                ClockView()
-                OpenGLView()
+                Box{
+                    ClockView()
+                    OpenGLView()
+                }
+
+                BalanceView()
+
+                PagingView(curPagingData)
             }
 
-            BalanceView()
-
-            PagingView(curPagingData)
+            Column(modifier = Modifier.align(Alignment.BottomCenter)){
+                CalendarGLView()
+            }
+            Column(modifier = Modifier.align(Alignment.BottomCenter)){
+                CalendarButton()
+            }
         }
+
     }
 
     @Composable
@@ -301,24 +327,31 @@ class SensorRecordComposeFragment: Fragment() {
     @Composable
     fun PagingView(pagingData: PagingData<RecordsForHourUIModel>?){
         var curForceScrollType by remember { mutableStateOf( SensorRecordLogic.ForceScrollType.NONE)}
+        var lazyPagingItems: LazyPagingItems<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.pagingViewChangeListener = object : PagingViewChangeListener {
                 override fun onForceScrollTypeChange(forceScrollType: SensorRecordLogic.ForceScrollType) {
                     curForceScrollType = forceScrollType
                 }
+
+                override fun onRefreshPage(initPageDate: String) {
+                    manageSensorRecordViewModel.changeInitPageDate(initPageDate)
+                    lazyPagingItems?.refresh()
+                }
             }
         }
 
         pagingData?.let{
-            val lazyPagingItems = remember(it) {
+            lazyPagingItems = remember(it) {
                 flow {
                     emit(it)
                 }
             }.collectAsLazyPagingItems()
-            SensorRecordLogic.manageLoadState(lazyPagingItems.loadState)
-
-            RecordsForHourLazyRowView(lazyPagingItems, curForceScrollType)
+            lazyPagingItems?.let{
+                SensorRecordLogic.manageLoadState(it.loadState)
+                RecordsForHourLazyRowView(it, curForceScrollType)
+            }
         }
     }
 
@@ -410,7 +443,8 @@ class SensorRecordComposeFragment: Fragment() {
             .padding(5.dp)
             .onGloballyPositioned {
                 curLocateX = it.positionInParent().x
-                curLocateY = it.positionInParent().y + abs(deviceSize.width / 2 - it.positionInParent().x - it.size.width/2) / 10
+                curLocateY =
+                    it.positionInParent().y + abs(deviceSize.width / 2 - it.positionInParent().x - it.size.width / 2) / 10
             }
             .offset(y = curLocateY.dp)){
             Box(modifier = Modifier.fillMaxSize()) {
@@ -430,6 +464,73 @@ class SensorRecordComposeFragment: Fragment() {
                 }
             }
         }
+    }
+
+    @Composable
+    fun CalendarGLView(){
+        var curVisibility by remember { mutableStateOf(false) }
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.calendarGLViewChangeListener = object : CalendarGLViewChangeListener{
+                override fun onChangeVisibility(isVisible: Boolean) {
+                    curVisibility = isVisible
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = curVisibility,
+            enter = slideInVertically(
+                initialOffsetY = { fullHeight -> 2 * fullHeight },
+                animationSpec = tween(durationMillis = 1000, easing = FastOutLinearInEasing)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { fullHeight -> 2 * fullHeight },
+                animationSpec = tween(durationMillis = 1000, easing = FastOutLinearInEasing)
+            )
+        ){
+            AndroidView(
+                factory = { context ->
+                    CustomCalendarGLSurfaceView(context)
+                },
+                modifier = Modifier
+                    .width(350.dp)
+                    .height(350.dp)
+                    .onGloballyPositioned {
+                        clockSize = it.size
+                    },
+                update = { view ->
+                    view.reset()
+                    view.renderer.calendarListener = object: CalendarListener{
+                        override fun onSelectedDateUpdate(selectedDate: Date) {
+                            SensorRecordLogic.refreshPage(selectedDate)
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    @Composable
+    fun CalendarButton(){
+        var calendarVisible by remember { mutableStateOf(false) }
+
+        Image(
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+                .clickable {
+                    calendarVisible = if (calendarVisible) {
+                        SensorRecordLogic.changeCalendarGLView(false)
+                        false
+                    } else {
+                        SensorRecordLogic.changeCalendarGLView(true)
+                        true
+                    }
+                },
+            painter = painterResource(id = R.drawable.loading),
+            contentDescription = "",
+            contentScale = ContentScale.Crop
+        )
     }
 
     @Composable

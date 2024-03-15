@@ -37,6 +37,7 @@ object SensorRecordLogic{
     var openGLViewChangeListener: OpenGLViewChangeListener?= null
     var pagingViewChangeListener: PagingViewChangeListener? = null
     var loadingDialogChangeListener: LoadingDialogChangeListener? = null
+    var calendarGLViewChangeListener: CalendarGLViewChangeListener?= null
 
     private val dayFormat = SimpleDateFormat("yyyy-MM-dd")
     private val hourFormat = SimpleDateFormat("HH")
@@ -105,6 +106,10 @@ object SensorRecordLogic{
         model?.let{
             balanceViewChangeListener?.onCurRecordsForHourChange(it)
         }
+    }
+
+    fun changeCalendarGLView(isVisible: Boolean){
+        calendarGLViewChangeListener?.onChangeVisibility(isVisible)
     }
 
     fun changeLoadingDialog(isShowing: Boolean){
@@ -286,5 +291,9 @@ object SensorRecordLogic{
                 lastZAngle = curZAngle
             }
         }
+    }
+
+    fun refreshPage(selectedDate: Date){
+        pagingViewChangeListener?.onRefreshPage(dayFormat.format(selectedDate))
     }
 }
