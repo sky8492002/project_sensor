@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,7 +27,6 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -60,14 +62,14 @@ import com.choi.sensorproject.ui.showrecord.CustomBalanceView
 import com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
 import com.choi.sensorproject.ui.showrecord.DrawSuccessListener
 import com.choi.sensorproject.ui.showrecord.TouchListener
+import com.choi.sensorproject.ui.theme.GodoTypography
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
-import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
 import com.example.sensorproject.R
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 class SensorRecordComposeFragment: Fragment() {
 
@@ -332,9 +334,8 @@ class SensorRecordComposeFragment: Fragment() {
             snapshotFlow { state.isScrollInProgress }
                 .collect {
                     if(it.not() && models?.itemCount != 0){
-                        val centerModel = models?.get(state.firstVisibleItemIndex + 2)
-
-                        // 변경된 데이터(centerModel)를 clockView에 적용
+                        val centerModelIndex = state.firstVisibleItemIndex + 2
+                        val centerModel = models?.get(centerModelIndex)
                         SensorRecordLogic.changeClockView(centerModel)
                     }
                 }
@@ -346,7 +347,10 @@ class SensorRecordComposeFragment: Fragment() {
                 SensorRecordLogic.ForceScrollType.REFRESH -> {
                     // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
                     viewLifecycleOwner.lifecycleScope.launch{
-                        state.scrollToItem(SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it))
+                        val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it) + 2
+                        //val centerModel = it.get(centerModelIndex)
+                        //SensorRecordLogic.changeClockView(centerModel)
+                        state.scrollToItem(centerModelIndex)
                     }
                 }
                 SensorRecordLogic.ForceScrollType.APPEND -> {}
@@ -357,6 +361,9 @@ class SensorRecordComposeFragment: Fragment() {
                 }
             }
             LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
                 // flingBehavior: PagerSnapHelper 대체
                 state = state, flingBehavior = rememberSnapFlingBehavior(lazyListState = state)) {
                 items(count = it.itemCount) { index ->
@@ -371,45 +378,55 @@ class SensorRecordComposeFragment: Fragment() {
 
     @Composable
     fun RecordsForHourItemView(item: RecordsForHourUIModel){
-        var backgroundImageId by remember { mutableStateOf(R.drawable.background_gray) }
+        var curBackgroundImageId by remember { mutableStateOf(R.drawable.background_gray) }
+        // 가운데에서 얼마나 멀어졌는지에 따라 y축 높이 다르게 적용
+        var curLocateX by remember { mutableStateOf(0f)}
+        var curLocateY by remember { mutableStateOf(0f)}
 
         when(item.hour.toInt()) {
             in 0..4 -> {
-                backgroundImageId = R.drawable.background_night_green
+                curBackgroundImageId = R.drawable.background_night_green
             }
             in 5..7 -> {
-                backgroundImageId = R.drawable.background_sunset_green
+                curBackgroundImageId = R.drawable.background_sunset_green
             }
             in 8..16 -> {
-                backgroundImageId = R.drawable.background_light_sky_green
+                curBackgroundImageId = R.drawable.background_light_sky_green
             }
             in 17..19 -> {
-                backgroundImageId = R.drawable.background_sunset_green
+                curBackgroundImageId = R.drawable.background_sunset_green
             }
             in 20..23 -> {
-                backgroundImageId = R.drawable.background_night_green
+                curBackgroundImageId = R.drawable.background_night_green
             }
             else -> {
-                backgroundImageId = R.drawable.background_gray
+                curBackgroundImageId = R.drawable.background_gray
             }
         }
 
         OutlinedCard(modifier = Modifier
             .width(90.dp)
-            .height(100.dp)){
+            .height(100.dp)
+            .padding(5.dp)
+            .onGloballyPositioned {
+                curLocateX = it.positionInParent().x
+                curLocateY = it.positionInParent().y + abs(deviceSize.width / 2 - it.positionInParent().x - it.size.width/2) / 10
+            }
+            .offset(y = curLocateY.dp)){
             Box(modifier = Modifier.fillMaxSize()) {
                 Image(
-                    painter = painterResource(id = backgroundImageId),
+                    painter = painterResource(id = curBackgroundImageId),
                     contentDescription = "",
                     contentScale = ContentScale.Crop
                 )
 
                 Column(
+                    modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text(item.date)
-                    Text(item.hour)
+                    Text(text = item.date, style = GodoTypography.titleSmall)
+                    Text(text = item.hour, style = GodoTypography.bodySmall)
                 }
             }
         }
