@@ -230,11 +230,11 @@ object SensorRecordLogic{
     // startTime 이후의 RecordsForHourUIModel 내부 기록을 보여줌
 
     var curPhoneViewPoint: PhoneViewPoint = PhoneViewPoint.FRONT
-    fun runUIJobByRecordsForHour(recordsForHourUIModel: RecordsForHourUIModel, startTime: String?, clockSize: IntSize): Job {
+    fun playRecord(scope: CoroutineScope, recordsForHourUIModel: RecordsForHourUIModel, startTime: String?, clockSize: IntSize): Job {
 
         // 새로운 coroutine job launch
         // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
-        return CoroutineScope(Dispatchers.Main).launch {
+        return scope.launch {
             // job이 변경되면 관련된 변수도 초기화해야 하므로 지역 변수로 둠
             var lastXAngle: Float? = null
             var lastZAngle: Float? = null

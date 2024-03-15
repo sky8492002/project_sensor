@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -149,6 +150,7 @@ class SensorRecordComposeFragment: Fragment() {
     fun ClockView(){
         var curRecordsForHourModel: RecordsForHourUIModel? by remember { mutableStateOf(null) }
         var curPlayRecordJob: Job? by remember { mutableStateOf(null) }
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.clockViewChangeListener = object : ClockViewChangeListener {
@@ -183,7 +185,7 @@ class SensorRecordComposeFragment: Fragment() {
 
                         // 새로운 coroutine job launch
                         curRecordsForHourModel?.let{
-                            curPlayRecordJob = SensorRecordLogic.runUIJobByRecordsForHour(it, sensorRecordUIModel.recordTime, clockSize)
+                            curPlayRecordJob = SensorRecordLogic.playRecord(scope, it, sensorRecordUIModel.recordTime, clockSize)
                         }
 
                     }
@@ -205,7 +207,7 @@ class SensorRecordComposeFragment: Fragment() {
 
                         // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
                         curRecordsForHourModel?.let{
-                            curPlayRecordJob = SensorRecordLogic.runUIJobByRecordsForHour(it, null, clockSize)
+                            curPlayRecordJob = SensorRecordLogic.playRecord(scope, it, null, clockSize)
                         }
                     }
                 }
