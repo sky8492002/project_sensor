@@ -58,6 +58,7 @@ import com.choi.sensorproject.ui.opngl.CustomGLSurfaceView
 import com.choi.sensorproject.ui.showrecord.CustomBalanceView
 import com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
 import com.choi.sensorproject.ui.showrecord.DrawSuccessListener
+import com.choi.sensorproject.ui.showrecord.TouchListener
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
@@ -169,11 +170,30 @@ class SensorRecordComposeFragment: Fragment() {
                     clockSize = it.size
                 },
             update = { view ->
+                view.touchListener = object : TouchListener {
+                    override fun onSensorRecordTouch(
+                        sensorRecordUIModel: SensorRecordUIModel,
+                    ) {
+                        // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
+                        curPlayRecordJob?.let{ job ->
+                            if(job.isActive) {
+                                job.cancel()
+                            }
+                        }
+
+                        // 새로운 coroutine job launch
+                        curRecordsForHourModel?.let{
+                            curPlayRecordJob = SensorRecordLogic.runUIJobByRecordsForHour(it, sensorRecordUIModel.recordTime, clockSize)
+                        }
+
+                    }
+                }
+
                 view.drawSuccessListener = object : DrawSuccessListener {
                     override fun onDrawSuccess() {
                         SensorRecordLogic.changeLoadingDialog(false)
 
-                        // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
+                        // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수
                         curPlayRecordJob?.let{ job ->
                             if(job.isActive) {
                                 job.cancel()
