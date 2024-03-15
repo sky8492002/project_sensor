@@ -91,18 +91,12 @@ class SensorRecordComposeFragment: Fragment() {
                   manageAppInfoViewModel: ManageAppInfoViewModel = hiltViewModel()){
         // hiltViewModel 대신 viewModel을 쓰면 App Crash (@HiltViewModel로 ViewModel을 만들었기 때문)
 
-        // UI를 변경하는 변수 목록
-        var curRecordsForHourModel: RecordsForHourUIModel? by remember { mutableStateOf(null) }
         var curPagingData: PagingData<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.mainViewChangeListener = object: MainViewChangeListener{
                 override fun onRecordPagingDataChange(pagingData: PagingData<RecordsForHourUIModel>) {
                     curPagingData = pagingData
-                }
-
-                override fun onCurRecordsForHourChange(model: RecordsForHourUIModel) {
-                    curRecordsForHourModel = model
                 }
             }
             SensorRecordLogic.runSensorRecordCollector(manageSensorRecordViewModel.uiState)
@@ -124,11 +118,11 @@ class SensorRecordComposeFragment: Fragment() {
             RecordTextView()
 
             Box{
-                ClockView(curRecordsForHourModel)
+                ClockView()
                 OpenGLView()
             }
 
-            BalanceView(curRecordsForHourModel)
+            BalanceView()
 
             PagingView(curPagingData)
         }
@@ -151,8 +145,17 @@ class SensorRecordComposeFragment: Fragment() {
     }
 
     @Composable
-    fun ClockView(recordsForHourUIModel: RecordsForHourUIModel?){
+    fun ClockView(){
+        var curRecordsForHourModel: RecordsForHourUIModel? by remember { mutableStateOf(null) }
         var curPlayRecordJob: Job? by remember { mutableStateOf(null) }
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.clockViewChangeListener = object : ClockViewChangeListener {
+                override fun onCurRecordsForHourChange(model: RecordsForHourUIModel) {
+                    curRecordsForHourModel = model
+                }
+            }
+        }
 
         // AndroidView를 사용하여 기존의 View를 호출할 수 있음
         AndroidView(
@@ -178,15 +181,15 @@ class SensorRecordComposeFragment: Fragment() {
                         }
 
                         // 변경된 데이터(centerModel)를 balanceView에 적용
-                        //binding.customBalanceView.setCurModel(centerModel)
+                        SensorRecordLogic.changeBalanceView(curRecordsForHourModel)
 
                         // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
-                        recordsForHourUIModel?.let{
-                            curPlayRecordJob = SensorRecordLogic.runUIJobByRecordsForHour(recordsForHourUIModel, null, clockSize)
+                        curRecordsForHourModel?.let{
+                            curPlayRecordJob = SensorRecordLogic.runUIJobByRecordsForHour(it, null, clockSize)
                         }
                     }
                 }
-                recordsForHourUIModel?.let{
+                curRecordsForHourModel?.let{
                     view.setCurModel(it)
                     SensorRecordLogic.changeLoadingDialog(true)
                 }
@@ -245,7 +248,17 @@ class SensorRecordComposeFragment: Fragment() {
     }
 
     @Composable
-    fun BalanceView(recordsForHourUIModel: RecordsForHourUIModel?){
+    fun BalanceView(){
+        var curRecordsForHourModel: RecordsForHourUIModel? by remember { mutableStateOf(null) }
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.balanceViewChangeListener = object : BalanceViewChangeListener {
+                override fun onCurRecordsForHourChange(model: RecordsForHourUIModel) {
+                    curRecordsForHourModel = model
+                }
+            }
+        }
+
         AndroidView(
             factory = { context ->
                 CustomBalanceView(context)
@@ -254,7 +267,7 @@ class SensorRecordComposeFragment: Fragment() {
                 .fillMaxWidth()
                 .height(80.dp),
             update = { view ->
-                recordsForHourUIModel?.let{
+                curRecordsForHourModel?.let{
                     view.setCurModel(it)
                 }
             }
@@ -298,7 +311,9 @@ class SensorRecordComposeFragment: Fragment() {
                 .collect {
                     if(it.not() && models?.itemCount != 0){
                         val centerModel = models?.get(state.firstVisibleItemIndex + 2)
-                        SensorRecordLogic.changeCurRecordsForHourModel(centerModel)
+
+                        // 변경된 데이터(centerModel)를 clockView에 적용
+                        SensorRecordLogic.changeClockView(centerModel)
                     }
                 }
         }

@@ -7,5 +7,4 @@ import com.choi.sensorproject.ui.model.SensorRecordUIModel
 interface MainViewChangeListener {
 
     fun onRecordPagingDataChange(pagingData: PagingData<RecordsForHourUIModel>)
-    fun onCurRecordsForHourChange(model: RecordsForHourUIModel)
 }

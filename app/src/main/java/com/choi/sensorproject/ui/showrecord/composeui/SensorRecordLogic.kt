@@ -31,6 +31,8 @@ import java.util.Date
 object SensorRecordLogic{
 
     var mainViewChangeListener: MainViewChangeListener? = null
+    var balanceViewChangeListener: BalanceViewChangeListener?= null
+    var clockViewChangeListener: ClockViewChangeListener?= null
     var recordTextViewChangeListener: RecordTextViewChangeListener?= null
     var openGLViewChangeListener: OpenGLViewChangeListener?= null
     var pagingViewChangeListener: PagingViewChangeListener? = null
@@ -85,11 +87,24 @@ object SensorRecordLogic{
         }
     }
 
-    fun changeCurRecordsForHourModel(model: RecordsForHourUIModel?){
+//    fun changeCurRecordsForHourModel(model: RecordsForHourUIModel?){
+//        model?.let{
+//            mainViewChangeListener?.onCurRecordsForHourChange(it)
+//        }
+//    }
+
+    fun changeClockView(model: RecordsForHourUIModel?){
         model?.let{
-            mainViewChangeListener?.onCurRecordsForHourChange(it)
+            clockViewChangeListener?.onCurRecordsForHourChange(it)
         }
     }
+
+    fun changeBalanceView(model: RecordsForHourUIModel?){
+        model?.let{
+            balanceViewChangeListener?.onCurRecordsForHourChange(it)
+        }
+    }
+
     fun changeLoadingDialog(isShowing: Boolean){
         loadingDialogChangeListener?.onLoadingDialogChange(isShowing)
     }
