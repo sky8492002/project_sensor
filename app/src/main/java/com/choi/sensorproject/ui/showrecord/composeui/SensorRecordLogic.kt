@@ -38,6 +38,7 @@ object SensorRecordLogic{
     var recordTextViewChangeListener: RecordTextViewChangeListener?= null
     var openGLViewChangeListener: OpenGLViewChangeListener?= null
     var pagingViewChangeListener: PagingViewChangeListener? = null
+    var lazyRowViewChangeListener: LazyRowViewChangeListener?= null
     var loadingDialogChangeListener: LoadingDialogChangeListener? = null
     var calendarGLViewChangeListener: CalendarGLViewChangeListener?= null
 
@@ -165,16 +166,16 @@ object SensorRecordLogic{
 
                 when(lastLoadingType){
                     LoadingType.NONE -> {
-                        pagingViewChangeListener?.onForceScrollTypeChange(ForceScrollType.NONE)
+                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.NONE)
                     }
                     LoadingType.REFRESH -> {
-                        pagingViewChangeListener?.onForceScrollTypeChange(ForceScrollType.REFRESH)
+                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.REFRESH)
                     }
                     LoadingType.APPEND -> {
-                        pagingViewChangeListener?.onForceScrollTypeChange(ForceScrollType.APPEND)
+                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.APPEND)
                     }
                     LoadingType.PREPEND -> {
-                        pagingViewChangeListener?.onForceScrollTypeChange(ForceScrollType.PREPEND)
+                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.PREPEND)
                     }
                 }
                 lastLoadingType = LoadingType.NONE

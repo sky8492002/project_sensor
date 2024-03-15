@@ -338,15 +338,10 @@ class SensorRecordComposeFragment: Fragment() {
 
     @Composable
     fun PagingView(pagingData: PagingData<RecordsForHourUIModel>?){
-        var curForceScrollType by remember { mutableStateOf( SensorRecordLogic.ForceScrollType.NONE)}
         var lazyPagingItems: LazyPagingItems<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.pagingViewChangeListener = object : PagingViewChangeListener {
-                override fun onForceScrollTypeChange(forceScrollType: SensorRecordLogic.ForceScrollType) {
-                    curForceScrollType = forceScrollType
-                }
-
                 override fun onRefreshPage(initPageDate: String) {
                     manageSensorRecordViewModel.changeInitPageDate(initPageDate)
                     lazyPagingItems?.refresh()
@@ -362,16 +357,25 @@ class SensorRecordComposeFragment: Fragment() {
             }.collectAsLazyPagingItems()
             lazyPagingItems?.let{
                 SensorRecordLogic.manageLoadState(it.loadState)
-                RecordsForHourLazyRowView(it, curForceScrollType)
+                LazyRowView(it)
             }
         }
     }
 
     @OptIn(ExperimentalFoundationApi::class) // 실험용 api를 사용할 때 추가하며, 실험용 api는 미래에 수정 또는 제거될 수 있다.
     @Composable
-    fun RecordsForHourLazyRowView(models: LazyPagingItems<RecordsForHourUIModel>?, forceScrollType: SensorRecordLogic.ForceScrollType){
+    fun LazyRowView(models: LazyPagingItems<RecordsForHourUIModel>?){
+        var curForceScrollType by remember { mutableStateOf( SensorRecordLogic.ForceScrollType.NONE)}
         // 스크롤 위치를 기억
         val state = rememberLazyListState()
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.lazyRowViewChangeListener = object : LazyRowViewChangeListener {
+                override fun onForceScrollTypeChange(forceScrollType: SensorRecordLogic.ForceScrollType) {
+                    curForceScrollType = forceScrollType
+                }
+            }
+        }
 
         // 스크롤이 멈췄을 때에만 화면을 업데이트 (RecyclerView.SCROLL_STATE_IDLE 대체)
         LaunchedEffect(state) {
@@ -387,21 +391,27 @@ class SensorRecordComposeFragment: Fragment() {
         }
 
         models?.let{
-            when(forceScrollType){
+            when(curForceScrollType){
                 SensorRecordLogic.ForceScrollType.NONE -> {}
                 SensorRecordLogic.ForceScrollType.REFRESH -> {
                     // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
+                    // rememberCoroutineScope가 아닌 이유: 도중에 recomposition되면 curForceScrollType이 None으로 변경되지 않을 수 있기 때문
                     viewLifecycleOwner.lifecycleScope.launch{
-                        val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it) + 2
-                        //val centerModel = it.get(centerModelIndex)
-                        //SensorRecordLogic.changeClockView(centerModel)
+                        val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it) - 2
+                        val centerModel = it.get(centerModelIndex)
+                        SensorRecordLogic.changeClockView(centerModel)
                         state.scrollToItem(centerModelIndex)
+                        curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
                     }
                 }
-                SensorRecordLogic.ForceScrollType.APPEND -> {}
+                SensorRecordLogic.ForceScrollType.APPEND -> {
+                    curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
+                }
                 SensorRecordLogic.ForceScrollType.PREPEND -> {
                     // 앞에 데이터가 추가된 경우 스크롤 위치 조정이 필요함
                     viewLifecycleOwner.lifecycleScope.launch{
+                        state.scrollToItem(state.firstVisibleItemIndex + 24)
+                        curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
                     }
                 }
             }
