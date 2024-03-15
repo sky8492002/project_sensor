@@ -2,28 +2,37 @@ package com.choi.sensorproject.ui.showrecord.composeui
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.RectF
 import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.lifecycleScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
+import com.choi.sensorproject.ui.showrecord.ShowRecordFragment
 import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
 import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
+import com.example.sensorproject.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Date
 
 @SuppressLint("SimpleDateFormat")
 object SensorRecordLogic{
 
     var mainViewChangeListener: MainViewChangeListener? = null
+    var recordTextViewChangeListener: RecordTextViewChangeListener?= null
+    var openGLViewChangeListener: OpenGLViewChangeListener?= null
     var pagingViewChangeListener: PagingViewChangeListener? = null
     var loadingDialogChangeListener: LoadingDialogChangeListener? = null
 
@@ -44,6 +53,10 @@ object SensorRecordLogic{
 
     enum class ForceScrollType{
         NONE, REFRESH, APPEND, PREPEND
+    }
+
+    enum class PhoneViewPoint{
+        FRONT, BACK
     }
 
     fun runSensorRecordCollector(uiState: StateFlow<SensorRecordUIState>){
@@ -197,5 +210,68 @@ object SensorRecordLogic{
         point[1] = -(point[1] - centerY) / (clockSize.height / 2)
 
         return point
+    }
+
+    // startTime 이후의 RecordsForHourUIModel 내부 기록을 보여줌
+
+    var curPhoneViewPoint: PhoneViewPoint = PhoneViewPoint.FRONT
+    fun runUIJobByRecordsForHour(recordsForHourUIModel: RecordsForHourUIModel, startTime: Date?, clockSize: IntSize): Job {
+        // 새로운 coroutine job launch
+        // UI 조정하는 작업은 IO thread에서 할 수 없음 (launch(Dispatchers.IO) 하면 앱 crash)
+        return CoroutineScope(Dispatchers.Main).launch {
+            // job이 변경되면 관련된 변수도 초기화해야 하므로 지역 변수로 둠
+            var lastXAngle: Float? = null
+            var lastZAngle: Float? = null
+            var lastYAngle: Float? = null
+            for(record in recordsForHourUIModel.records){
+                // 시작 시간보다 이르면 화면에 표시하지 않고 넘어감
+                if((startTime != null) && (startTime > timeFormat.parse(record.recordTime))){
+                    continue
+                }
+
+                openGLViewChangeListener?.onCurSensorRecordChange(record)
+                recordTextViewChangeListener?.onCurSensorRecordChange(record)
+
+                val curXAngle = record.xAngle
+                var curYAngle = 0f
+                var curZAngle = record.zAngle
+
+                // 보는 시점이 뒤쪽이면 curYAngle, curZAngle 다르게 설정
+                if(curPhoneViewPoint == PhoneViewPoint.BACK){
+                    curYAngle = 180f
+                    curZAngle = -curZAngle
+                }
+
+                // 실제 각도와 화면이 일치하게 조정 (이전 각도와 비교 후 10밀리 간격으로 미세조정)
+                if(lastXAngle != null && lastZAngle != null && lastYAngle != null){
+                    val diffXAngle = curXAngle - lastXAngle
+                    val diffYAngle = curYAngle - lastYAngle
+                    val diffZAngle = curZAngle - lastZAngle
+                    for(n in 1..10){
+                        val phoneAngle = FloatArray(3)
+                        val splitedXAngle = lastXAngle + diffXAngle / 10 * n
+                        val splitedYAngle = lastYAngle + diffYAngle / 10 * n
+                        val splitedZAngle = lastZAngle + diffZAngle / 10 * n
+                        phoneAngle[0] = -splitedZAngle / 180f * 200f
+                        phoneAngle[1] = splitedYAngle / 180f * 200f
+                        phoneAngle[2] = splitedXAngle / 180f * 200f
+                        openGLViewChangeListener?.onPhoneAngleChange(phoneAngle)
+                        delay(10)
+                    }
+                }
+                else{
+                    val phoneAngle = FloatArray(3)
+                    phoneAngle[0] = -curZAngle / 180f * 200f
+                    phoneAngle[1] = curYAngle / 180f * 200f
+                    phoneAngle[2] = curXAngle / 180f * 200f
+                    openGLViewChangeListener?.onPhoneAngleChange(phoneAngle)
+                    delay(100)
+                }
+
+                lastXAngle = curXAngle
+                lastYAngle = curYAngle
+                lastZAngle = curZAngle
+            }
+        }
     }
 }

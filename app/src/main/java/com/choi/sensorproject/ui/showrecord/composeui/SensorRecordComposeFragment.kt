@@ -1,6 +1,7 @@
 package com.choi.sensorproject.ui.showrecord.composeui
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -61,6 +62,7 @@ import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
 import com.example.sensorproject.R
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
@@ -91,25 +93,12 @@ class SensorRecordComposeFragment: Fragment() {
 
         // UI를 변경하는 변수 목록
         var curRecordsForHourModel: RecordsForHourUIModel? by remember { mutableStateOf(null) }
-        var curRecord: SensorRecordUIModel? by remember { mutableStateOf(null) }
-        var curPinPoint: FloatArray? by remember { mutableStateOf(null) }
-        var curPhoneAngle: FloatArray? by remember { mutableStateOf(null) }
-        var curAppIcon: Bitmap? by remember { mutableStateOf(null) }
-        var curAppPlayingImage: Bitmap? by remember { mutableStateOf(null) }
-
         var curPagingData: PagingData<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.mainViewChangeListener = object: MainViewChangeListener{
                 override fun onRecordPagingDataChange(pagingData: PagingData<RecordsForHourUIModel>) {
                     curPagingData = pagingData
-                }
-
-                override fun onCurSensorRecordChange(model: SensorRecordUIModel) {
-                    curRecord = model
-                    curPinPoint = SensorRecordLogic.getPinPoint(model, clockSize)
-                    curAppIcon = SensorRecordLogic.getAppIcon(model.runningAppName)
-                    curAppPlayingImage = SensorRecordLogic.getPlayingImage(model.runningAppName)
                 }
 
                 override fun onCurRecordsForHourChange(model: RecordsForHourUIModel) {
@@ -131,12 +120,12 @@ class SensorRecordComposeFragment: Fragment() {
                 .onGloballyPositioned {
                     deviceSize = it.size
                 }){
-            Text(text = "기록 시간" + curRecord?.recordTime)
-            Text(text = "앱 패키지명" + curRecord?.runningAppName)
+
+            RecordTextView()
 
             Box{
                 ClockView(curRecordsForHourModel)
-                OpenGLView(curPinPoint, curPhoneAngle, curAppIcon, curAppPlayingImage)
+                OpenGLView()
             }
 
             BalanceView(curRecordsForHourModel)
@@ -145,20 +134,26 @@ class SensorRecordComposeFragment: Fragment() {
         }
     }
 
-    // 기록 시간 단위로 변경되는 UI
     @Composable
-    fun UpdateInRecordHourView(recordsForHourUIModel: RecordsForHourUIModel?){
+    fun RecordTextView(){
+        var curRecord: SensorRecordUIModel? by remember { mutableStateOf(null) }
 
-    }
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.recordTextViewChangeListener = object : RecordTextViewChangeListener{
+                override fun onCurSensorRecordChange(model: SensorRecordUIModel) {
+                    curRecord = model
+                }
+            }
+        }
 
-    // 기록 초 단위로 변경되는 UI
-    @Composable
-    fun UpdateInRecordSecondsView(curPinPoint: FloatArray?, curPhoneAngle: FloatArray?, curAppIcon: Bitmap?, curAppPlayingImage: Bitmap?){
-
+        Text(text = "기록 시간" + curRecord?.recordTime)
+        Text(text = "앱 패키지명" + curRecord?.runningAppName)
     }
 
     @Composable
     fun ClockView(recordsForHourUIModel: RecordsForHourUIModel?){
+        var curPlayRecordJob: Job? by remember { mutableStateOf(null) }
+
         // AndroidView를 사용하여 기존의 View를 호출할 수 있음
         AndroidView(
             factory = { context ->
@@ -175,18 +170,20 @@ class SensorRecordComposeFragment: Fragment() {
                     override fun onDrawSuccess() {
                         SensorRecordLogic.changeLoadingDialog(false)
 
-//                        // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
-//                        curUIJob?.let{ job ->
-//                            if(job.isActive) {
-//                                job.cancel()
-//                            }
-//                        }
-//
-//                        // 변경된 데이터(centerModel)를 balanceView에 적용
-//                        binding.customBalanceView.setCurModel(centerModel)
-//
-//                        // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
-//                        curUIJob = runUIJobByRecordsForHour(centerModel, null)
+                        // 실시간으로 화면에 기록을 보여주던 이전 coroutine job cancel 필수 (한번 더 확인)
+                        curPlayRecordJob?.let{ job ->
+                            if(job.isActive) {
+                                job.cancel()
+                            }
+                        }
+
+                        // 변경된 데이터(centerModel)를 balanceView에 적용
+                        //binding.customBalanceView.setCurModel(centerModel)
+
+                        // 실시간으로 화면에 기록을 보여주는 새로운 coroutine job launch
+                        recordsForHourUIModel?.let{
+                            curPlayRecordJob = SensorRecordLogic.runUIJobByRecordsForHour(recordsForHourUIModel, null, clockSize)
+                        }
                     }
                 }
                 recordsForHourUIModel?.let{
@@ -198,7 +195,34 @@ class SensorRecordComposeFragment: Fragment() {
     }
 
     @Composable
-    fun OpenGLView(curPinPoint: FloatArray?, curPhoneAngle: FloatArray?, curAppIcon: Bitmap?, curAppPlayingImage: Bitmap?){
+    fun OpenGLView(){
+        var curRecord: SensorRecordUIModel? by remember { mutableStateOf(null) }
+        var curPinPoint: FloatArray? by remember { mutableStateOf(null) }
+        var curPhoneAngle: FloatArray? by remember { mutableStateOf(null) }
+        var curAppIcon: Bitmap? by remember { mutableStateOf(null) }
+        var curAppPlayingImage: Bitmap? by remember { mutableStateOf(null) }
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.openGLViewChangeListener = object: OpenGLViewChangeListener{
+                override fun onCurSensorRecordChange(model: SensorRecordUIModel) {
+                    curRecord = model
+                    curPinPoint = SensorRecordLogic.getPinPoint(model, clockSize)
+                    curAppIcon = SensorRecordLogic.getAppIcon(model.runningAppName)
+
+                    // 화면이 켜진 기록일 경우 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움
+                    curAppPlayingImage = if(model.isScreenOn == true){
+                        SensorRecordLogic.getPlayingImage(model.runningAppName)
+                    } else{
+                        BitmapFactory.decodeResource(resources, R.drawable.phone_off)
+                    }
+                }
+
+                override fun onPhoneAngleChange(phoneAngle: FloatArray) {
+                    curPhoneAngle = phoneAngle
+                }
+            }
+        }
+
         // AndroidView를 사용하여 기존의 View를 호출할 수 있음
         AndroidView(
             factory = { context ->
@@ -260,78 +284,6 @@ class SensorRecordComposeFragment: Fragment() {
             RecordsForHourLazyRowView(lazyPagingItems, curForceScrollType)
         }
     }
-//    @Composable
-//    fun PagingView(uiState: StateFlow<SensorRecordUIState>) {
-//        var lastLoadingType by remember { mutableStateOf(LoadingType.NONE) }
-//
-//        var showDialog by remember { mutableStateOf(false) }
-//        LoadingDialog(showDialog)
-//
-//        var models: LazyPagingItems<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
-//        var forceScrollType by remember { mutableStateOf(ForceScrollType.NONE) }
-//        RecordsForHourLazyRowView(models, forceScrollType)
-//
-//
-//        uiState.collectAsState().value.let {
-//            if (it is SensorRecordUIState.Success) {
-//                forceScrollType = ForceScrollType.NONE
-//
-//                // remember(key) : key 값이 변경되었을 때만 값이 갱신된다. (그 외의 recomposition 수행 시 유지된다.)
-//                val lazyPagingItems = remember(it.records) {
-//                    flow {
-//                        emit(it.records)
-//                    }
-//                }.collectAsLazyPagingItems()
-//
-//                // 로드 상태 관찰
-//                val loadState = lazyPagingItems.loadState
-//                // LaunchedEffect(key) : key 값이 변경되었을 때만 내부 코드가 실행된다.
-//                LaunchedEffect(key1 = loadState) {
-//                    when {
-//                        loadState.refresh is LoadState.Loading -> {
-//                            showDialog = true
-//                            lastLoadingType = LoadingType.REFRESH
-//                        }
-//                        loadState.append is LoadState.Loading ->{
-//                            showDialog = true
-//                            lastLoadingType = LoadingType.APPEND
-//                        }
-//                        loadState.prepend is LoadState.Loading ->{
-//                            showDialog = true
-//                            lastLoadingType = LoadingType.PREPEND
-//                        }
-//                        loadState.refresh is LoadState.NotLoading && loadState.append is LoadState.NotLoading && loadState.prepend is LoadState.NotLoading-> {
-//                            showDialog = false
-//                            models = lazyPagingItems
-//
-//                            forceScrollType = when(lastLoadingType){
-//                                LoadingType.NONE -> {
-//                                    ForceScrollType.NONE
-//                                }
-//
-//                                LoadingType.REFRESH -> {
-//                                    ForceScrollType.REFRESH
-//                                }
-//
-//                                LoadingType.APPEND -> {
-//                                    ForceScrollType.APPEND
-//                                }
-//
-//                                LoadingType.PREPEND -> {
-//                                    ForceScrollType.PREPEND
-//                                }
-//                            }
-//                            lastLoadingType = LoadingType.NONE
-//                        }
-//                    }
-//                }
-//            }
-//            else{
-//                requireActivity().finish()
-//            }
-//        }
-//
-//    }
 
     @OptIn(ExperimentalFoundationApi::class) // 실험용 api를 사용할 때 추가하며, 실험용 api는 미래에 수정 또는 제거될 수 있다.
     @Composable
