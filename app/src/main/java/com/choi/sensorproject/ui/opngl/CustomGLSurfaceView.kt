@@ -25,26 +25,6 @@ class CustomGLSurfaceView @JvmOverloads constructor(
         setRenderer(renderer)
     }
 
-//    private var mPreviousX = 0f
-//    private var mPreviousY = 0f
-//    @SuppressLint("ClickableViewAccessibility")
-//    override fun onTouchEvent(event: MotionEvent): Boolean {
-//
-//        val x: Float = event.getX()
-//        val y: Float = event.getY()
-//        when (event.getAction()) {
-//            MotionEvent.ACTION_MOVE -> {
-//                val dx: Float = mPreviousX - x
-//                val dy: Float = mPreviousY - y
-//                renderer.rotate(dx, dy)
-//                requestRender()
-//            }
-//        }
-//        mPreviousX = x
-//        mPreviousY = y
-//        return true
-//    }
-
     fun changePhoneAngle(dx: Float, dy: Float, dz: Float){
         renderer.resetPhoneMatrix()
         renderer.rotatePhone(dx, dy, dz)

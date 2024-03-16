@@ -203,14 +203,18 @@ class SensorRecordComposeFragment: Fragment() {
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.recordTextViewChangeListener = object : RecordTextViewChangeListener{
+                override fun onReset() {
+                    curRecord = null
+                }
+
                 override fun onCurSensorRecordChange(model: SensorRecordUIModel) {
                     curRecord = model
                 }
             }
         }
 
-        Text(text = "기록 시간" + curRecord?.recordTime)
-        Text(text = "앱 패키지명" + curRecord?.runningAppName)
+        Text(text = "기록 시간: " + curRecord?.recordTime)
+        Text(text = "앱 패키지명: " + curRecord?.runningAppName)
     }
 
     @Composable
@@ -296,6 +300,13 @@ class SensorRecordComposeFragment: Fragment() {
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.openGLViewChangeListener = object: OpenGLViewChangeListener{
+                override fun onReset() {
+                    curPinPoint = FloatArray(2) { 0f }
+                    curPhoneAngle = FloatArray(3) { 0f }
+                    curAppIcon = null
+                    curAppPlayingImage = null
+                }
+
                 override fun onCurSensorRecordChange(model: SensorRecordUIModel) {
                     curRecord = model
                     curPinPoint = SensorRecordLogic.getPinPoint(model, clockSize)

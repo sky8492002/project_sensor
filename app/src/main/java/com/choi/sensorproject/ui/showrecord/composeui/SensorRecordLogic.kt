@@ -247,6 +247,11 @@ object SensorRecordLogic{
             var lastXAngle: Float? = null
             var lastZAngle: Float? = null
             var lastYAngle: Float? = null
+
+            // 시작 전 화면 초기화
+            openGLViewChangeListener?.onReset()
+            recordTextViewChangeListener?.onReset()
+
             for(record in recordsForHourUIModel.records){
                 // 시작 시간보다 이르면 화면에 표시하지 않고 넘어감
                 if((startTime != null) && (timeFormat.parse(startTime)!! > timeFormat.parse(record.recordTime))){
