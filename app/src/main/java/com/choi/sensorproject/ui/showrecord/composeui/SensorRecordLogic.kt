@@ -33,6 +33,7 @@ import java.util.Date
 object SensorRecordLogic{
 
     var mainViewChangeListener: MainViewChangeListener? = null
+    var backGroundViewChangeListener: BackGroundViewChangeListener?= null
     var balanceViewChangeListener: BalanceViewChangeListener?= null
     var clockViewChangeListener: ClockViewChangeListener?= null
     var recordTextViewChangeListener: RecordTextViewChangeListener?= null
@@ -67,6 +68,10 @@ object SensorRecordLogic{
         FRONT, BACK
     }
 
+    enum class BackgroundImageStyle{
+        GRAY, GREEN
+    }
+
     fun runSensorRecordCollector(uiState: StateFlow<SensorRecordUIState>){
         CoroutineScope(Dispatchers.IO).launch {
             uiState.collect(){ uiState ->
@@ -93,11 +98,9 @@ object SensorRecordLogic{
         }
     }
 
-//    fun changeCurRecordsForHourModel(model: RecordsForHourUIModel?){
-//        model?.let{
-//            mainViewChangeListener?.onCurRecordsForHourChange(it)
-//        }
-//    }
+    fun changeBackgroundView(hour: Int?){
+        backGroundViewChangeListener?.onBackgroundImageChange(getBackgroundImageId(hour, BackgroundImageStyle.GRAY))
+    }
 
     fun changeClockView(model: RecordsForHourUIModel?){
         model?.let{
@@ -139,7 +142,7 @@ object SensorRecordLogic{
                 for(index in 0 until items.itemCount){
                     val curModel = items[index]
                     if(curModel != null && curModel.date == initPageDate){
-                        return index
+                        return index + 12
                     }
                 }
             }
@@ -302,5 +305,43 @@ object SensorRecordLogic{
 
     fun changePhoneViewPoint(phoneViewPoint: PhoneViewPoint){
         curPhoneViewPoint = phoneViewPoint
+    }
+
+    fun getBackgroundImageId(hour: Int?, backgroundImageStyle: BackgroundImageStyle): Int{
+        when(hour) {
+            in 0..4 -> {
+                return when(backgroundImageStyle){
+                    BackgroundImageStyle.GRAY -> R.drawable.background_night_gray
+                    BackgroundImageStyle.GREEN -> R.drawable.background_night_green
+                }
+            }
+            in 5..7 -> {
+                return when(backgroundImageStyle){
+                    BackgroundImageStyle.GRAY -> R.drawable.background_sunset_gray
+                    BackgroundImageStyle.GREEN -> R.drawable.background_sunset_green
+                }
+            }
+            in 8..16 -> {
+                return when(backgroundImageStyle){
+                    BackgroundImageStyle.GRAY -> R.drawable.background_sky_gray
+                    BackgroundImageStyle.GREEN -> R.drawable.background_light_sky_green
+                }
+            }
+            in 17..19 -> {
+                return when(backgroundImageStyle){
+                    BackgroundImageStyle.GRAY -> R.drawable.background_sunset_gray
+                    BackgroundImageStyle.GREEN -> R.drawable.background_sunset_green
+                }
+            }
+            in 20..23 -> {
+                return when(backgroundImageStyle){
+                    BackgroundImageStyle.GRAY -> R.drawable.background_night_gray
+                    BackgroundImageStyle.GREEN -> R.drawable.background_night_green
+                }
+            }
+            else -> {
+                return R.drawable.background_gray
+            }
+        }
     }
 }

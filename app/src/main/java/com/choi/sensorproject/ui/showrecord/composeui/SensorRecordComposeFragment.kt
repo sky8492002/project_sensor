@@ -24,6 +24,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -136,6 +137,11 @@ class SensorRecordComposeFragment: Fragment() {
             .onGloballyPositioned {
                 deviceSize = it.size
             }){
+
+            Column(modifier = Modifier.fillMaxSize()){
+                BackgroundView()
+            }
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -161,13 +167,34 @@ class SensorRecordComposeFragment: Fragment() {
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
             ){
                 CalendarButton()
                 ChangePhoneViewPointButton()
             }
         }
 
+    }
+
+    @Composable
+    fun BackgroundView(){
+        var curBackgroundImageId by remember { mutableStateOf(R.drawable.background_gray) }
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.backGroundViewChangeListener = object: BackGroundViewChangeListener {
+                override fun onBackgroundImageChange(imageId: Int) {
+                    curBackgroundImageId = imageId
+                }
+            }
+        }
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = curBackgroundImageId),
+            contentDescription = "",
+            contentScale = ContentScale.Crop
+        )
     }
 
     @Composable
@@ -386,6 +413,7 @@ class SensorRecordComposeFragment: Fragment() {
                         val centerModelIndex = state.firstVisibleItemIndex + 2
                         val centerModel = models?.get(centerModelIndex)
                         SensorRecordLogic.changeClockView(centerModel)
+                        SensorRecordLogic.changeBackgroundView(centerModel?.hour?.toInt())
                     }
                 }
         }
@@ -395,13 +423,14 @@ class SensorRecordComposeFragment: Fragment() {
                 SensorRecordLogic.ForceScrollType.NONE -> {}
                 SensorRecordLogic.ForceScrollType.REFRESH -> {
                     // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
-                    // rememberCoroutineScope가 아닌 이유: 도중에 recomposition되면 curForceScrollType이 None으로 변경되지 않을 수 있기 때문
+                    // rememberCoroutineScope가 아닌 이유: 도중에 recomposition되면 나머지 코드가 실행되지 않을 수 있기 때문
                     viewLifecycleOwner.lifecycleScope.launch{
                         val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it) - 2
                         val centerModel = it.get(centerModelIndex)
                         SensorRecordLogic.changeClockView(centerModel)
-                        state.scrollToItem(centerModelIndex)
+                        SensorRecordLogic.changeBackgroundView(centerModel?.hour?.toInt())
                         curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
+                        state.scrollToItem(centerModelIndex)
                     }
                 }
                 SensorRecordLogic.ForceScrollType.APPEND -> {
@@ -410,8 +439,8 @@ class SensorRecordComposeFragment: Fragment() {
                 SensorRecordLogic.ForceScrollType.PREPEND -> {
                     // 앞에 데이터가 추가된 경우 스크롤 위치 조정이 필요함
                     viewLifecycleOwner.lifecycleScope.launch{
-                        state.scrollToItem(state.firstVisibleItemIndex + 24)
                         curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
+                        state.scrollToItem(state.firstVisibleItemIndex + 24)
                     }
                 }
             }
@@ -438,26 +467,7 @@ class SensorRecordComposeFragment: Fragment() {
         var curLocateX by remember { mutableStateOf(0f)}
         var curLocateY by remember { mutableStateOf(0f)}
 
-        when(item.hour.toInt()) {
-            in 0..4 -> {
-                curBackgroundImageId = R.drawable.background_night_green
-            }
-            in 5..7 -> {
-                curBackgroundImageId = R.drawable.background_sunset_green
-            }
-            in 8..16 -> {
-                curBackgroundImageId = R.drawable.background_light_sky_green
-            }
-            in 17..19 -> {
-                curBackgroundImageId = R.drawable.background_sunset_green
-            }
-            in 20..23 -> {
-                curBackgroundImageId = R.drawable.background_night_green
-            }
-            else -> {
-                curBackgroundImageId = R.drawable.background_gray
-            }
-        }
+        curBackgroundImageId = SensorRecordLogic.getBackgroundImageId(item.hour.toInt(), SensorRecordLogic.BackgroundImageStyle.GREEN)
 
         OutlinedCard(modifier = Modifier
             .width(90.dp)
@@ -570,31 +580,33 @@ class SensorRecordComposeFragment: Fragment() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
              modifier = Modifier
-                .width(40.dp)
-                .height(40.dp)
-                .background(
-                    color = when(curPhoneViewPoint) {
-                        SensorRecordLogic.PhoneViewPoint.FRONT -> {
-                            androidx.compose.ui.graphics.Color(Color.GRAY)
-                        }
-                        SensorRecordLogic.PhoneViewPoint.BACK -> {
-                            androidx.compose.ui.graphics.Color(Color.GREEN)
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable {
-                    curPhoneViewPoint = when(curPhoneViewPoint){
-                        SensorRecordLogic.PhoneViewPoint.FRONT -> {
-                            SensorRecordLogic.changePhoneViewPoint(SensorRecordLogic.PhoneViewPoint.BACK)
-                            SensorRecordLogic.PhoneViewPoint.BACK
-                        }
-                        SensorRecordLogic.PhoneViewPoint.BACK -> {
-                            SensorRecordLogic.changePhoneViewPoint(SensorRecordLogic.PhoneViewPoint.FRONT)
-                            SensorRecordLogic.PhoneViewPoint.FRONT
-                        }
-                    }
-            }){
+                 .width(40.dp)
+                 .height(40.dp)
+                 .background(
+                     color = when (curPhoneViewPoint) {
+                         SensorRecordLogic.PhoneViewPoint.FRONT -> {
+                             androidx.compose.ui.graphics.Color(Color.GRAY)
+                         }
+
+                         SensorRecordLogic.PhoneViewPoint.BACK -> {
+                             androidx.compose.ui.graphics.Color(Color.GREEN)
+                         }
+                     },
+                     shape = RoundedCornerShape(12.dp)
+                 )
+                 .clickable {
+                     curPhoneViewPoint = when (curPhoneViewPoint) {
+                         SensorRecordLogic.PhoneViewPoint.FRONT -> {
+                             SensorRecordLogic.changePhoneViewPoint(SensorRecordLogic.PhoneViewPoint.BACK)
+                             SensorRecordLogic.PhoneViewPoint.BACK
+                         }
+
+                         SensorRecordLogic.PhoneViewPoint.BACK -> {
+                             SensorRecordLogic.changePhoneViewPoint(SensorRecordLogic.PhoneViewPoint.FRONT)
+                             SensorRecordLogic.PhoneViewPoint.FRONT
+                         }
+                     }
+                 }){
 
             Image(
                 modifier = Modifier
