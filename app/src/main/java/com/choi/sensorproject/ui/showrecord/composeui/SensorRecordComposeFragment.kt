@@ -295,6 +295,8 @@ class SensorRecordComposeFragment: Fragment() {
         var curRecord: SensorRecordUIModel? by remember { mutableStateOf(null) }
         var curPinPoint: FloatArray? by remember { mutableStateOf(null) }
         var curPhoneAngle: FloatArray? by remember { mutableStateOf(null) }
+        var lastAppIcon: Bitmap? by remember { mutableStateOf(null) }
+        var lastAppPlayingImage: Bitmap? by remember { mutableStateOf(null) }
         var curAppIcon: Bitmap? by remember { mutableStateOf(null) }
         var curAppPlayingImage: Bitmap? by remember { mutableStateOf(null) }
 
@@ -341,8 +343,14 @@ class SensorRecordComposeFragment: Fragment() {
                 curPhoneAngle?.let{
                     view.changePhoneAngle(it[0], it[1], it[2])
                 }
-                view.changeAppIcon(curAppIcon)
-                view.changeAppPlayingImage(curAppPlayingImage)
+                if(lastAppIcon != curAppIcon){
+                    view.changeAppIcon(curAppIcon)
+                    lastAppIcon = curAppIcon
+                }
+                if(lastAppPlayingImage != curAppPlayingImage){
+                    view.changeAppPlayingImage(curAppPlayingImage)
+                    lastAppPlayingImage = curAppPlayingImage
+                }
             }
         )
     }
