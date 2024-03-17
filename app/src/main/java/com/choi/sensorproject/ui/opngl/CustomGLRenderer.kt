@@ -76,7 +76,7 @@ class CustomGLRenderer(val context: Context): GLSurfaceView.Renderer {
         mPhoneFront2D.draw(phoneFrontVPMatrix)
 
         // 이미지가 바뀌지 않더라도 mPhoneFront2D에서 바꾼 이미지가 적용되지 않도록 재설정해야함 (GLES20을 공유하기 때문)
-        mPhoneFront2D.changeImage(baseBackPhoneImage)
+        mPhoneBack2D.changeImage(baseBackPhoneImage)
         mPhoneBack2D.draw(phoneBackVPMatrix)
 
         // 실행 중이었던 앱 별 미리 설정해 둔 이미지를 띄움 (없을 경우 기본 이미지)
