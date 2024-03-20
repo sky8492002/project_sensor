@@ -10,21 +10,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,10 +28,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -52,8 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
@@ -70,7 +61,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -83,6 +73,16 @@ import com.choi.sensorproject.ui.showrecord.CustomBalanceView
 import com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
 import com.choi.sensorproject.ui.showrecord.DrawSuccessListener
 import com.choi.sensorproject.ui.showrecord.TouchListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.BackGroundViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.BalanceViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.CalendarGLViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.ClockViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.LazyRowViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.LoadingDialogChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.MainViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.OpenGLViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.PagingViewChangeListener
+import com.choi.sensorproject.ui.showrecord.composeui.listener.RecordTextViewChangeListener
 import com.choi.sensorproject.ui.theme.GodoTypography
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
@@ -120,7 +120,7 @@ class SensorRecordComposeFragment: Fragment() {
         var curPagingData: PagingData<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
-            SensorRecordLogic.mainViewChangeListener = object: MainViewChangeListener{
+            SensorRecordLogic.mainViewChangeListener = object: MainViewChangeListener {
                 override fun onRecordPagingDataChange(pagingData: PagingData<RecordsForHourUIModel>) {
                     curPagingData = pagingData
                 }
@@ -202,7 +202,7 @@ class SensorRecordComposeFragment: Fragment() {
         var curRecord: SensorRecordUIModel? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
-            SensorRecordLogic.recordTextViewChangeListener = object : RecordTextViewChangeListener{
+            SensorRecordLogic.recordTextViewChangeListener = object : RecordTextViewChangeListener {
                 override fun onReset() {
                     curRecord = null
                 }
@@ -301,7 +301,7 @@ class SensorRecordComposeFragment: Fragment() {
         var curAppPlayingImage: Bitmap? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
-            SensorRecordLogic.openGLViewChangeListener = object: OpenGLViewChangeListener{
+            SensorRecordLogic.openGLViewChangeListener = object: OpenGLViewChangeListener {
                 override fun onReset() {
                     curPinPoint = FloatArray(2) { 0f }
                     curPhoneAngle = FloatArray(3) { 0f }
@@ -522,7 +522,7 @@ class SensorRecordComposeFragment: Fragment() {
         var curVisibility by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
-            SensorRecordLogic.calendarGLViewChangeListener = object : CalendarGLViewChangeListener{
+            SensorRecordLogic.calendarGLViewChangeListener = object : CalendarGLViewChangeListener {
                 override fun onChangeVisibility(isVisible: Boolean) {
                     curVisibility = isVisible
                 }
@@ -643,7 +643,7 @@ class SensorRecordComposeFragment: Fragment() {
         var showDialog by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
-            SensorRecordLogic.loadingDialogChangeListener = object: LoadingDialogChangeListener{
+            SensorRecordLogic.loadingDialogChangeListener = object: LoadingDialogChangeListener {
                 override fun onLoadingDialogChange(isShowing: Boolean) {
                     showDialog = isShowing
                 }
@@ -674,9 +674,10 @@ class SensorRecordComposeFragment: Fragment() {
                 ) {
                     Image(
                         painter = painterResource(R.drawable.loading),
-                        contentDescription = null
+                        contentDescription = null,
+                        Modifier.size(200.dp)
                     )
-                    Text("Loading...")
+                    Text("Loading...", color = androidx.compose.ui.graphics.Color.White, style = GodoTypography.titleMedium)
                 }
             }
         }

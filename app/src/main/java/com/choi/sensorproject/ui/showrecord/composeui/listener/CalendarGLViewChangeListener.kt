@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.showrecord.composeui
+package com.choi.sensorproject.ui.showrecord.composeui.listener
 
 import androidx.compose.ui.unit.IntSize
 

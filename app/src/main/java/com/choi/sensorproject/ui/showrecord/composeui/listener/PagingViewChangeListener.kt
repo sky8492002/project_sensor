@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.showrecord.composeui
+package com.choi.sensorproject.ui.showrecord.composeui.listener
 
 interface PagingViewChangeListener {
 
