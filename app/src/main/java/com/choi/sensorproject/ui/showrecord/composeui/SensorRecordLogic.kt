@@ -81,7 +81,7 @@ object SensorRecordLogic{
         CoroutineScope(Dispatchers.IO).launch {
             uiState.collect(){ uiState ->
                 if (uiState is SensorRecordUIState.Success) {
-                    mainViewChangeListener?.onRecordPagingDataChange(uiState.records)
+                    pagingViewChangeListener?.onRecordPagingDataChange(uiState.records)
                 }
                 else{
 
@@ -134,11 +134,11 @@ object SensorRecordLogic{
         when(initPageDate){
             // 오늘 날짜인 경우 현재 시간으로 스크롤함
             dayFormat.format(curTimeMillis) -> {
-                for(index in 0 until items.itemCount){
+                for(index in 2 until items.itemCount){
                     val curModel = items[index]
                     if(curModel != null && curModel.hour.toInt() == hourFormat.format(curTimeMillis).toInt()
                         && curModel.date == initPageDate) {
-                        return index
+                        return index - 2
                     }
                 }
             }
@@ -147,12 +147,12 @@ object SensorRecordLogic{
                 for(index in 0 until items.itemCount){
                     val curModel = items[index]
                     if(curModel != null && curModel.date == initPageDate){
-                        return index + 12
+                        return index + 10
                     }
                 }
             }
         }
-        return 0
+        return 10
     }
 
     fun manageLoadState (loadState: CombinedLoadStates){
@@ -171,22 +171,21 @@ object SensorRecordLogic{
             }
             loadState.refresh is LoadState.NotLoading && loadState.append is LoadState.NotLoading && loadState.prepend is LoadState.NotLoading-> {
                 loadingDialogChangeListener?.onLoadingDialogChange(false)
-
                 when(lastLoadingType){
-                    LoadingType.NONE -> {
-                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.NONE)
+                        LoadingType.NONE -> {
+                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.NONE)
+                        }
+                        LoadingType.REFRESH -> {
+                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.REFRESH)
+                        }
+                        LoadingType.APPEND -> {
+                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.APPEND)
+                        }
+                        LoadingType.PREPEND -> {
+                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.PREPEND)
+                        }
                     }
-                    LoadingType.REFRESH -> {
-                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.REFRESH)
-                    }
-                    LoadingType.APPEND -> {
-                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.APPEND)
-                    }
-                    LoadingType.PREPEND -> {
-                        lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.PREPEND)
-                    }
-                }
-                lastLoadingType = LoadingType.NONE
+                    lastLoadingType = LoadingType.NONE
             }
         }
     }
@@ -310,7 +309,7 @@ object SensorRecordLogic{
     }
 
     fun refreshPage(selectedDate: Date){
-        pagingViewChangeListener?.onRefreshPage(dayFormat.format(selectedDate))
+        lazyRowViewChangeListener?.onRefresh(dayFormat.format(selectedDate))
     }
 
     fun changePhoneViewPoint(phoneViewPoint: PhoneViewPoint){

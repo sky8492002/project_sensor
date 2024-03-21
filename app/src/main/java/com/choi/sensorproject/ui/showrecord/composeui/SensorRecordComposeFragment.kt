@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,6 +90,7 @@ import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.example.sensorproject.R
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -117,19 +120,6 @@ class SensorRecordComposeFragment: Fragment() {
                   manageAppInfoViewModel: ManageAppInfoViewModel = hiltViewModel()){
         // hiltViewModel 대신 viewModel을 쓰면 App Crash (@HiltViewModel로 ViewModel을 만들었기 때문)
 
-        var curPagingData: PagingData<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
-
-        LaunchedEffect(Unit) {
-            SensorRecordLogic.mainViewChangeListener = object: MainViewChangeListener {
-                override fun onRecordPagingDataChange(pagingData: PagingData<RecordsForHourUIModel>) {
-                    curPagingData = pagingData
-                }
-            }
-            SensorRecordLogic.runSensorRecordCollector(manageSensorRecordViewModel.uiState)
-            SensorRecordLogic.runAppInfoCollector(manageAppInfoViewModel.uiState)
-        }
-
-
         LoadingDialog()
 
         Box(modifier = Modifier
@@ -157,7 +147,7 @@ class SensorRecordComposeFragment: Fragment() {
 
                 BalanceView()
 
-                PagingView(curPagingData)
+                PagingView()
             }
 
             Column(modifier = Modifier.align(Alignment.BottomCenter)){
@@ -175,6 +165,13 @@ class SensorRecordComposeFragment: Fragment() {
                 ChangePhoneViewPointButton()
             }
         }
+
+
+        LaunchedEffect(Unit) {
+            SensorRecordLogic.runSensorRecordCollector(manageSensorRecordViewModel.uiState)
+            SensorRecordLogic.runAppInfoCollector(manageAppInfoViewModel.uiState)
+        }
+
 
     }
 
@@ -383,25 +380,23 @@ class SensorRecordComposeFragment: Fragment() {
     }
 
     @Composable
-    fun PagingView(pagingData: PagingData<RecordsForHourUIModel>?){
-        var lazyPagingItems: LazyPagingItems<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
+    fun PagingView(){
+        var curPagingData: PagingData<RecordsForHourUIModel>? by remember { mutableStateOf(null) }
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.pagingViewChangeListener = object : PagingViewChangeListener {
-                override fun onRefreshPage(initPageDate: String) {
-                    manageSensorRecordViewModel.changeInitPageDate(initPageDate)
-                    lazyPagingItems?.refresh()
+                override fun onRecordPagingDataChange(pagingData: PagingData<RecordsForHourUIModel>) {
+                    curPagingData = pagingData
                 }
             }
         }
 
-        pagingData?.let{
-            lazyPagingItems = remember(it) {
+        curPagingData?.let{
+            remember(it) {
                 flow {
                     emit(it)
                 }
-            }.collectAsLazyPagingItems()
-            lazyPagingItems?.let{
+            }.collectAsLazyPagingItems().let{
                 SensorRecordLogic.manageLoadState(it.loadState)
                 LazyRowView(it)
             }
@@ -411,20 +406,45 @@ class SensorRecordComposeFragment: Fragment() {
     @OptIn(ExperimentalFoundationApi::class) // 실험용 api를 사용할 때 추가하며, 실험용 api는 미래에 수정 또는 제거될 수 있다.
     @Composable
     fun LazyRowView(models: LazyPagingItems<RecordsForHourUIModel>?){
-        var curForceScrollType by remember { mutableStateOf( SensorRecordLogic.ForceScrollType.NONE)}
         // 스크롤 위치를 기억
-        val state = rememberLazyListState()
+        val state = rememberLazyListState(initialFirstVisibleItemIndex = 0, initialFirstVisibleItemScrollOffset = 0)
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
             SensorRecordLogic.lazyRowViewChangeListener = object : LazyRowViewChangeListener {
+                override fun onRefresh(initPageDate: String) {
+                    manageSensorRecordViewModel.changeInitPageDate(initPageDate)
+                    models?.refresh()
+                }
+
                 override fun onForceScrollTypeChange(forceScrollType: SensorRecordLogic.ForceScrollType) {
-                    curForceScrollType = forceScrollType
+                    models?.let {
+                        when (forceScrollType) {
+                            SensorRecordLogic.ForceScrollType.NONE -> {}
+                            SensorRecordLogic.ForceScrollType.REFRESH -> {
+                                // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
+                                scope.launch {
+                                    val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it)
+                                    state.animateScrollToItem(centerModelIndex)
+                                    state.animateScrollBy(120f)
+                                }
+                            }
+                            SensorRecordLogic.ForceScrollType.APPEND -> {}
+                            SensorRecordLogic.ForceScrollType.PREPEND -> {
+                                // 앞에 데이터가 추가된 경우 스크롤 위치 조정이 필요함
+                                scope.launch {
+                                    state.animateScrollToItem(state.firstVisibleItemIndex + 24)
+                                    state.animateScrollBy(120f)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
         // 스크롤이 멈췄을 때에만 화면을 업데이트 (RecyclerView.SCROLL_STATE_IDLE 대체)
-        LaunchedEffect(state) {
+        LaunchedEffect(state, models) {
             // snapshotFlow: State -> Flow 변환
             snapshotFlow { state.isScrollInProgress }
                 .collect {
@@ -438,31 +458,6 @@ class SensorRecordComposeFragment: Fragment() {
         }
 
         models?.let{
-            when(curForceScrollType){
-                SensorRecordLogic.ForceScrollType.NONE -> {}
-                SensorRecordLogic.ForceScrollType.REFRESH -> {
-                    // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
-                    // rememberCoroutineScope가 아닌 이유: 도중에 recomposition되면 나머지 코드가 실행되지 않을 수 있기 때문
-                    viewLifecycleOwner.lifecycleScope.launch{
-                        val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it) - 2
-                        val centerModel = it.get(centerModelIndex)
-                        SensorRecordLogic.changeClockView(centerModel)
-                        SensorRecordLogic.changeBackgroundView(centerModel?.hour?.toInt())
-                        curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
-                        state.scrollToItem(centerModelIndex)
-                    }
-                }
-                SensorRecordLogic.ForceScrollType.APPEND -> {
-                    curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
-                }
-                SensorRecordLogic.ForceScrollType.PREPEND -> {
-                    // 앞에 데이터가 추가된 경우 스크롤 위치 조정이 필요함
-                    viewLifecycleOwner.lifecycleScope.launch{
-                        curForceScrollType = SensorRecordLogic.ForceScrollType.NONE
-                        state.scrollToItem(state.firstVisibleItemIndex + 24)
-                    }
-                }
-            }
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
