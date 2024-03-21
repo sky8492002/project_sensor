@@ -65,9 +65,10 @@ object SensorRecordLogic{
         NONE, REFRESH, APPEND, PREPEND
     }
 
-    enum class ForceScrollType{
-        NONE, REFRESH, APPEND, PREPEND
-    }
+    data class LoadingInfo(
+        val loadingType: LoadingType,
+        val isLoaded: Boolean
+    )
 
     enum class PhoneViewPoint{
         FRONT, BACK
@@ -155,39 +156,47 @@ object SensorRecordLogic{
         return 10
     }
 
-    fun manageLoadState (loadState: CombinedLoadStates){
+    fun manageLoadState (loadState: CombinedLoadStates): LoadingInfo?{
+        var curLoadingInfo: LoadingInfo? = null
         when {
             loadState.refresh is LoadState.Loading -> {
                 loadingDialogChangeListener?.onLoadingDialogChange(true)
                 lastLoadingType = LoadingType.REFRESH
+                curLoadingInfo = LoadingInfo(LoadingType.REFRESH, false)
             }
             loadState.append is LoadState.Loading ->{
                 loadingDialogChangeListener?.onLoadingDialogChange(true)
                 lastLoadingType = LoadingType.APPEND
+                curLoadingInfo = LoadingInfo(LoadingType.APPEND, false)
             }
             loadState.prepend is LoadState.Loading ->{
                 loadingDialogChangeListener?.onLoadingDialogChange(true)
                 lastLoadingType = LoadingType.PREPEND
+                curLoadingInfo = LoadingInfo(LoadingType.PREPEND, false)
             }
             loadState.refresh is LoadState.NotLoading && loadState.append is LoadState.NotLoading && loadState.prepend is LoadState.NotLoading-> {
                 loadingDialogChangeListener?.onLoadingDialogChange(false)
-                when(lastLoadingType){
-                        LoadingType.NONE -> {
-                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.NONE)
-                        }
-                        LoadingType.REFRESH -> {
-                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.REFRESH)
-                        }
-                        LoadingType.APPEND -> {
-                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.APPEND)
-                        }
-                        LoadingType.PREPEND -> {
-                            lazyRowViewChangeListener?.onForceScrollTypeChange(ForceScrollType.PREPEND)
-                        }
+                curLoadingInfo = when(lastLoadingType){
+                    LoadingType.NONE -> {
+                        LoadingInfo(LoadingType.NONE, true)
                     }
-                    lastLoadingType = LoadingType.NONE
+
+                    LoadingType.REFRESH -> {
+                        LoadingInfo(LoadingType.REFRESH, true)
+                    }
+
+                    LoadingType.APPEND -> {
+                        LoadingInfo(LoadingType.APPEND, true)
+                    }
+
+                    LoadingType.PREPEND -> {
+                        LoadingInfo(LoadingType.PREPEND, true)
+                    }
+                }
+                lastLoadingType = LoadingType.NONE
             }
         }
+        return curLoadingInfo
     }
     fun getPlayingImage(appName: String): Bitmap? {
         for(appInfo in allAppInfos){

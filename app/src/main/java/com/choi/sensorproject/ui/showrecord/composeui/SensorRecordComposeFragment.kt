@@ -397,17 +397,19 @@ class SensorRecordComposeFragment: Fragment() {
                     emit(it)
                 }
             }.collectAsLazyPagingItems().let{
-                SensorRecordLogic.manageLoadState(it.loadState)
-                LazyRowView(it)
+                val loadingInfo = SensorRecordLogic.manageLoadState(it.loadState)
+                if(loadingInfo != null){
+                    LazyRowView(it, loadingInfo)
+                }
             }
         }
     }
 
     @OptIn(ExperimentalFoundationApi::class) // 실험용 api를 사용할 때 추가하며, 실험용 api는 미래에 수정 또는 제거될 수 있다.
     @Composable
-    fun LazyRowView(models: LazyPagingItems<RecordsForHourUIModel>?){
+    fun LazyRowView(models: LazyPagingItems<RecordsForHourUIModel>?, loadingInfo: SensorRecordLogic.LoadingInfo){
         // 스크롤 위치를 기억
-        val state = rememberLazyListState(initialFirstVisibleItemIndex = 0, initialFirstVisibleItemScrollOffset = 0)
+        val state = rememberLazyListState(initialFirstVisibleItemIndex = 12, initialFirstVisibleItemScrollOffset = 0)
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
@@ -416,26 +418,28 @@ class SensorRecordComposeFragment: Fragment() {
                     manageSensorRecordViewModel.changeInitPageDate(initPageDate)
                     models?.refresh()
                 }
+            }
+        }
 
-                override fun onForceScrollTypeChange(forceScrollType: SensorRecordLogic.ForceScrollType) {
-                    models?.let {
-                        when (forceScrollType) {
-                            SensorRecordLogic.ForceScrollType.NONE -> {}
-                            SensorRecordLogic.ForceScrollType.REFRESH -> {
-                                // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
-                                scope.launch {
-                                    val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it)
-                                    state.animateScrollToItem(centerModelIndex)
-                                    state.animateScrollBy(120f)
-                                }
+        LaunchedEffect(loadingInfo, models) {
+            models?.let {
+                if(loadingInfo.isLoaded){
+                    when (loadingInfo.loadingType) {
+                        SensorRecordLogic.LoadingType.NONE -> {}
+                        SensorRecordLogic.LoadingType.REFRESH -> {
+                            // refresh 후 강제 스크롤 필요 (처음 실행, 날짜 이동, 새로고침 등)
+                            scope.launch {
+                                val centerModelIndex = SensorRecordLogic.getScrollPosition(manageSensorRecordViewModel.getInitPageDate(), it)
+                                state.animateScrollToItem(centerModelIndex)
+                                state.animateScrollBy(120f)
                             }
-                            SensorRecordLogic.ForceScrollType.APPEND -> {}
-                            SensorRecordLogic.ForceScrollType.PREPEND -> {
-                                // 앞에 데이터가 추가된 경우 스크롤 위치 조정이 필요함
-                                scope.launch {
-                                    state.animateScrollToItem(state.firstVisibleItemIndex + 24)
-                                    state.animateScrollBy(120f)
-                                }
+                        }
+                        SensorRecordLogic.LoadingType.APPEND -> {}
+                        SensorRecordLogic.LoadingType.PREPEND -> {
+                            // 앞에 데이터가 추가된 경우 스크롤 위치 조정이 필요함
+                            scope.launch {
+                                state.animateScrollToItem(state.firstVisibleItemIndex + 24)
+                                state.animateScrollBy(120f)
                             }
                         }
                     }
