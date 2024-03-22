@@ -16,11 +16,11 @@
 
 | 앱 별 이미지 변경 후 기록 열람 | Pin을 이동하여 시간초 변경 | 좌우로 슬라이드 하여 시간대 변경 |
 | --- | --- | --- |
-| <img src="https://github.com/sky8492002/project_sensor/assets/75258748/c3d204a6-b0fd-4892-8ed1-6de1781bd04b" width="250" height="541"/> | <img src="https://github.com/sky8492002/project_sensor/assets/75258748/a7e61963-1b6c-4a4f-b7bb-9b327ab928a1" width="250" height="541"/> | <img src="https://github.com/sky8492002/project_sensor/assets/75258748/c9e8b376-3ac5-4784-b113-ed9a95d539b4" width="250" height="541"/> |
+| <img src="https://github.com/sky8492002/project_sensor/assets/75258748/c3d204a6-b0fd-4892-8ed1-6de1781bd04b" width="240" height="520"/> | <img src="https://github.com/sky8492002/project_sensor/assets/75258748/a7e61963-1b6c-4a4f-b7bb-9b327ab928a1" width="240" height="520"/> | <img src="https://github.com/sky8492002/project_sensor/assets/75258748/c9e8b376-3ac5-4784-b113-ed9a95d539b4" width="240" height="520"/> |
 
 | 앞/뒷면을 바라보도록 시점 변경 | 달력에서 열람할 날짜를 선택 |
 | --- | --- |
-| <img src="https://github.com/sky8492002/project_sensor/assets/75258748/21228a2c-caec-4831-a27b-8686f779b1a9" width="250" height="541"/> | <img src="https://github.com/sky8492002/project_sensor/assets/75258748/a7e38000-c457-428e-8a54-0f2daf2115d5" width="250" height="541"/> |
+| <img src="https://github.com/sky8492002/project_sensor/assets/75258748/21228a2c-caec-4831-a27b-8686f779b1a9" width="240" height="520"/> | <img src="https://github.com/sky8492002/project_sensor/assets/75258748/a7e38000-c457-428e-8a54-0f2daf2115d5" width="240" height="520"/> |
 
 #
 
