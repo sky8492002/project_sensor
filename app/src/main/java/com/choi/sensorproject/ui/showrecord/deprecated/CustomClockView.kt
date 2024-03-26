@@ -16,7 +16,7 @@ import android.view.MotionEvent
 import android.view.View
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
-import com.choi.sensorproject.ui.showrecord.TouchListener
+import com.choi.sensorproject.ui.showrecord.listener.TouchListener
 import java.text.SimpleDateFormat
 
 @SuppressLint("SimpleDateFormat")

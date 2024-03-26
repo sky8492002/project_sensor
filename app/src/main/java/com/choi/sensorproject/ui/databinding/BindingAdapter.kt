@@ -4,11 +4,6 @@ import android.graphics.Bitmap
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.BindingAdapter
-import androidx.recyclerview.widget.RecyclerView
-import com.choi.sensorproject.ui.model.RecordsForHourUIModel
-import com.choi.sensorproject.ui.recyclerview.AppInfoAdapter
-import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
-import com.choi.sensorproject.ui.viewmodel.SensorRecordUIState
 import com.example.sensorproject.R
 
 //@BindingAdapter("show_record_ui_state")

@@ -49,7 +49,7 @@
         <!--            app:layout_constraintTop_toTopOf="parent" />-->
 
 
-        <com.choi.sensorproject.ui.opngl.CustomGLSurfaceView
+        <com.choi.sensorproject.ui.showrecord.opngl.CustomGLSurfaceView
             android:id="@+id/gl_surface_view"
             android:layout_width="match_parent"
             android:layout_height="400dp"
@@ -103,7 +103,7 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent">
 
-                <com.choi.sensorproject.ui.opngl.CustomCalendarGLSurfaceView
+                <com.choi.sensorproject.ui.showrecord.opngl.CustomCalendarGLSurfaceView
                     android:id="@+id/calendarView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

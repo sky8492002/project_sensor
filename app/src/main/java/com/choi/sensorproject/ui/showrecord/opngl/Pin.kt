@@ -1,50 +1,42 @@
-package com.choi.sensorproject.ui.opngl
+package com.choi.sensorproject.ui.showrecord.opngl
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-
-class Background2D() {
+class Pin {
     private val COORDS = 3;
     private val STRIDE: Int = COORDS * 4
 
     private var vertices = floatArrayOf(
-        -2.5f, -3.0f, 0.0f,
-        2.5f, -3.0f, 0.0f,
-        -2.5f, 3.0f, 0.0f,
-        2.5f, 3.0f, 0.0f
+        -0.12f, -0.1f, 0.0f,
+        0.12f, -0.1f, 0.0f,
+        -0.12f, 0.1f, 0.0f,
+        0.12f, 0.1f, 0.0f
     )
 
-    // 폰의 앞면, 뒷면 중 어디를 그릴지에 따라 이미지를 뒤집어서 적용할 지 결정
-    private var texCoords =
-        floatArrayOf(
-            0.0f, 1.0f, 0.0f,
-            1.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-        )
-
+    private var texCoords = floatArrayOf(
+        0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+    )
 
     private var vertexBuffer: FloatBuffer
     private var texCoordBuffer: FloatBuffer
 
-    val VERTEX_SHADER_CODE = "attribute vec4 vPosition;" +
-            "uniform mat4 uMVPMatrix;" +
-            "attribute vec2 aTexCoord;" +
-            "varying vec2 vTexCoord;" +
-            "void main() {" +
-            "  gl_Position = uMVPMatrix * vPosition;" +
-            "  vTexCoord = aTexCoord;"+
-            "}"
+    val VERTEX_SHADER_CODE =
+        "attribute vec4 vPosition;" +
+                "uniform mat4 uMVPMatrix;" +
+                "attribute vec2 aTexCoord;" +
+                "varying vec2 vTexCoord;" +
+                "void main() {" +
+                "  gl_Position = uMVPMatrix * vPosition;" +
+                "  vTexCoord = aTexCoord;"+
+                "}"
 
 
     val FRAGMENT_SHADER_CODE = "precision mediump float;" +
@@ -144,6 +136,11 @@ class Background2D() {
     }
 
     fun draw(mvpMatrix: FloatArray) {
+
+        // 뒷면을 그리지 않도록 설정
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+        GLES20.glCullFace(GLES20.GL_BACK)
+
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
 
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, STRIDE, vertexBuffer)
@@ -153,6 +150,7 @@ class Background2D() {
         GLES20.glEnableVertexAttribArray(texCoordHandle)
         GLES20.glEnableVertexAttribArray(colorHandle)
         GLES20.glEnableVertexAttribArray(textureHandle)
+
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
 
         GLES20.glDisableVertexAttribArray(positionHandle)

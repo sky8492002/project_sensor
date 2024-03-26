@@ -1,26 +1,13 @@
-package com.choi.sensorproject.ui.opngl
+package com.choi.sensorproject.ui.showrecord.opngl
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.PixelFormat
-import android.graphics.PorterDuff
-import android.graphics.Rect
-import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.opengl.GLU
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceHolder
-import com.choi.sensorproject.ui.showrecord.RequestRenderListener
-import com.example.sensorproject.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import com.choi.sensorproject.ui.showrecord.listener.RequestRenderListener
 import kotlin.math.abs
 
 class CustomCalendarGLSurfaceView @JvmOverloads constructor(
@@ -44,7 +31,7 @@ class CustomCalendarGLSurfaceView @JvmOverloads constructor(
         setRenderer(renderer)
         setRenderMode(RENDERMODE_WHEN_DIRTY) // onDrawFrame이 매 프레임마다 호출되지 않고, requestRender 함수 호출 시에 호출됨
 
-        renderer.requestRenderListener = object : RequestRenderListener{
+        renderer.requestRenderListener = object : RequestRenderListener {
             override fun onRequestRender() {
                 requestRender()
             }

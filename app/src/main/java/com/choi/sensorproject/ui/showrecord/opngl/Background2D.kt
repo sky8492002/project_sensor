@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.opngl
+package com.choi.sensorproject.ui.showrecord.opngl
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -13,33 +13,25 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 
-class Phone2D(val isFrontScreen: Boolean) {
+class Background2D() {
     private val COORDS = 3;
     private val STRIDE: Int = COORDS * 4
 
     private var vertices = floatArrayOf(
-        -0.4f, -0.7f, 0.0f,
-        0.4f, -0.7f, 0.0f,
-        -0.4f, 0.7f, 0.0f,
-        0.4f, 0.7f, 0.0f
+        -2.5f, -3.0f, 0.0f,
+        2.5f, -3.0f, 0.0f,
+        -2.5f, 3.0f, 0.0f,
+        2.5f, 3.0f, 0.0f
     )
 
     // 폰의 앞면, 뒷면 중 어디를 그릴지에 따라 이미지를 뒤집어서 적용할 지 결정
     private var texCoords =
-        if (isFrontScreen)
-            floatArrayOf(
-                0.0f, 1.0f, 0.0f,
-                1.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-            )
-        else
-            floatArrayOf(
-                1.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-            )
+        floatArrayOf(
+            0.0f, 1.0f, 0.0f,
+            1.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+        )
 
 
     private var vertexBuffer: FloatBuffer
@@ -147,46 +139,12 @@ class Phone2D(val isFrontScreen: Boolean) {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
 
-        // 폰 테두리가 있는 bitmap을 새로 만들어서 적용
-        val phoneBitmapImage =
-            Bitmap.createBitmap(bitmapImage.getWidth(), bitmapImage.getHeight(), bitmapImage.getConfig())
-        val canvas = Canvas(phoneBitmapImage) // canvas의 변경 사항이 phoneBitmapImage에 적용됨
-
-        // 이미지를 화면에 표시할 범위 설정
-        val fillPaint = Paint()
-        fillPaint.style = Paint.Style.FILL
-        canvas.drawRoundRect(0f, 0f, phoneBitmapImage.getWidth().toFloat(), phoneBitmapImage.getHeight().toFloat(), 80f, 80f, fillPaint)
-
-        // 이미지 그리기
-        val bitmapPaint = Paint()
-        bitmapPaint.setXfermode(PorterDuffXfermode(PorterDuff.Mode.SRC_IN)) // 앞서 설정한 사각형 범위 내에만 이미지가 그려짐
-        canvas.drawBitmap(bitmapImage, 0f, 0f, bitmapPaint)
-
-        // 테두리 그리기
-        val borderPaint = Paint()
-        borderPaint.color = Color.BLACK
-        borderPaint.strokeWidth = 5f
-        borderPaint.style = Paint.Style.STROKE
-        canvas.drawRoundRect(0f, 0f, phoneBitmapImage.getWidth().toFloat(), phoneBitmapImage.getHeight().toFloat(), 80f, 80f, borderPaint)
-
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, phoneBitmapImage, 0)
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmapImage, 0)
         GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D) // 메모리 캐싱 문제 해결 기능
     }
 
     fun draw(mvpMatrix: FloatArray) {
-
-        // 앞면 또는 뒷면을 그리지 않도록 설정
-        if(isFrontScreen){
-            GLES20.glEnable(GLES20.GL_CULL_FACE)
-            GLES20.glCullFace(GLES20.GL_BACK)
-        }
-        else{
-            GLES20.glEnable(GLES20.GL_CULL_FACE)
-            GLES20.glCullFace(GLES20.GL_FRONT)
-        }
-
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
-        //GLES20.glUniform4fv(colorHandle, 1, color, 0)
 
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, STRIDE, vertexBuffer)
         GLES20.glVertexAttribPointer(texCoordHandle, 3, GLES20.GL_FLOAT, false, STRIDE, texCoordBuffer)
@@ -195,8 +153,6 @@ class Phone2D(val isFrontScreen: Boolean) {
         GLES20.glEnableVertexAttribArray(texCoordHandle)
         GLES20.glEnableVertexAttribArray(colorHandle)
         GLES20.glEnableVertexAttribArray(textureHandle)
-
-        //GLES20.glDrawElements(GL_TRIANGLES, order.size, GL_UNSIGNED_INT, orderBuffer)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
 
         GLES20.glDisableVertexAttribArray(positionHandle)

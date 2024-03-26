@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,26 +61,24 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
-import com.choi.sensorproject.ui.opngl.CustomCalendarGLSurfaceView
-import com.choi.sensorproject.ui.opngl.CustomGLSurfaceView
-import com.choi.sensorproject.ui.showrecord.CalendarListener
+import com.choi.sensorproject.ui.showrecord.opngl.CustomCalendarGLSurfaceView
+import com.choi.sensorproject.ui.showrecord.opngl.CustomGLSurfaceView
+import com.choi.sensorproject.ui.showrecord.listener.CalendarListener
 import com.choi.sensorproject.ui.showrecord.CustomBalanceView
 import com.choi.sensorproject.ui.showrecord.CustomClockSurfaceView
-import com.choi.sensorproject.ui.showrecord.DrawSuccessListener
-import com.choi.sensorproject.ui.showrecord.TouchListener
+import com.choi.sensorproject.ui.showrecord.listener.DrawSuccessListener
+import com.choi.sensorproject.ui.showrecord.listener.TouchListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.BackGroundViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.BalanceViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.CalendarGLViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.ClockViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.LazyRowViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.LoadingDialogChangeListener
-import com.choi.sensorproject.ui.showrecord.composeui.listener.MainViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.OpenGLViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.PagingViewChangeListener
 import com.choi.sensorproject.ui.showrecord.composeui.listener.RecordTextViewChangeListener
@@ -90,7 +87,6 @@ import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
 import com.example.sensorproject.R
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -547,7 +543,7 @@ class SensorRecordComposeFragment: Fragment() {
                     .height(400.dp),
                 update = { view ->
                     view.reset()
-                    view.renderer.calendarListener = object: CalendarListener{
+                    view.renderer.calendarListener = object: CalendarListener {
                         override fun onSelectedDateUpdate(selectedDate: Date) {
                             SensorRecordLogic.refreshPage(selectedDate)
                         }

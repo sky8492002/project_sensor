@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.opngl.deprecated
+package com.choi.sensorproject.ui.showrecord.opngl.deprecated
 
 import android.graphics.Bitmap
 import android.opengl.GLES20

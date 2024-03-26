@@ -23,8 +23,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.choi.sensorproject.ui.model.AppInfoUIModel
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
-import com.choi.sensorproject.ui.recyclerview.FocusedLayoutManager
-import com.choi.sensorproject.ui.recyclerview.RecordsForHourAdapter
+import com.choi.sensorproject.ui.showrecord.listener.CalendarListener
+import com.choi.sensorproject.ui.showrecord.listener.DrawSuccessListener
+import com.choi.sensorproject.ui.showrecord.listener.TouchListener
+import com.choi.sensorproject.ui.showrecord.recyclerview.FocusedLayoutManager
+import com.choi.sensorproject.ui.showrecord.recyclerview.RecordsForHourAdapter
 import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.choi.sensorproject.ui.viewmodel.ManageSensorRecordViewModel
@@ -129,7 +132,7 @@ class ShowRecordFragment: Fragment() {
         }
 
         // 달력에서 날짜를 터치하면 해당 날짜의 데이터를 보여줌
-        binding.calendarView.renderer.calendarListener = object : CalendarListener{
+        binding.calendarView.renderer.calendarListener = object : CalendarListener {
             override fun onSelectedDateUpdate(selectedDate: Date) {
                 manageSensorRecordViewModel.changeInitPageDate(
                     dayFormat.format(selectedDate)
@@ -305,7 +308,8 @@ class ShowRecordFragment: Fragment() {
                                 binding.customClockView.setCurModel(centerModel)
 
                                 // clockView를 다 그렸을 때 dialog를 지우고 다음 과정으로 넘어감
-                                binding.customClockView.drawSuccessListener = object : DrawSuccessListener{
+                                binding.customClockView.drawSuccessListener = object :
+                                    DrawSuccessListener {
                                     override fun onDrawSuccess() {
                                         if(clockViewLoadingDialog.isShowing){
                                             clockViewLoadingDialog.cancel()

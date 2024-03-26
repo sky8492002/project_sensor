@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.opngl
+package com.choi.sensorproject.ui.showrecord.opngl
 
 import android.content.Context
 import android.graphics.Bitmap

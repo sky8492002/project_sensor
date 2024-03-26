@@ -6,7 +6,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PixelFormat
-import android.graphics.Point
 import android.graphics.PorterDuff
 import android.graphics.RectF
 import android.util.AttributeSet
@@ -16,6 +15,8 @@ import android.view.SurfaceView
 import com.choi.sensorproject.service.Orientation
 import com.choi.sensorproject.ui.model.RecordsForHourUIModel
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
+import com.choi.sensorproject.ui.showrecord.listener.DrawSuccessListener
+import com.choi.sensorproject.ui.showrecord.listener.TouchListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

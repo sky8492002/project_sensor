@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.showrecord
+package com.choi.sensorproject.ui.showrecord.listener
 
 import com.choi.sensorproject.ui.model.SensorRecordUIModel
 

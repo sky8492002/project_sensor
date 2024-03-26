@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.recyclerview
+package com.choi.sensorproject.ui.showrecord.recyclerview
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

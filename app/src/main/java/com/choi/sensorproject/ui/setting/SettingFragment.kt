@@ -5,9 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -22,7 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.choi.sensorproject.ui.model.AppInfoUIModel
-import com.choi.sensorproject.ui.recyclerview.AppInfoAdapter
+import com.choi.sensorproject.ui.setting.recyclerview.AppInfoAdapter
 import com.choi.sensorproject.ui.viewmodel.AppInfoUIState
 import com.choi.sensorproject.ui.viewmodel.ManageAppInfoViewModel
 import com.example.sensorproject.R

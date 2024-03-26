@@ -1,4 +1,4 @@
-package com.choi.sensorproject.ui.opngl
+package com.choi.sensorproject.ui.showrecord.opngl
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,8 +15,8 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLU
 import android.opengl.Matrix
-import com.choi.sensorproject.ui.showrecord.CalendarListener
-import com.choi.sensorproject.ui.showrecord.RequestRenderListener
+import com.choi.sensorproject.ui.showrecord.listener.CalendarListener
+import com.choi.sensorproject.ui.showrecord.listener.RequestRenderListener
 import com.example.sensorproject.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
