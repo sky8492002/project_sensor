@@ -24,7 +24,27 @@
 
 #
 
-### 사용한 기술 스텍
+### 사용한 기술
+
+#### DESIGN PATTERN
+<img src="https://img.shields.io/badge/MVVM-B2FCE4?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/Clean Architecture-B2FCE4?style=flat-square&logo=android&logoColor=white">
+
+#### UI COMPOSITON
+<img src="https://img.shields.io/badge/DataBinding-40AEF0?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/ViewBinding-40AEF0?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/RecyclerView-40AEF0?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/Jetpack Compose-40AEF0?style=flat-square&logo=android&logoColor=white">
+
+#### DISPLAY PERFORMANCE
+<img src="https://img.shields.io/badge/Coroutine-3B66BC?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/SurfaceView-3B66BC?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/MotionLayout-3B66BC?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/OpenGL ES-3B66BC?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/GLSurfaceView-3B66BC?style=flat-square&logo=android&logoColor=white">
+
+#### DATA MANAGEMENT
+<img src="https://img.shields.io/badge/Room-9999FF?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/AAC ViewModel-9999FF?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/Coroutine Flow-9999FF?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/Paging3-9999FF?style=flat-square&logo=android&logoColor=white">
+
+#### SERVICE
+<img src="https://img.shields.io/badge/Foreground Service-0ABF53?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/Background Service-0ABF53?style=flat-square&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/WorkManager-0ABF53?style=flat-square&logo=android&logoColor=white">
+
+
+#### DEPENDENCY INJECTION
+<img src="https://img.shields.io/badge/Hilt-E34F26?style=flat-square&logo=android&logoColor=white">
+
 
 # 
 
